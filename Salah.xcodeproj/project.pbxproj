@@ -11,6 +11,8 @@
 		5AA6AB592B81E90900E2A7DB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB582B81E90900E2A7DB /* ContentView.swift */; };
 		5AA6AB5B2B81E90A00E2A7DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */; };
 		5AA6AB5E2B81E90A00E2A7DB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5AA6AB5D2B81E90A00E2A7DB /* Preview Assets.xcassets */; };
+		5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB652B81EA4700E2A7DB /* Salah.swift */; };
+		5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB692B81FC0F00E2A7DB /* String+Extension.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +21,8 @@
 		5AA6AB582B81E90900E2A7DB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5AA6AB5D2B81E90A00E2A7DB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		5AA6AB652B81EA4700E2A7DB /* Salah.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Salah.swift; sourceTree = "<group>"; };
+		5AA6AB692B81FC0F00E2A7DB /* String+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Extension.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +55,8 @@
 		5AA6AB552B81E90900E2A7DB /* Salah */ = {
 			isa = PBXGroup;
 			children = (
+				5AA6AB672B81FBEB00E2A7DB /* Helpers */,
+				5AA6AB642B81EA2A00E2A7DB /* Model */,
 				5AA6AB562B81E90900E2A7DB /* SalahApp.swift */,
 				5AA6AB582B81E90900E2A7DB /* ContentView.swift */,
 				5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */,
@@ -65,6 +71,30 @@
 				5AA6AB5D2B81E90A00E2A7DB /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		5AA6AB642B81EA2A00E2A7DB /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				5AA6AB652B81EA4700E2A7DB /* Salah.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		5AA6AB672B81FBEB00E2A7DB /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				5AA6AB682B81FBF300E2A7DB /* Extensions */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		5AA6AB682B81FBF300E2A7DB /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				5AA6AB692B81FC0F00E2A7DB /* String+Extension.swift */,
+			);
+			name = Extensions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -137,6 +167,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */,
+				5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */,
 				5AA6AB592B81E90900E2A7DB /* ContentView.swift in Sources */,
 				5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */,
 			);
