@@ -7,17 +7,32 @@
 
 import Foundation
 
-enum Salah {
-    case fajr
-    case duha
-    case dhuhr
-    case asr
-    case maghrib
-    case awabin
-    case isha
-    case tahajjud
+extension Salah {
+    enum Waqt {
+        case fajr, dhur, asr, maghrib, isha
+    }
 }
 
-struct Waqt {
-    //let startTime: Time
+struct Salah {
+    let waqt: Waqt
+    let startingTime: String
+    let endingTime: String
+    
+//    init(waqt: Waqt, timingData: TimingResponse) {
+//        self.waqt = waqt
+//        
+//        switch waqt {
+//        case .fajr:
+//            startingTime = timingData.fajr
+//            endingTime = Int(timingData.sunrise) - 1
+//        case .dhur:
+//            <#code#>
+//        case .asr:
+//            <#code#>
+//        case .maghrib:
+//            <#code#>
+//        case .isha:
+//            <#code#>
+//        }
+//    }
 }

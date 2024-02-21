@@ -11,7 +11,7 @@ extension String {
     // Converts 24-hour format to 12-hour format
     // Input: 22:15
     // Output: 10:15 PM
-    var time12String: String {
+    var time12String: Self {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
         guard let date = dateFormatter.date(from: self) else {
@@ -24,7 +24,7 @@ extension String {
     // Converts 12-hour format to 24-hour format
     // Input: 10:15 PM
     // Output: 22:15
-    var time24String: String {
+    var time24String: Self {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "hh:mm a"
         guard let date = dateFormatter.date(from: self) else {
@@ -32,5 +32,20 @@ extension String {
         }
         dateFormatter.dateFormat = "HH:mm"
         return dateFormatter.string(from: date)
+    }
+    
+    func addMinits(_ minits: Int) -> Self {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        guard var date = dateFormatter.date(from: self) else {
+            return "Invalid Time String"
+        }
+        date.addTimeInterval(TimeInterval(minits * 60))
+        
+        return dateFormatter.string(from: date)
+    }
+    
+    func subtractMinits(_ minits: Int) -> Self {
+        addMinits(-minits)
     }
 }

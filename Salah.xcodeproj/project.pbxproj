@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */; };
+		5A78F9C22B8654B2009FE4DA /* Test.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A78F9C12B8654B2009FE4DA /* Test.json */; };
 		5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB562B81E90900E2A7DB /* SalahApp.swift */; };
 		5AA6AB592B81E90900E2A7DB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB582B81E90900E2A7DB /* ContentView.swift */; };
 		5AA6AB5B2B81E90A00E2A7DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponseModel.swift; sourceTree = "<group>"; };
+		5A78F9C12B8654B2009FE4DA /* Test.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Test.json; sourceTree = "<group>"; };
 		5AA6AB532B81E90900E2A7DB /* Salah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Salah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AA6AB562B81E90900E2A7DB /* SalahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahApp.swift; sourceTree = "<group>"; };
 		5AA6AB582B81E90900E2A7DB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -77,6 +81,8 @@
 			isa = PBXGroup;
 			children = (
 				5AA6AB652B81EA4700E2A7DB /* Salah.swift */,
+				5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */,
+				5A78F9C12B8654B2009FE4DA /* Test.json */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -155,6 +161,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A78F9C22B8654B2009FE4DA /* Test.json in Resources */,
 				5AA6AB5E2B81E90A00E2A7DB /* Preview Assets.xcassets in Resources */,
 				5AA6AB5B2B81E90A00E2A7DB /* Assets.xcassets in Resources */,
 			);
@@ -170,6 +177,7 @@
 				5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */,
 				5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */,
 				5AA6AB592B81E90900E2A7DB /* ContentView.swift in Sources */,
+				5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */,
 				5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

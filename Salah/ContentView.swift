@@ -15,10 +15,28 @@ struct ContentView: View {
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             
-            Text("02/12/15, 6:35 PM".time24String)
+            Text("23:00".subtractMinits(1))
         }
         .padding()
     }
+    
+//    func getDummyvalue() -> String {
+//        if let url = Bundle.main.url(forResource: "Test", withExtension: "json") {
+//            guard let data = try? Data(contentsOf: url) else {
+//                return "FFAILED"
+//            }
+//            let decoder = JSONDecoder()
+//            guard let data = try? decoder.decode(APIResponse.self, from: data) else {
+//                return "Failed"
+//            }
+//            
+//            return data.data.timings.isha
+//            
+//        }
+//      
+//        
+//        return "Failed last"
+//    }
 }
 
 #Preview {

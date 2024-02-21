@@ -1,0 +1,93 @@
+{
+  "code": 200,
+  "status": "OK",
+  "data": {
+    "timings": {
+      "Fajr": "05:12",
+      "Sunrise": "06:28",
+      "Dhuhr": "12:12",
+      "Asr": "16:19",
+      "Sunset": "17:57",
+      "Maghrib": "17:57",
+      "Isha": "19:13",
+      "Imsak": "05:02",
+      "Midnight": "00:12",
+      "Firstthird": "22:07",
+      "Lastthird": "02:17"
+    },
+    "date": {
+      "readable": "21 Feb 2024",
+      "timestamp": "1708477200",
+      "hijri": {
+        "date": "10-08-1445",
+        "format": "DD-MM-YYYY",
+        "day": "10",
+        "weekday": {
+          "en": "Al Arba'a",
+          "ar": "الاربعاء"
+        },
+        "month": {
+          "number": 8,
+          "en": "Shaʿbān",
+          "ar": "شَعْبان"
+        },
+        "year": "1445",
+        "designation": {
+          "abbreviated": "AH",
+          "expanded": "Anno Hegirae"
+        },
+        "holidays": [
+          
+        ]
+      },
+      "gregorian": {
+        "date": "21-02-2024",
+        "format": "DD-MM-YYYY",
+        "day": "21",
+        "weekday": {
+          "en": "Wednesday"
+        },
+        "month": {
+          "number": 2,
+          "en": "February"
+        },
+        "year": "2024",
+        "designation": {
+          "abbreviated": "AD",
+          "expanded": "Anno Domini"
+        }
+      }
+    },
+    "meta": {
+      "latitude": 23.7104,
+      "longitude": 90.40744,
+      "timezone": "Asia/Dhaka",
+      "method": {
+        "id": 1,
+        "name": "University of Islamic Sciences, Karachi",
+        "params": {
+          "Fajr": 18,
+          "Isha": 18
+        },
+        "location": {
+          "latitude": 24.8614622,
+          "longitude": 67.0099388
+        }
+      },
+      "latitudeAdjustmentMethod": "ANGLE_BASED",
+      "midnightMode": "STANDARD",
+      "school": "HANAFI",
+      "offset": {
+        "Imsak": 0,
+        "Fajr": 0,
+        "Sunrise": 0,
+        "Dhuhr": 0,
+        "Asr": 0,
+        "Maghrib": 0,
+        "Sunset": 0,
+        "Isha": 0,
+        "Midnight": 0
+      }
+    }
+  }
+}
