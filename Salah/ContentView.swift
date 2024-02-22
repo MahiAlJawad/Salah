@@ -9,34 +9,16 @@ import SwiftUI
 import Foundation
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            
-            Text("23:00".subtractMinits(1))
-        }
-        .padding()
+    @State var apiResponse: APIResponse?
+    
+    var ishaTime: String {
+        guard let apiResponse else { return ""}
+        return apiResponse.data.timings.isha
     }
     
-//    func getDummyvalue() -> String {
-//        if let url = Bundle.main.url(forResource: "Test", withExtension: "json") {
-//            guard let data = try? Data(contentsOf: url) else {
-//                return "FFAILED"
-//            }
-//            let decoder = JSONDecoder()
-//            guard let data = try? decoder.decode(APIResponse.self, from: data) else {
-//                return "Failed"
-//            }
-//            
-//            return data.data.timings.isha
-//            
-//        }
-//      
-//        
-//        return "Failed last"
-//    }
+    var body: some View {
+        Text(ishaTime)
+    }
 }
 
 #Preview {

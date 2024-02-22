@@ -18,21 +18,25 @@ struct Salah {
     let startingTime: String
     let endingTime: String
     
-//    init(waqt: Waqt, timingData: TimingResponse) {
-//        self.waqt = waqt
-//        
-//        switch waqt {
-//        case .fajr:
-//            startingTime = timingData.fajr
-//            endingTime = Int(timingData.sunrise) - 1
-//        case .dhur:
-//            <#code#>
-//        case .asr:
-//            <#code#>
-//        case .maghrib:
-//            <#code#>
-//        case .isha:
-//            <#code#>
-//        }
-//    }
+    init(waqt: Waqt, timingData: TimingResponse) {
+        self.waqt = waqt
+        
+        switch waqt {
+        case .fajr:
+            startingTime = timingData.fajr
+            endingTime = timingData.sunrise.subtractMinits(1)
+        case .dhur:
+            startingTime = timingData.dhuhr
+            endingTime = timingData.asr.subtractMinits(1)
+        case .asr:
+            startingTime = timingData.asr
+            endingTime = timingData.sunset.subtractMinits(1)
+        case .maghrib:
+            startingTime = timingData.maghrib
+            endingTime = timingData.isha.subtractMinits(1)
+        case .isha:
+            startingTime = timingData.isha
+            endingTime = timingData.imsak.subtractMinits(1)
+        }
+    }
 }

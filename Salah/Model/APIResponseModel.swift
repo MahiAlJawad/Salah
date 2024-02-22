@@ -7,7 +7,7 @@
 
 import Foundation
 
-import Foundation
+// MARK: For Salah API Response
 
 struct APIResponse: Codable {
     let data: DataResponse
@@ -53,4 +53,23 @@ struct GregorianDateResponse: Codable {
     let date: String
 }
 
+// MARK: For Location by City Response
 
+struct BDLocations: Codable {
+    let districts: [BDDistrict]
+}
+
+struct BDDistrict: Codable, Identifiable {
+    let id = UUID()
+    let name: String
+    let banglaName: String
+    let lat: String
+    let lon: String
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case banglaName = "bn_name"
+        case lat
+        case lon
+    }
+}
