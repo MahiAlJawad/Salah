@@ -11,7 +11,7 @@ import SwiftUI
 struct SalahApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TabBarView()
         }
     }
 }

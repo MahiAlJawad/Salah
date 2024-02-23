@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */; };
 		5A78F9C22B8654B2009FE4DA /* Test.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A78F9C12B8654B2009FE4DA /* Test.json */; };
+		5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAD2B88A9F0000660EC /* TabBarView.swift */; };
+		5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAF2B88AA8B000660EC /* TabBarModel.swift */; };
+		5A843FB22B88B701000660EC /* TimingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FB12B88B701000660EC /* TimingsView.swift */; };
 		5A8F54872B87638700ED1BFC /* SalahAPIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8F54862B87638700ED1BFC /* SalahAPIManager.swift */; };
 		5A8F54892B87696500ED1BFC /* districts.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A8F54882B87696500ED1BFC /* districts.json */; };
 		5A8F548B2B877F5400ED1BFC /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8F548A2B877F5400ED1BFC /* Settings.swift */; };
 		5A8F548D2B878D3000ED1BFC /* Date+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8F548C2B878D3000ED1BFC /* Date+Extension.swift */; };
 		5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB562B81E90900E2A7DB /* SalahApp.swift */; };
-		5AA6AB592B81E90900E2A7DB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB582B81E90900E2A7DB /* ContentView.swift */; };
 		5AA6AB5B2B81E90A00E2A7DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */; };
 		5AA6AB5E2B81E90A00E2A7DB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5AA6AB5D2B81E90A00E2A7DB /* Preview Assets.xcassets */; };
 		5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB652B81EA4700E2A7DB /* Salah.swift */; };
@@ -24,13 +26,15 @@
 /* Begin PBXFileReference section */
 		5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponseModel.swift; sourceTree = "<group>"; };
 		5A78F9C12B8654B2009FE4DA /* Test.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Test.json; sourceTree = "<group>"; };
+		5A843FAD2B88A9F0000660EC /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
+		5A843FAF2B88AA8B000660EC /* TabBarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarModel.swift; sourceTree = "<group>"; };
+		5A843FB12B88B701000660EC /* TimingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingsView.swift; sourceTree = "<group>"; };
 		5A8F54862B87638700ED1BFC /* SalahAPIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahAPIManager.swift; sourceTree = "<group>"; };
 		5A8F54882B87696500ED1BFC /* districts.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = districts.json; sourceTree = "<group>"; };
 		5A8F548A2B877F5400ED1BFC /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		5A8F548C2B878D3000ED1BFC /* Date+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extension.swift"; sourceTree = "<group>"; };
 		5AA6AB532B81E90900E2A7DB /* Salah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Salah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AA6AB562B81E90900E2A7DB /* SalahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahApp.swift; sourceTree = "<group>"; };
-		5AA6AB582B81E90900E2A7DB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5AA6AB5D2B81E90A00E2A7DB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5AA6AB652B81EA4700E2A7DB /* Salah.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Salah.swift; sourceTree = "<group>"; };
@@ -48,6 +52,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5A843FAB2B88A96E000660EC /* View */ = {
+			isa = PBXGroup;
+			children = (
+				5A843FAD2B88A9F0000660EC /* TabBarView.swift */,
+				5A843FB12B88B701000660EC /* TimingsView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		5A843FAC2B88A976000660EC /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
 		5A8F54852B87637000ED1BFC /* Networking */ = {
 			isa = PBXGroup;
 			children = (
@@ -75,10 +95,11 @@
 		5AA6AB552B81E90900E2A7DB /* Salah */ = {
 			isa = PBXGroup;
 			children = (
-				5AA6AB672B81FBEB00E2A7DB /* Helpers */,
-				5AA6AB642B81EA2A00E2A7DB /* Model */,
 				5AA6AB562B81E90900E2A7DB /* SalahApp.swift */,
-				5AA6AB582B81E90900E2A7DB /* ContentView.swift */,
+				5AA6AB642B81EA2A00E2A7DB /* Model */,
+				5A843FAB2B88A96E000660EC /* View */,
+				5A843FAC2B88A976000660EC /* ViewModel */,
+				5AA6AB672B81FBEB00E2A7DB /* Helpers */,
 				5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */,
 				5AA6AB5C2B81E90A00E2A7DB /* Preview Content */,
 			);
@@ -98,6 +119,7 @@
 			children = (
 				5A8F548A2B877F5400ED1BFC /* Settings.swift */,
 				5AA6AB652B81EA4700E2A7DB /* Salah.swift */,
+				5A843FAF2B88AA8B000660EC /* TabBarModel.swift */,
 				5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */,
 				5A8F54882B87696500ED1BFC /* districts.json */,
 				5A78F9C12B8654B2009FE4DA /* Test.json */,
@@ -195,13 +217,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */,
 				5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */,
 				5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */,
+				5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */,
 				5A8F54872B87638700ED1BFC /* SalahAPIManager.swift in Sources */,
-				5AA6AB592B81E90900E2A7DB /* ContentView.swift in Sources */,
 				5A8F548B2B877F5400ED1BFC /* Settings.swift in Sources */,
 				5A8F548D2B878D3000ED1BFC /* Date+Extension.swift in Sources */,
 				5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */,
+				5A843FB22B88B701000660EC /* TimingsView.swift in Sources */,
 				5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -261,7 +285,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -318,7 +342,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -342,8 +366,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -371,8 +394,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
