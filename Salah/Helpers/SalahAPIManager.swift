@@ -8,7 +8,7 @@
 import Foundation
 
 class SalahAPIManager {
-    private var dateResponse: DataResponse?
+    private var dateResponse: [String: DataResponse] = [:]
     
     func salahTimeResponse(
         of date: Date = Date(),
@@ -18,7 +18,8 @@ class SalahAPIManager {
         madhab: Madhab = .hanafi,
         hijriDateAdjustment: HijriDateAdjustment = .adjustDays(-1)
     ) async -> Result<DataResponse, ResponseError> {
-        if let response = dateResponse {
+        if let response = dateResponse[date.dateString] {
+            print("Returning from cache")
             return .success(response)
         }
         
@@ -33,11 +34,12 @@ class SalahAPIManager {
             print("Failed getting URL")
             return .failure(.urlConvertionError)
         }
+        print("Fetching data")
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let salahAPIResponse = try JSONDecoder().decode(APIResponse.self, from: data)
-            dateResponse = salahAPIResponse.data
+            dateResponse[date.dateString] = salahAPIResponse.data
             return .success(salahAPIResponse.data)
         } catch {
             print("Error: \(error)")
