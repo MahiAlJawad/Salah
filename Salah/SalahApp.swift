@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct SalahApp: App {
+    private let salahAPIManager = SalahAPIManager()
+    
     var body: some Scene {
         WindowGroup {
-            TabBarView()
+            TabBarView(salahAPIManager: salahAPIManager)
         }
     }
 }

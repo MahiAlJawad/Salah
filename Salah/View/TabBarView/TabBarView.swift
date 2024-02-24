@@ -9,13 +9,19 @@ import SwiftUI
 
 struct TabBarView: View {
     typealias Tab = TabBarModel.Item
-    
     @State var selectedTab: Tab = .timings
+    private let salahAPIManager: SalahAPIManager
+    
+    init(salahAPIManager: SalahAPIManager) {
+        self.salahAPIManager = salahAPIManager
+    }
     
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                TimingsView()
+                TimingsView(
+                    viewModel: .init(salahAPIManager: salahAPIManager)
+                )
             }
             .tabItem {
                 Label(Tab.timings.title, systemImage: Tab.timings.icon)
@@ -35,8 +41,4 @@ struct TabBarView: View {
                 .tag(Tab.more)
         }
     }
-}
-
-#Preview {
-    TabBarView()
 }

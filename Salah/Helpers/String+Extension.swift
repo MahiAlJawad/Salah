@@ -14,6 +14,7 @@ extension String {
     var time12String: Self {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         guard let date = dateFormatter.date(from: self) else {
             return "Invalid Time String"
         }
@@ -27,6 +28,7 @@ extension String {
     var time24String: Self {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "hh:mm a"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         guard let date = dateFormatter.date(from: self) else {
             return "Invalid Time String"
         }
@@ -37,6 +39,7 @@ extension String {
     func addMinits(_ minits: Int) -> Self {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         guard var date = dateFormatter.date(from: self) else {
             return "Invalid Time String"
         }

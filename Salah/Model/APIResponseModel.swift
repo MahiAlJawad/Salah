@@ -7,6 +7,19 @@
 
 import Foundation
 
+// MARK: LoadingState
+enum LoadingState<Data> {
+    case loaded(Data)
+    case loading
+    case failed(ResponseError)
+}
+
+// MARK: Errors
+enum ResponseError: Error {
+    case urlConvertionError
+    case error(String)
+}
+
 // MARK: For Salah API Response
 
 struct APIResponse: Codable {
