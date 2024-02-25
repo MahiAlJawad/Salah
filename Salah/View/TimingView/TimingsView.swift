@@ -18,8 +18,13 @@ struct TimingsView: View {
         switch viewModel.salahTimings {
         case .loaded(let data):
             List {
-                ForEach(Salah.Waqt.allCases) { waqt in
-                    SalahView(salah: .init(waqt: waqt, timingData: data))
+                Section {
+                    RemainingTimeCard()
+                }
+                Section {
+                    ForEach(Salah.Waqt.allCases) { waqt in
+                        SalahView(salah: .init(waqt: waqt, timingData: data))
+                    }
                 }
             }
             .navigationTitle(TabBarModel.Item.timings.title)

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 
 // MARK: LoadingState
 enum LoadingState<Data> {
