@@ -61,18 +61,18 @@ struct RemainingTimeCard: View {
     var body: some View {
         HStack(alignment: .center) {
             VStack {
-                Text("Remaining time")
+                HStack {
+                    Image(systemName: "sun.horizon.fill")
+                        .foregroundStyle(.red)
+                    Text("Magrib")
+                }
+                Text("Ends in")
                 TimerView()
                     .frame(width: 100, height: 100)
             }
             Spacer()
             VStack {
                 VStack {
-                    HStack {
-                        Image(systemName: "sun.horizon.fill")
-                            .foregroundStyle(.red)
-                        Text("Magrib")
-                    }
                     Text("Sunday, 25 February")
                     Text("14 Shaban, 1439")
                 }

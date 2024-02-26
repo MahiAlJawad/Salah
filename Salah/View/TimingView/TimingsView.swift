@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TimingsView: View {
     @State private var viewModel: TimingsViewModel
-    
+    @State var selectedCard: Int = 0
     init(viewModel: TimingsViewModel) {
         self.viewModel = viewModel
     }
@@ -19,7 +19,19 @@ struct TimingsView: View {
         case .loaded(let data):
             List {
                 Section {
-                    RemainingTimeCard()
+                    TabView(selection: $selectedCard) {
+                        RemainingTimeCard()
+                            .padding()
+                            .tag(0)
+                        RemainingTimeCard()
+                            .padding()
+                            .tag(1)
+                    }
+                    .tabViewStyle(.page)
+                    .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+                    .frame(height: 200)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(selectedCard == 0 ? LinearGradient(colors: [.green, .teal, .blue], startPoint: .topLeading, endPoint: .bottomTrailing) : LinearGradient(colors: [.orange, .yellow, .blue], startPoint: .topLeading, endPoint: .bottomTrailing))
                 }
                 Section {
                     ForEach(Salah.Waqt.allCases) { waqt in
