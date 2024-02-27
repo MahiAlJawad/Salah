@@ -20,10 +20,10 @@ struct TimingsView: View {
             List {
                 Section {
                     TabView(selection: $selectedCard) {
-                        RemainingTimeCard()
+                        WaqtDetailCard()
                             .padding()
                             .tag(0)
-                        RemainingTimeCard()
+                        WaqtDetailCard()
                             .padding()
                             .tag(1)
                     }

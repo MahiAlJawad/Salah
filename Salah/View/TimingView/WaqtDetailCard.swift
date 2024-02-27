@@ -1,5 +1,5 @@
 //
-//  RemainingTimeCard.swift
+//  WaqtDetailCard.swift
 //  Salah
 //
 //  Created by Mahi Al Jawad on 25/2/24.
@@ -57,7 +57,28 @@ struct TimerView: View {
     }
 }
 
-struct RemainingTimeCard: View {
+@Observable
+class WaqtDetailCardModel {
+    var timingResponse: TimingResponse
+    
+    var sunriseSchedule: SunSchedules {
+        SunSchedules.sunrise(timingResponse.sunrise)
+    }
+    
+    var sunsetSchedule: SunSchedules {
+        SunSchedules.sunset(timingResponse.sunrise)
+    }
+    
+    init(timingResponse: TimingResponse) {
+        self.timingResponse = timingResponse
+    }
+}
+
+struct WaqtDetailCard: View {
+    var viewModel: WaqtDetailCardModel = .init(
+        timingResponse: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:19", sunset: "17:57", maghrib: "17:57", isha: "19:13")
+    )
+    
     var body: some View {
         HStack(alignment: .center) {
             VStack {
@@ -80,14 +101,14 @@ struct RemainingTimeCard: View {
                 
                 VStack(alignment: .leading) {
                     HStack {
-                        Image(systemName: "sun.horizon.fill")
-                            .foregroundStyle(.orange)
-                        Text("Sunrise: 10:07 AM")
+                        Image(systemName: viewModel.sunriseSchedule.icon)
+                            .foregroundStyle(viewModel.sunriseSchedule.color)
+                        Text(viewModel.sunriseSchedule.title)
                     }
                     HStack {
-                        Image(systemName: "sun.dust.fill")
-                            .foregroundStyle(.red)
-                        Text("Sunset: 10:57 PM")
+                        Image(systemName: viewModel.sunsetSchedule.icon)
+                            .foregroundStyle(viewModel.sunsetSchedule.color)
+                        Text(viewModel.sunsetSchedule.title)
                     }
                 }
 
@@ -97,5 +118,9 @@ struct RemainingTimeCard: View {
 }
 
 #Preview {
-    RemainingTimeCard()
+    WaqtDetailCard(
+        viewModel: .init(
+            timingResponse: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:19", sunset: "17:57", maghrib: "17:57", isha: "19:13")
+        )
+    )
 }

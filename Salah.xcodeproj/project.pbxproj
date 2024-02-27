@@ -7,11 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5A76B9252B8B7634003CF702 /* RemainingTimeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A76B9242B8B7634003CF702 /* RemainingTimeCard.swift */; };
+		5A76B9252B8B7634003CF702 /* WaqtDetailCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A76B9242B8B7634003CF702 /* WaqtDetailCard.swift */; };
 		5A76B9272B8B81F6003CF702 /* Double+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A76B9262B8B81F6003CF702 /* Double+Extension.swift */; };
 		5A76B9292B8B86CC003CF702 /* Int+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A76B9282B8B86CC003CF702 /* Int+Extension.swift */; };
 		5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */; };
 		5A78F9C22B8654B2009FE4DA /* Test.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A78F9C12B8654B2009FE4DA /* Test.json */; };
+		5A832D362B8E483B00C13AC7 /* WaqtDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A832D352B8E483B00C13AC7 /* WaqtDetailModel.swift */; };
 		5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAD2B88A9F0000660EC /* TabBarView.swift */; };
 		5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAF2B88AA8B000660EC /* TabBarModel.swift */; };
 		5A843FB22B88B701000660EC /* TimingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FB12B88B701000660EC /* TimingsView.swift */; };
@@ -29,11 +30,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5A76B9242B8B7634003CF702 /* RemainingTimeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemainingTimeCard.swift; sourceTree = "<group>"; };
+		5A76B9242B8B7634003CF702 /* WaqtDetailCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaqtDetailCard.swift; sourceTree = "<group>"; };
 		5A76B9262B8B81F6003CF702 /* Double+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+Extension.swift"; sourceTree = "<group>"; };
 		5A76B9282B8B86CC003CF702 /* Int+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Extension.swift"; sourceTree = "<group>"; };
 		5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponseModel.swift; sourceTree = "<group>"; };
 		5A78F9C12B8654B2009FE4DA /* Test.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Test.json; sourceTree = "<group>"; };
+		5A832D352B8E483B00C13AC7 /* WaqtDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaqtDetailModel.swift; sourceTree = "<group>"; };
 		5A843FAD2B88A9F0000660EC /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
 		5A843FAF2B88AA8B000660EC /* TabBarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarModel.swift; sourceTree = "<group>"; };
 		5A843FB12B88B701000660EC /* TimingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingsView.swift; sourceTree = "<group>"; };
@@ -84,7 +86,7 @@
 			children = (
 				5A843FB12B88B701000660EC /* TimingsView.swift */,
 				5A8CDC552B89DE0800AD0A95 /* SalahView.swift */,
-				5A76B9242B8B7634003CF702 /* RemainingTimeCard.swift */,
+				5A76B9242B8B7634003CF702 /* WaqtDetailCard.swift */,
 			);
 			path = TimingView;
 			sourceTree = "<group>";
@@ -148,6 +150,7 @@
 			children = (
 				5A8F548A2B877F5400ED1BFC /* Settings.swift */,
 				5AA6AB652B81EA4700E2A7DB /* Salah.swift */,
+				5A832D352B8E483B00C13AC7 /* WaqtDetailModel.swift */,
 				5A843FAF2B88AA8B000660EC /* TabBarModel.swift */,
 				5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */,
 				5A8F54882B87696500ED1BFC /* districts.json */,
@@ -249,10 +252,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				5A76B9292B8B86CC003CF702 /* Int+Extension.swift in Sources */,
+				5A832D362B8E483B00C13AC7 /* WaqtDetailModel.swift in Sources */,
 				5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */,
 				5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */,
 				5A76B9272B8B81F6003CF702 /* Double+Extension.swift in Sources */,
-				5A76B9252B8B7634003CF702 /* RemainingTimeCard.swift in Sources */,
+				5A76B9252B8B7634003CF702 /* WaqtDetailCard.swift in Sources */,
 				5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */,
 				5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */,
 				5A8CDC592B8A06F300AD0A95 /* TimingsViewModel.swift in Sources */,
