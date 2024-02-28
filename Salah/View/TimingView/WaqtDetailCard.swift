@@ -59,25 +59,36 @@ struct TimerView: View {
 
 @Observable
 class WaqtDetailCardModel {
-    var timingResponse: TimingResponse
+    typealias Model = WaqtDetailModel
+    private let dataResponse: DataResponse
     
-    var sunriseSchedule: SunSchedules {
-        SunSchedules.sunrise(timingResponse.sunrise)
+    var timingResponse: TimingResponse {
+        dataResponse.timings
     }
     
-    var sunsetSchedule: SunSchedules {
-        SunSchedules.sunset(timingResponse.sunrise)
+    var sunriseSchedule: Model.SunSchedules {
+        .sunrise(timingResponse.sunrise)
     }
     
-    init(timingResponse: TimingResponse) {
-        self.timingResponse = timingResponse
+    var sunsetSchedule: Model.SunSchedules {
+        .sunset(timingResponse.sunset)
+    }
+    
+    var dateSummary: Model.DateSummary {
+        .init(dataResponse.date)
+    }
+    
+    init(dataResponse: DataResponse) {
+        self.dataResponse = dataResponse
     }
 }
 
 struct WaqtDetailCard: View {
-    var viewModel: WaqtDetailCardModel = .init(
-        timingResponse: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:19", sunset: "17:57", maghrib: "17:57", isha: "19:13")
-    )
+    private var viewModel: WaqtDetailCardModel
+    
+    init(viewModel: WaqtDetailCardModel) {
+        self.viewModel = viewModel
+    }
     
     var body: some View {
         HStack(alignment: .center) {
@@ -94,8 +105,8 @@ struct WaqtDetailCard: View {
             Spacer()
             VStack {
                 VStack {
-                    Text("Sunday, 25 February")
-                    Text("14 Shaban, 1439")
+                    Text(viewModel.dateSummary.gregorian)
+                    Text(viewModel.dateSummary.hijri)
                 }
                 .padding(.init(top: 0, leading: 0, bottom: 10, trailing: 0))
                 
@@ -119,8 +130,5 @@ struct WaqtDetailCard: View {
 
 #Preview {
     WaqtDetailCard(
-        viewModel: .init(
-            timingResponse: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:19", sunset: "17:57", maghrib: "17:57", isha: "19:13")
-        )
-    )
+        viewModel: .init(dataResponse: .init(timings: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:19", sunset: "17:57", maghrib: "17:57", isha: "19:13"), date: .init(hijri: .init(date: "3-10-1439", day: "12", month: .init(en: "Shaban")), gregorian: .init(date: "8-10-12", day: "25", weekday: .init(en: "Sunday"), month: .init(en: "February"))))))
 }

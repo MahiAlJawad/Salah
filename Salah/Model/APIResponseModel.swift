@@ -61,12 +61,24 @@ struct DateResponse: Codable {
 
 struct HijriDateResponse: Codable {
     let date: String
+    let day: String
+    let month: MonthResponse
+}
+
+struct MonthResponse: Codable {
+    let en: String
 }
 
 struct GregorianDateResponse: Codable {
     let date: String
+    let day: String
+    let weekday: WeekdayResponse
+    let month: MonthResponse
 }
 
+struct WeekdayResponse: Codable {
+    let en: String
+}
 // MARK: For Location by City Response
 
 struct BDLocations: Codable {

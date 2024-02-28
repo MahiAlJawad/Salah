@@ -15,15 +15,15 @@ struct TimingsView: View {
     }
     
     var body: some View {
-        switch viewModel.salahTimings {
+        switch viewModel.dataResponse {
         case .loaded(let data):
             List {
                 Section {
                     TabView(selection: $selectedCard) {
-                        WaqtDetailCard()
+                        WaqtDetailCard(viewModel: .init(dataResponse: data))
                             .padding()
                             .tag(0)
-                        WaqtDetailCard()
+                        WaqtDetailCard(viewModel: .init(dataResponse: data))
                             .padding()
                             .tag(1)
                     }
@@ -35,7 +35,7 @@ struct TimingsView: View {
                 }
                 Section {
                     ForEach(Salah.Waqt.allCases) { waqt in
-                        SalahView(salah: .init(waqt: waqt, timingData: data))
+                        SalahView(salah: .init(waqt: waqt, timingData: data.timings))
                     }
                 }
             }

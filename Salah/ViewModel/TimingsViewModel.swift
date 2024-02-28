@@ -11,20 +11,8 @@ import SwiftUI
 @Observable
 class TimingsViewModel {
     private var salahAPIManager: SalahAPIManager
-    private var dataResponse: LoadingState<DataResponse> = .loading
+    var dataResponse: LoadingState<DataResponse> = .loading
     var selectedDate: Date = .now
-    
-    var salahTimings: LoadingState<TimingResponse> {
-        switch dataResponse {
-        case .loaded(let data):
-            return .loaded(data.timings)
-        case .loading:
-            return .loading
-        case .failed(let error):
-            print("Error: \(error)")
-            return .failed(error)
-        }
-    }
     
     init(salahAPIManager: SalahAPIManager) {
         self.salahAPIManager = salahAPIManager
