@@ -42,6 +42,11 @@ struct WaqtDetailModel {
         }
     }
     
+    enum WaqtType {
+        case waqtOngoing(_ endTime: String)
+        case waqtToStart(_ startingTime: String)
+    }
+    
     struct DateSummary {
         let gregorian: String
         let hijri: String
@@ -57,6 +62,40 @@ struct WaqtDetailModel {
             let monthHijri = dateResponse.hijri.month.en
             
             hijri = "\(dayHijri) \(monthHijri)"
+        }
+    }
+}
+
+extension WaqtDetailModel {
+    static func getCurrentWaqtType(from timings: TimingResponse, currentTime: String) -> WaqtType {
+        let currentTime = currentTime.toDate
+        let imsak = timings.imsak.toDate
+        let fajr = timings.fajr.toDate
+        let sunrise = timings.sunrise.toDate
+        let dhuhr = timings.dhuhr.toDate
+        let asr = timings.asr.toDate
+        let sunset = timings.sunset.toDate
+        let maghrib = timings.maghrib.toDate
+        let isha = timings.isha.toDate
+        
+        if currentTime < imsak {
+            return .waqtOngoing(timings.imsak.subtractMinits(1))
+        } else if currentTime >= imsak, currentTime < fajr {
+            return .waqtToStart(timings.fajr)
+        } else if currentTime >= fajr, currentTime < sunrise {
+            return .waqtOngoing(timings.sunrise.subtractMinits(1))
+        } else if currentTime >= sunrise, currentTime < dhuhr {
+            return .waqtToStart(timings.dhuhr)
+        } else if currentTime >= dhuhr, currentTime < asr {
+            return .waqtOngoing(timings.asr.subtractMinits(1))
+        } else if currentTime >= asr, currentTime < sunset {
+            return .waqtOngoing(timings.sunset.subtractMinits(1))
+        } else if currentTime >= sunset, currentTime < maghrib {
+            return .waqtToStart(timings.maghrib)
+        } else if currentTime >= maghrib, currentTime < isha {
+            return .waqtOngoing(timings.isha.subtractMinits(1))
+        } else {
+            return .waqtOngoing(timings.imsak.subtractMinits(1))
         }
     }
 }

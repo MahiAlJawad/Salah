@@ -61,6 +61,20 @@ struct TimerView: View {
 class WaqtDetailCardModel {
     typealias Model = WaqtDetailModel
     private let dataResponse: DataResponse
+    private var currentDate: Date
+    
+    var currentWaqtType: Model.WaqtType
+    
+    init(dataResponse: DataResponse) {
+        self.dataResponse = dataResponse
+        let date = Date()
+        currentDate = date
+        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: date.time24String)
+    }
+    
+    var currentTimeString: String {
+        currentDate.time24String
+    }
     
     var timingResponse: TimingResponse {
         dataResponse.timings
@@ -76,10 +90,6 @@ class WaqtDetailCardModel {
     
     var dateSummary: Model.DateSummary {
         .init(dataResponse.date)
-    }
-    
-    init(dataResponse: DataResponse) {
-        self.dataResponse = dataResponse
     }
 }
 

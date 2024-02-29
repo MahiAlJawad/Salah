@@ -36,6 +36,19 @@ extension String {
         return dateFormatter.string(from: date)
     }
     
+    // Input: "16:11"
+    // Output: 1 Jan 2000 at 4:11 PM (Date type)
+    var toDate: Date {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        guard let date = dateFormatter.date(from: self) else {
+            assertionFailure("Failed converting to date string")
+            return Date()
+        }
+        return date
+    }
+    
     func addMinits(_ minits: Int) -> Self {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
