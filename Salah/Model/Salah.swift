@@ -30,7 +30,7 @@ extension Salah {
             case .dhuhr: return "sun.max.fill"
             case .asr: return "sun.min.fill"
             case .maghrib: return "sun.dust.fill"
-            case .isha: return "moon.fill"
+            case .isha: return "moon.zzz.fill"
             }
         }
         

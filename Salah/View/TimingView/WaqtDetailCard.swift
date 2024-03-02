@@ -28,11 +28,15 @@ struct GaugeProgressStyle: ProgressViewStyle {
 }
 
 struct TimerView: View {
-    let totalDuration: Double = 3600
-    @State private var progress: Double = 400
-    @State var timer = Timer.publish(every: 1, on: .main, in: .common)
+    @State private var totalDuration: Double = 0
+    @State private var progress: Double = 0
+    @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
-    @State var cancellable: Cancellable?
+    @Binding private var timerEventSubject: PassthroughSubject<WaqtDetailModel.TimerEvent, Never>
+    
+    init(timerEventSubject: Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>) {
+        self._timerEventSubject = timerEventSubject
+    }
     
     var remainingTimeString: String {
         let remainingSeconds = totalDuration - progress
@@ -46,34 +50,64 @@ struct TimerView: View {
                 .progressViewStyle(GaugeProgressStyle())
                 .contentShape(Rectangle())
                 .onReceive(timer) { timer in
-                    print("Timer: \(timer)")
                     if progress >= totalDuration {
-                        cancellable?.cancel()
+                        timerEventSubject.send(.completed)
                         return
                     }
                     progress += 1
+                }
+                .onReceive(timerEventSubject) { event in
+                    print("[TimerView] event: \(event)")
+                    switch event {
+                    case .startTimer(let totalRemainingTime):
+                        totalDuration = totalRemainingTime
+                        progress = 0
+                    default:
+                        break
+                    }
                 }
         }
     }
 }
 
 @Observable
-class WaqtDetailCardModel {
+class WaqtDetailCardViewModel {
     typealias Model = WaqtDetailModel
     private let dataResponse: DataResponse
-    private var currentDate: Date
+    var currentWaqtType: Model.WaqtType = .waqtToStart(.fajr, "00:00")
     
-    var currentWaqtType: Model.WaqtType
+    var timerEventSubject = PassthroughSubject<Model.TimerEvent, Never>()
+    private var cancellable: Cancellable?
     
     init(dataResponse: DataResponse) {
         self.dataResponse = dataResponse
-        let date = Date()
-        currentDate = date
-        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: date.time24String)
+        observeTimerEvents()
     }
     
-    var currentTimeString: String {
-        currentDate.time24String
+    private func observeTimerEvents() {
+        updateCurrentWaqtTimer()
+        cancellable = timerEventSubject.sink { [weak self] event in
+            switch event {
+            case .completed:
+                self?.updateCurrentWaqtTimer()
+            default:
+                break
+            }
+        }
+    }
+    
+    private func updateCurrentWaqtTimer() {
+        let currentTime = Date().time24String
+        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: currentTime)
+        
+        timerEventSubject.send(.startTimer(currentWaqtType.remainingTimeInSeconds(from: currentTime)))
+    }
+    
+    var currentWaqt: Salah.Waqt {
+        switch currentWaqtType {
+        case let .waqtOngoing(waqt, _), let .waqtToStart(waqt, _):
+            return waqt
+        }
     }
     
     var timingResponse: TimingResponse {
@@ -94,9 +128,9 @@ class WaqtDetailCardModel {
 }
 
 struct WaqtDetailCard: View {
-    private var viewModel: WaqtDetailCardModel
+    @State private var viewModel: WaqtDetailCardViewModel
     
-    init(viewModel: WaqtDetailCardModel) {
+    init(viewModel: WaqtDetailCardViewModel) {
         self.viewModel = viewModel
     }
     
@@ -104,13 +138,13 @@ struct WaqtDetailCard: View {
         HStack(alignment: .center) {
             VStack {
                 HStack {
-                    Image(systemName: "sun.horizon.fill")
-                        .foregroundStyle(.red)
-                    Text("Magrib")
+                    Image(systemName: viewModel.currentWaqt.icon)
+                        .foregroundStyle(viewModel.currentWaqt.color)
+                    Text(viewModel.currentWaqt.title)
                 }
                 Text("Ends in")
-                TimerView()
-                    .frame(width: 100, height: 100)
+                TimerView(timerEventSubject: $viewModel.timerEventSubject)
+                .frame(width: 100, height: 100)
             }
             Spacer()
             VStack {

@@ -9,6 +9,11 @@ import Foundation
 import SwiftUI
 
 struct WaqtDetailModel {
+    enum TimerEvent {
+        case startTimer(_ totalRemainingTime: Double)
+        case completed
+    }
+    
     enum SunSchedules {
         case sunrise(String)
         case sunset(String)
@@ -43,8 +48,23 @@ struct WaqtDetailModel {
     }
     
     enum WaqtType {
-        case waqtOngoing(_ endTime: String)
-        case waqtToStart(_ startingTime: String)
+        case waqtOngoing(_ waqt: Salah.Waqt, _ endTime: String)
+        case waqtToStart(_ waqt: Salah.Waqt,_ startingTime: String)
+        
+        func remainingTimeInSeconds(from currentTime: String) -> Double {
+            switch self {
+            case .waqtOngoing(_, let timeToTrack), .waqtToStart(_, let timeToTrack):
+                let currentTime = currentTime.toDate
+                let timeToTrack = timeToTrack.toDate
+                
+                if currentTime > timeToTrack { // Late Isha case
+                    let nextDayTime = timeToTrack.addingTimeInterval(TimeInterval(3600 * 24))
+                    return currentTime.distance(to: nextDayTime)
+                } else {
+                    return currentTime.distance(to: timeToTrack)
+                }
+            }
+        }
     }
     
     struct DateSummary {
@@ -79,23 +99,23 @@ extension WaqtDetailModel {
         let isha = timings.isha.toDate
         
         if currentTime < imsak {
-            return .waqtOngoing(timings.imsak.subtractMinits(1))
+            return .waqtOngoing(.isha, timings.imsak.subtractMinits(1))
         } else if currentTime >= imsak, currentTime < fajr {
-            return .waqtToStart(timings.fajr)
+            return .waqtToStart(.fajr, timings.fajr)
         } else if currentTime >= fajr, currentTime < sunrise {
-            return .waqtOngoing(timings.sunrise.subtractMinits(1))
+            return .waqtOngoing(.fajr, timings.sunrise.subtractMinits(1))
         } else if currentTime >= sunrise, currentTime < dhuhr {
-            return .waqtToStart(timings.dhuhr)
+            return .waqtToStart(.dhuhr, timings.dhuhr)
         } else if currentTime >= dhuhr, currentTime < asr {
-            return .waqtOngoing(timings.asr.subtractMinits(1))
+            return .waqtOngoing(.dhuhr, timings.asr.subtractMinits(1))
         } else if currentTime >= asr, currentTime < sunset {
-            return .waqtOngoing(timings.sunset.subtractMinits(1))
+            return .waqtOngoing(.asr, timings.sunset.subtractMinits(1))
         } else if currentTime >= sunset, currentTime < maghrib {
-            return .waqtToStart(timings.maghrib)
+            return .waqtToStart(.maghrib, timings.maghrib)
         } else if currentTime >= maghrib, currentTime < isha {
-            return .waqtOngoing(timings.isha.subtractMinits(1))
+            return .waqtOngoing(.maghrib, timings.isha.subtractMinits(1))
         } else {
-            return .waqtOngoing(timings.imsak.subtractMinits(1))
+            return .waqtOngoing(.isha, timings.imsak.subtractMinits(1))
         }
     }
 }
