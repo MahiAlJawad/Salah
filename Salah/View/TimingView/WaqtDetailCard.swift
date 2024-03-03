@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct WaqtDetailCard: View {
-    @State private var viewModel: WaqtDetailCardViewModel
+    @Bindable private var viewModel: WaqtDetailCardViewModel
     
     init(viewModel: WaqtDetailCardViewModel) {
         self.viewModel = viewModel

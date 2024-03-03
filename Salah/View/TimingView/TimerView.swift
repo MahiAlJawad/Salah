@@ -67,11 +67,11 @@ struct TimerView: View {
 
 struct GaugeProgressStyle: ProgressViewStyle {
     var remainingStrokeColor: Color {
-        isWaqtOngoing ? .blue : .secondary.opacity(0.5)
+        isWaqtOngoing ? .blue.opacity(0.8) : .secondary.opacity(0.5)
     }
     
     var strokeColor: Color {
-        isWaqtOngoing ? .secondary.opacity(0.5) : .blue
+        isWaqtOngoing ? .secondary.opacity(0.5) : .blue.opacity(0.8)
     }
     
     var strokeWidth = 10.0

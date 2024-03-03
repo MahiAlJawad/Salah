@@ -8,15 +8,13 @@
 import SwiftUI
 
 struct TimingsView: View {
-    @State private var viewModel: TimingsViewModel
+    @Bindable private var viewModel: TimingsViewModel
     @State var selectedCard: Int = 0
     init(viewModel: TimingsViewModel) {
         self.viewModel = viewModel
     }
     
     var body: some View {
-        //Text("16:11".toDate, format: .dateTime)
-
         switch viewModel.dataResponse {
         case .loaded(let data):
             List {
