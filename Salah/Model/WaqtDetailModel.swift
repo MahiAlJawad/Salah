@@ -10,7 +10,7 @@ import SwiftUI
 
 struct WaqtDetailModel {
     enum TimerEvent {
-        case startTimer(_ totalRemainingTime: Double)
+        case startTimer(totalRemainingTime: Double, elapsedTime: Double)
         case completed
     }
     
@@ -48,20 +48,42 @@ struct WaqtDetailModel {
     }
     
     enum WaqtType {
-        case waqtOngoing(_ waqt: Salah.Waqt, _ endTime: String)
-        case waqtToStart(_ waqt: Salah.Waqt,_ startingTime: String)
+        case waqtOngoing(_ waqt: Salah.Waqt, _ startTime: String, _ endTime: String)
+        case waqtToStart(_ waqt: Salah.Waqt, _ startTime: String, _ endTime: String)
         
-        func remainingTimeInSeconds(from currentTime: String) -> Double {
+        var timerIndicatorDescription: String {
             switch self {
-            case .waqtOngoing(_, let timeToTrack), .waqtToStart(_, let timeToTrack):
-                let currentTime = currentTime.toDate
-                let timeToTrack = timeToTrack.toDate
+            case .waqtOngoing: return "Ends in"
+            case .waqtToStart: return "Starts in"
+            }
+        }
+        
+        var totalTimeDurationInSeconds: Double {
+            switch self {
+            case .waqtOngoing(_, let startTime, let endTime), .waqtToStart(_, let startTime, let endTime):
+                let startTime = startTime.toDate
+                let endTime = endTime.toDate
                 
-                if currentTime > timeToTrack { // Late Isha case
-                    let nextDayTime = timeToTrack.addingTimeInterval(TimeInterval(3600 * 24))
-                    return currentTime.distance(to: nextDayTime)
+                if startTime > endTime { // Late Isha case
+                    let nextDayTime = endTime.addingTimeInterval(TimeInterval(3600 * 24))
+                    return startTime.distance(to: nextDayTime)
                 } else {
-                    return currentTime.distance(to: timeToTrack)
+                    return startTime.distance(to: endTime)
+                }
+            }
+        }
+        
+        func elapsedTime(from currentTime: String) -> Double {
+            switch self {
+            case .waqtOngoing(_, let startTime, _), .waqtToStart(_, let startTime, _):
+                let currentTime = currentTime.toDate
+                let startTime = startTime.toDate
+                
+                if currentTime < startTime {
+                    let nextDayTime = currentTime.addingTimeInterval(TimeInterval(3600 * 24))
+                    return startTime.distance(to: nextDayTime)
+                } else {
+                    return startTime.distance(to: currentTime)
                 }
             }
         }
@@ -99,23 +121,23 @@ extension WaqtDetailModel {
         let isha = timings.isha.toDate
         
         if currentTime < imsak {
-            return .waqtOngoing(.isha, timings.imsak.subtractMinits(1))
+            return .waqtOngoing(.isha, timings.isha, timings.imsak)
         } else if currentTime >= imsak, currentTime < fajr {
-            return .waqtToStart(.fajr, timings.fajr)
+            return .waqtToStart(.fajr, timings.imsak, timings.fajr)
         } else if currentTime >= fajr, currentTime < sunrise {
-            return .waqtOngoing(.fajr, timings.sunrise.subtractMinits(1))
+            return .waqtOngoing(.fajr, timings.fajr, timings.sunrise)
         } else if currentTime >= sunrise, currentTime < dhuhr {
-            return .waqtToStart(.dhuhr, timings.dhuhr)
+            return .waqtToStart(.dhuhr, timings.sunrise, timings.dhuhr)
         } else if currentTime >= dhuhr, currentTime < asr {
-            return .waqtOngoing(.dhuhr, timings.asr.subtractMinits(1))
+            return .waqtOngoing(.dhuhr, timings.dhuhr, timings.asr)
         } else if currentTime >= asr, currentTime < sunset {
-            return .waqtOngoing(.asr, timings.sunset.subtractMinits(1))
+            return .waqtOngoing(.asr, timings.asr, timings.sunset)
         } else if currentTime >= sunset, currentTime < maghrib {
-            return .waqtToStart(.maghrib, timings.maghrib)
+            return .waqtToStart(.maghrib, timings.sunset, timings.maghrib)
         } else if currentTime >= maghrib, currentTime < isha {
-            return .waqtOngoing(.maghrib, timings.isha.subtractMinits(1))
+            return .waqtOngoing(.maghrib, timings.maghrib, timings.isha)
         } else {
-            return .waqtOngoing(.isha, timings.imsak.subtractMinits(1))
+            return .waqtOngoing(.isha, timings.isha, timings.imsak)
         }
     }
 }

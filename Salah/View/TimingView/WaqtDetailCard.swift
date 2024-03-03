@@ -15,27 +15,28 @@ struct GaugeProgressStyle: ProgressViewStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         let fractionCompleted = configuration.fractionCompleted ?? 0
-        
         return ZStack {
             Circle()
                 .stroke(remainingStrokeColor, style: StrokeStyle(lineWidth: strokeWidth))
             Circle()
                 .trim(from: 0, to: fractionCompleted)
-                .stroke(strokeColor, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .square))
+                .stroke(strokeColor, style: StrokeStyle(lineWidth: strokeWidth))
                 .rotationEffect(.degrees(-90))
         }
     }
 }
 
 struct TimerView: View {
-    @State private var totalDuration: Double = 0
-    @State private var progress: Double = 0
+    @State private var totalDuration: Double
+    @State private var progress: Double
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @Binding private var timerEventSubject: PassthroughSubject<WaqtDetailModel.TimerEvent, Never>
     
-    init(timerEventSubject: Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>) {
+    init(timerEventSubject: Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>, totalDuration: Double, progress: Double) {
         self._timerEventSubject = timerEventSubject
+        self.totalDuration = totalDuration
+        self.progress = progress
     }
     
     var remainingTimeString: String {
@@ -59,9 +60,9 @@ struct TimerView: View {
                 .onReceive(timerEventSubject) { event in
                     print("[TimerView] event: \(event)")
                     switch event {
-                    case .startTimer(let totalRemainingTime):
+                    case .startTimer(let totalRemainingTime, let elapsedTime):
                         totalDuration = totalRemainingTime
-                        progress = 0
+                        progress = elapsedTime
                     default:
                         break
                     }
@@ -74,14 +75,26 @@ struct TimerView: View {
 class WaqtDetailCardViewModel {
     typealias Model = WaqtDetailModel
     private let dataResponse: DataResponse
-    var currentWaqtType: Model.WaqtType = .waqtToStart(.fajr, "00:00")
+    var currentWaqtType: Model.WaqtType
     
     var timerEventSubject = PassthroughSubject<Model.TimerEvent, Never>()
+    private var currentTimeString: String
     private var cancellable: Cancellable?
     
     init(dataResponse: DataResponse) {
         self.dataResponse = dataResponse
+        let time = Date().time24String
+        currentTimeString = time
+        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: time)
         observeTimerEvents()
+    }
+    
+    var totalWaqtDuration: Double {
+        currentWaqtType.totalTimeDurationInSeconds
+    }
+    
+    var elapsedTime: Double {
+        currentWaqtType.elapsedTime(from: currentTimeString)
     }
     
     private func observeTimerEvents() {
@@ -97,15 +110,20 @@ class WaqtDetailCardViewModel {
     }
     
     private func updateCurrentWaqtTimer() {
-        let currentTime = Date().time24String
-        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: currentTime)
+        currentTimeString = Date().time24String
+        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: currentTimeString)
         
-        timerEventSubject.send(.startTimer(currentWaqtType.remainingTimeInSeconds(from: currentTime)))
+        timerEventSubject.send(
+            .startTimer(
+                totalRemainingTime: currentWaqtType.totalTimeDurationInSeconds,
+                elapsedTime: currentWaqtType.elapsedTime(from: currentTimeString)
+            )
+        )
     }
     
     var currentWaqt: Salah.Waqt {
         switch currentWaqtType {
-        case let .waqtOngoing(waqt, _), let .waqtToStart(waqt, _):
+        case let .waqtOngoing(waqt, _, _), let .waqtToStart(waqt, _, _):
             return waqt
         }
     }
@@ -142,8 +160,12 @@ struct WaqtDetailCard: View {
                         .foregroundStyle(viewModel.currentWaqt.color)
                     Text(viewModel.currentWaqt.title)
                 }
-                Text("Ends in")
-                TimerView(timerEventSubject: $viewModel.timerEventSubject)
+                Text(viewModel.currentWaqtType.timerIndicatorDescription)
+                TimerView(
+                    timerEventSubject: $viewModel.timerEventSubject,
+                    totalDuration: viewModel.totalWaqtDuration,
+                    progress: viewModel.elapsedTime
+                )
                 .frame(width: 100, height: 100)
             }
             Spacer()

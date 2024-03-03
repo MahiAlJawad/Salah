@@ -15,6 +15,8 @@ struct TimingsView: View {
     }
     
     var body: some View {
+        //Text("16:11".toDate, format: .dateTime)
+
         switch viewModel.dataResponse {
         case .loaded(let data):
             List {
@@ -67,6 +69,7 @@ struct TimingsView: View {
                 description: Text("Check your internet connection")
             )
         }
+        
     }
          
 }
