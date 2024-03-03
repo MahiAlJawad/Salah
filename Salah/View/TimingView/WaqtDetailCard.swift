@@ -196,5 +196,5 @@ struct WaqtDetailCard: View {
 
 #Preview {
     WaqtDetailCard(
-        viewModel: .init(dataResponse: .init(timings: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:19", sunset: "17:57", maghrib: "17:57", isha: "19:13"), date: .init(hijri: .init(date: "3-10-1439", day: "12", month: .init(en: "Shaban")), gregorian: .init(date: "8-10-12", day: "25", weekday: .init(en: "Sunday"), month: .init(en: "February"))))))
+        viewModel: .init(dataResponse: .init(timings: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:14", sunset: "17:57", maghrib: "17:57", isha: "19:13"), date: .init(hijri: .init(date: "3-10-1439", day: "12", month: .init(en: "Shaban")), gregorian: .init(date: "8-10-12", day: "25", weekday: .init(en: "Sunday"), month: .init(en: "February"))))))
 }

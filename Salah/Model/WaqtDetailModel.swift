@@ -76,7 +76,7 @@ struct WaqtDetailModel {
         func elapsedTime(from currentTime: String) -> Double {
             switch self {
             case .waqtOngoing(_, let startTime, _), .waqtToStart(_, let startTime, _):
-                let currentTime = currentTime.toDate
+                let currentTime = currentTime.toDateWithSeconds
                 let startTime = startTime.toDate
                 
                 if currentTime < startTime {
@@ -110,7 +110,7 @@ struct WaqtDetailModel {
 
 extension WaqtDetailModel {
     static func getCurrentWaqtType(from timings: TimingResponse, currentTime: String) -> WaqtType {
-        let currentTime = currentTime.toDate
+        let currentTime = currentTime.toDateWithSeconds
         let imsak = timings.imsak.toDate
         let fajr = timings.fajr.toDate
         let sunrise = timings.sunrise.toDate
