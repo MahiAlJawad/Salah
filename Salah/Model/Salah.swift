@@ -51,7 +51,7 @@ struct Salah {
     let startingTime: String
     let endingTime: String
     
-    init(waqt: Waqt, timingData: TimingResponse) {
+    init(waqt: Waqt, timingData: TimingResponse, cautionDelay: CautionDelay) {
         self.waqt = waqt
         
         switch waqt {
@@ -65,7 +65,7 @@ struct Salah {
             startingTime = timingData.asr.time12String
             endingTime = timingData.sunset.subtractMinits(1).time12String
         case .maghrib:
-            startingTime = timingData.maghrib.time12String
+            startingTime = timingData.maghrib.addMinits(cautionDelay.delay).time12String
             endingTime = timingData.isha.subtractMinits(1).time12String
         case .isha:
             startingTime = timingData.isha.time12String

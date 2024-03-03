@@ -8,143 +8,6 @@
 import SwiftUI
 import Combine
 
-struct GaugeProgressStyle: ProgressViewStyle {
-    var remainingStrokeColor = Color.secondary.opacity(0.5)
-    var strokeColor = Color.blue
-    var strokeWidth = 10.0
-
-    func makeBody(configuration: Configuration) -> some View {
-        let fractionCompleted = configuration.fractionCompleted ?? 0
-        return ZStack {
-            Circle()
-                .stroke(remainingStrokeColor, style: StrokeStyle(lineWidth: strokeWidth))
-            Circle()
-                .trim(from: 0, to: fractionCompleted)
-                .stroke(strokeColor, style: StrokeStyle(lineWidth: strokeWidth))
-                .rotationEffect(.degrees(-90))
-        }
-    }
-}
-
-struct TimerView: View {
-    @State private var totalDuration: Double
-    @State private var progress: Double
-    @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
-    @Binding private var timerEventSubject: PassthroughSubject<WaqtDetailModel.TimerEvent, Never>
-    
-    init(timerEventSubject: Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>, totalDuration: Double, progress: Double) {
-        self._timerEventSubject = timerEventSubject
-        self.totalDuration = totalDuration
-        self.progress = progress
-    }
-    
-    var remainingTimeString: String {
-        let remainingSeconds = totalDuration - progress
-        return remainingSeconds.secondsToRemainingTimeString
-    }
-    
-    var body: some View {
-        ZStack {
-            Text(remainingTimeString)
-            ProgressView(value: progress, total: totalDuration)
-                .progressViewStyle(GaugeProgressStyle())
-                .contentShape(Rectangle())
-                .onReceive(timer) { timer in
-                    if progress >= totalDuration {
-                        timerEventSubject.send(.completed)
-                        return
-                    }
-                    progress += 1
-                }
-                .onReceive(timerEventSubject) { event in
-                    print("[TimerView] event: \(event)")
-                    switch event {
-                    case .startTimer(let totalRemainingTime, let elapsedTime):
-                        totalDuration = totalRemainingTime
-                        progress = elapsedTime
-                    default:
-                        break
-                    }
-                }
-        }
-    }
-}
-
-@Observable
-class WaqtDetailCardViewModel {
-    typealias Model = WaqtDetailModel
-    private let dataResponse: DataResponse
-    var currentWaqtType: Model.WaqtType
-    
-    var timerEventSubject = PassthroughSubject<Model.TimerEvent, Never>()
-    private var currentTimeString: String
-    private var cancellable: Cancellable?
-    
-    init(dataResponse: DataResponse) {
-        self.dataResponse = dataResponse
-        let time = Date().time24String
-        currentTimeString = time
-        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: time)
-        observeTimerEvents()
-    }
-    
-    var totalWaqtDuration: Double {
-        currentWaqtType.totalTimeDurationInSeconds
-    }
-    
-    var elapsedTime: Double {
-        currentWaqtType.elapsedTime(from: currentTimeString)
-    }
-    
-    private func observeTimerEvents() {
-        updateCurrentWaqtTimer()
-        cancellable = timerEventSubject.sink { [weak self] event in
-            switch event {
-            case .completed:
-                self?.updateCurrentWaqtTimer()
-            default:
-                break
-            }
-        }
-    }
-    
-    private func updateCurrentWaqtTimer() {
-        currentTimeString = Date().time24String
-        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: currentTimeString)
-        
-        timerEventSubject.send(
-            .startTimer(
-                totalRemainingTime: currentWaqtType.totalTimeDurationInSeconds,
-                elapsedTime: currentWaqtType.elapsedTime(from: currentTimeString)
-            )
-        )
-    }
-    
-    var currentWaqt: Salah.Waqt {
-        switch currentWaqtType {
-        case let .waqtOngoing(waqt, _, _), let .waqtToStart(waqt, _, _):
-            return waqt
-        }
-    }
-    
-    var timingResponse: TimingResponse {
-        dataResponse.timings
-    }
-    
-    var sunriseSchedule: Model.SunSchedules {
-        .sunrise(timingResponse.sunrise)
-    }
-    
-    var sunsetSchedule: Model.SunSchedules {
-        .sunset(timingResponse.sunset)
-    }
-    
-    var dateSummary: Model.DateSummary {
-        .init(dataResponse.date)
-    }
-}
-
 struct WaqtDetailCard: View {
     @State private var viewModel: WaqtDetailCardViewModel
     
@@ -155,16 +18,13 @@ struct WaqtDetailCard: View {
     var body: some View {
         HStack(alignment: .center) {
             VStack {
-                HStack {
-                    Image(systemName: viewModel.currentWaqt.icon)
-                        .foregroundStyle(viewModel.currentWaqt.color)
-                    Text(viewModel.currentWaqt.title)
-                }
+                Text(viewModel.currentWaqt.title)
                 Text(viewModel.currentWaqtType.timerIndicatorDescription)
                 TimerView(
                     timerEventSubject: $viewModel.timerEventSubject,
                     totalDuration: viewModel.totalWaqtDuration,
-                    progress: viewModel.elapsedTime
+                    progress: viewModel.elapsedTime, 
+                    isWaqtOngoing: viewModel.isWaqtOngoing
                 )
                 .frame(width: 100, height: 100)
             }
@@ -196,5 +56,5 @@ struct WaqtDetailCard: View {
 
 #Preview {
     WaqtDetailCard(
-        viewModel: .init(dataResponse: .init(timings: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:14", sunset: "17:57", maghrib: "17:57", isha: "19:13"), date: .init(hijri: .init(date: "3-10-1439", day: "12", month: .init(en: "Shaban")), gregorian: .init(date: "8-10-12", day: "25", weekday: .init(en: "Sunday"), month: .init(en: "February"))))))
+        viewModel: .init(dataResponse: .init(timings: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:14", sunset: "17:30", maghrib: "17:57", isha: "19:13"), date: .init(hijri: .init(date: "3-10-1439", day: "12", month: .init(en: "Shaban")), gregorian: .init(date: "8-10-12", day: "25", weekday: .init(en: "Sunday"), month: .init(en: "February"))))))
 }

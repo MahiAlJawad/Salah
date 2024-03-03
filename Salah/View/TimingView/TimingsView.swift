@@ -37,7 +37,7 @@ struct TimingsView: View {
                 }
                 Section {
                     ForEach(Salah.Waqt.allCases) { waqt in
-                        SalahView(salah: .init(waqt: waqt, timingData: data.timings))
+                        SalahView(salah: .init(waqt: waqt, timingData: data.timings, cautionDelay: .IslamicFoundation))
                     }
                 }
             }

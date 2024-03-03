@@ -16,6 +16,8 @@
 		5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAD2B88A9F0000660EC /* TabBarView.swift */; };
 		5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAF2B88AA8B000660EC /* TabBarModel.swift */; };
 		5A843FB22B88B701000660EC /* TimingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FB12B88B701000660EC /* TimingsView.swift */; };
+		5A8C76452B9497F300A472A7 /* WaqtDetailCardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */; };
+		5A8C76472B94984900A472A7 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C76462B94984900A472A7 /* TimerView.swift */; };
 		5A8CDC562B89DE0800AD0A95 /* SalahView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8CDC552B89DE0800AD0A95 /* SalahView.swift */; };
 		5A8CDC592B8A06F300AD0A95 /* TimingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8CDC582B8A06F300AD0A95 /* TimingsViewModel.swift */; };
 		5A8F54872B87638700ED1BFC /* SalahAPIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8F54862B87638700ED1BFC /* SalahAPIManager.swift */; };
@@ -39,6 +41,8 @@
 		5A843FAD2B88A9F0000660EC /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
 		5A843FAF2B88AA8B000660EC /* TabBarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarModel.swift; sourceTree = "<group>"; };
 		5A843FB12B88B701000660EC /* TimingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingsView.swift; sourceTree = "<group>"; };
+		5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaqtDetailCardViewModel.swift; sourceTree = "<group>"; };
+		5A8C76462B94984900A472A7 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		5A8CDC552B89DE0800AD0A95 /* SalahView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahView.swift; sourceTree = "<group>"; };
 		5A8CDC582B8A06F300AD0A95 /* TimingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingsViewModel.swift; sourceTree = "<group>"; };
 		5A8F54862B87638700ED1BFC /* SalahAPIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahAPIManager.swift; sourceTree = "<group>"; };
@@ -77,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				5A8CDC582B8A06F300AD0A95 /* TimingsViewModel.swift */,
+				5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -87,6 +92,7 @@
 				5A843FB12B88B701000660EC /* TimingsView.swift */,
 				5A8CDC552B89DE0800AD0A95 /* SalahView.swift */,
 				5A76B9242B8B7634003CF702 /* WaqtDetailCard.swift */,
+				5A8C76462B94984900A472A7 /* TimerView.swift */,
 			);
 			path = TimingView;
 			sourceTree = "<group>";
@@ -251,6 +257,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A8C76472B94984900A472A7 /* TimerView.swift in Sources */,
 				5A76B9292B8B86CC003CF702 /* Int+Extension.swift in Sources */,
 				5A832D362B8E483B00C13AC7 /* WaqtDetailModel.swift in Sources */,
 				5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */,
@@ -264,6 +271,7 @@
 				5A8CDC562B89DE0800AD0A95 /* SalahView.swift in Sources */,
 				5A8F548B2B877F5400ED1BFC /* Settings.swift in Sources */,
 				5A8F548D2B878D3000ED1BFC /* Date+Extension.swift in Sources */,
+				5A8C76452B9497F300A472A7 /* WaqtDetailCardViewModel.swift in Sources */,
 				5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */,
 				5A843FB22B88B701000660EC /* TimingsView.swift in Sources */,
 				5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */,

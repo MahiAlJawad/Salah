@@ -10,7 +10,7 @@ import SwiftUI
 
 struct WaqtDetailModel {
     enum TimerEvent {
-        case startTimer(totalRemainingTime: Double, elapsedTime: Double)
+        case startTimer(totalRemainingTime: Double, elapsedTime: Double, isWaqtOngoing: Bool)
         case completed
     }
     
