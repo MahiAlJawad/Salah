@@ -57,6 +57,9 @@ struct TimerView: View {
                         break
                     }
                 }
+                .onAppear {
+                    timerEventSubject.send(.refresh)
+                }
         }
     }
 }

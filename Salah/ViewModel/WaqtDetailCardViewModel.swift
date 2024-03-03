@@ -45,7 +45,7 @@ class WaqtDetailCardViewModel {
         updateCurrentWaqtTimer()
         cancellable = timerEventSubject.sink { [weak self] event in
             switch event {
-            case .completed:
+            case .completed, .refresh:
                 self?.updateCurrentWaqtTimer()
             default:
                 break
