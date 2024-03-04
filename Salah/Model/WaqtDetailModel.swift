@@ -54,8 +54,8 @@ struct WaqtDetailModel {
         
         var timerIndicatorDescription: String {
             switch self {
-            case .waqtOngoing: return "Ends in"
-            case .waqtToStart: return "Starts in"
+            case .waqtOngoing: return "Waqt ends in"
+            case .waqtToStart: return "Waqt starts in"
             }
         }
         

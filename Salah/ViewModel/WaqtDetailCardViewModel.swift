@@ -87,4 +87,8 @@ class WaqtDetailCardViewModel {
     var dateSummary: Model.DateSummary {
         .init(dataResponse.date)
     }
+    
+    var showTimer: Bool {
+        Date().dateString == dataResponse.date.gregorian.date
+    }
 }

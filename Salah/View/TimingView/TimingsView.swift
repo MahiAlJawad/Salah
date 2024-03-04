@@ -9,7 +9,9 @@ import SwiftUI
 
 struct TimingsView: View {
     @Bindable private var viewModel: TimingsViewModel
-    @State var selectedCard: Int = 0
+    @State private var selectedCard: Int = 0
+    @State private var showCalendar: Bool = false
+    
     init(viewModel: TimingsViewModel) {
         self.viewModel = viewModel
     }
@@ -42,8 +44,20 @@ struct TimingsView: View {
             .navigationTitle(TabBarModel.Item.timings.title)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    DatePicker(selection: $viewModel.selectedDate, displayedComponents: [.date]) {
-                        Image(systemName: "calendar")
+                    Button {
+                        showCalendar = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text(viewModel.selectedDate, style: .date)
+                        }
+                    }
+                    .popover(isPresented: $showCalendar) {
+                        DatePicker("Select date", selection: $viewModel.selectedDate, displayedComponents: .date)
+                            .datePickerStyle(.graphical)
+                            .frame(width: 400, height: 400)
+                            .padding([.leading, .trailing])
+                            .presentationDetents([.height(400)])
                     }
                 }
             }
@@ -55,6 +69,7 @@ struct TimingsView: View {
                     await viewModel.loadData()
                 }
             }
+            .onChange(of: viewModel.selectedDate) { showCalendar = false }
         case .loading:
             ProgressView()
                 .task {
@@ -69,5 +84,4 @@ struct TimingsView: View {
         }
         
     }
-         
 }
