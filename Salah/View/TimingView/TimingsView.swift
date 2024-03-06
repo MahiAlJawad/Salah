@@ -55,9 +55,9 @@ struct TimingsView: View {
                     .popover(isPresented: $showCalendar) {
                         DatePicker("Select date", selection: $viewModel.selectedDate, displayedComponents: .date)
                             .datePickerStyle(.graphical)
-                            .frame(width: 400, height: 400)
-                            .padding([.leading, .trailing])
-                            .presentationDetents([.height(400)])
+                            .padding()
+                            .frame(width: 365, height: 365)
+                            .presentationCompactAdaptation(.popover)
                     }
                 }
             }

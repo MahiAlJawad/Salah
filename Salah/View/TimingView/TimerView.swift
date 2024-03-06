@@ -9,12 +9,14 @@ import SwiftUI
 import Combine
 
 struct TimerView: View {
-    @State private var totalDuration: Double
-    @State private var progress: Double
+    @Environment(\.scenePhase) var scenePhase
+    
+    @State private var totalDuration: Double = 0
+    @State private var progress: Double = 0
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @Binding private var timerEventSubject: PassthroughSubject<WaqtDetailModel.TimerEvent, Never>
-    @State private var isWaqtOngoing: Bool
+    @State private var isWaqtOngoing: Bool = false
     
     init(
         timerEventSubject: Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>,
@@ -59,6 +61,11 @@ struct TimerView: View {
                 }
                 .onAppear {
                     timerEventSubject.send(.refresh)
+                }
+                .onChange(of: scenePhase) { oldValue, newValue in
+                    if oldValue != .active, newValue == .active {
+                        timerEventSubject.send(.refresh)
+                    }
                 }
         }
     }
