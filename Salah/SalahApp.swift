@@ -14,6 +14,7 @@ struct SalahApp: App {
     var body: some Scene {
         WindowGroup {
             TabBarView(salahAPIManager: salahAPIManager)
+                .fontDesign(.rounded)
         }
     }
 }

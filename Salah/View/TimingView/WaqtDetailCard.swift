@@ -18,8 +18,10 @@ struct WaqtDetailCard: View {
     var waqtTimerView: some View {
         VStack {
             Text(viewModel.currentWaqt.title)
+                .font(.title2)
                 .fontWeight(.bold)
             Text(viewModel.currentWaqtType.timerIndicatorDescription)
+                .font(.caption)
             TimerView(
                 timerEventSubject: $viewModel.timerEventSubject,
                 totalDuration: viewModel.totalWaqtDuration,
@@ -34,11 +36,13 @@ struct WaqtDetailCard: View {
         VStack {
             VStack {
                 Text(viewModel.dateSummary.gregorian)
+                    .fontWeight(.bold)
                 Text(viewModel.dateSummary.hijri)
+                    .fontWeight(.bold)
             }
             .padding(.init(top: 0, leading: 0, bottom: 10, trailing: 0))
             
-            VStack(alignment: .leading) {
+            VStack {
                 HStack {
                     Image(systemName: viewModel.sunriseSchedule.icon)
                         .foregroundStyle(viewModel.sunriseSchedule.color)

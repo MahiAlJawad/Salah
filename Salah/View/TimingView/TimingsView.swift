@@ -9,9 +9,7 @@ import SwiftUI
 
 struct TimingsView: View {
     @Bindable private var viewModel: TimingsViewModel
-    @State private var selectedCard: Int = 0
-    @State private var showCalendar: Bool = false
-    
+
     init(viewModel: TimingsViewModel) {
         self.viewModel = viewModel
     }
@@ -19,11 +17,16 @@ struct TimingsView: View {
     private func loadedListView(with data: DataResponse) -> some View {
         List {
             Section {
-                TabView(selection: $selectedCard) {
+                TabView(selection: $viewModel.selectedCard) {
                     WaqtDetailCard(viewModel: .init(dataResponse: data))
                         .tag(0)
+                        .scaleEffect(viewModel.waqtDetailCardScaleValue)
+                        .animation(.default, value: viewModel.waqtDetailCardScaleValue)
+                    
                     WaqtDetailCard(viewModel: .init(dataResponse: data))
                         .tag(1)
+                        .scaleEffect(viewModel.fastingCardScaleValue)
+                        .animation(.default, value: viewModel.fastingCardScaleValue)
                 }
                 .tabViewStyle(.page)
                 .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
@@ -50,14 +53,14 @@ struct TimingsView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            showCalendar = true
+                            viewModel.showCalendar = true
                         } label: {
                             HStack {
                                 Image(systemName: "calendar")
                                 Text(viewModel.selectedDate, style: .date)
                             }
                         }
-                        .popover(isPresented: $showCalendar) {
+                        .popover(isPresented: $viewModel.showCalendar) {
                             DatePicker("Select date", selection: $viewModel.selectedDate, displayedComponents: .date)
                                 .datePickerStyle(.graphical)
                                 .padding()
@@ -74,7 +77,7 @@ struct TimingsView: View {
                         await viewModel.loadData()
                     }
                 }
-                .onChange(of: viewModel.selectedDate) { showCalendar = false }
+                .onChange(of: viewModel.selectedDate) { viewModel.showCalendar = false }
         case .loading:
             ProgressView()
                 .task {
