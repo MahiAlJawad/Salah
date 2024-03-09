@@ -19,18 +19,9 @@ struct TabBarView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                TabView {
-                    TimingsView(
-                        viewModel: .init(salahAPIManager: salahAPIManager)
-                    )
-                    .tag(0)
-                    TimingsView(
-                        viewModel: .init(salahAPIManager: salahAPIManager)
-                    )
-                    .tag(1)
-                }
-                .tabViewStyle(.page)
-                .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+                TimingsView(
+                    viewModel: .init(salahAPIManager: salahAPIManager)
+                )
             }
             .tabItem {
                 Label(Tab.timings.title, systemImage: Tab.timings.icon)

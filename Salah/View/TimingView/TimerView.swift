@@ -38,6 +38,7 @@ struct TimerView: View {
     var body: some View {
         ZStack {
             Text(remainingTimeString)
+                .monospacedDigit()
             ProgressView(value: progress, total: totalDuration)
                 .progressViewStyle(GaugeProgressStyle( isWaqtOngoing: $isWaqtOngoing))
                 .contentShape(Rectangle())
