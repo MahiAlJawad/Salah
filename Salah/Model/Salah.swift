@@ -43,6 +43,21 @@ extension Salah {
             case .isha: return .blue
             }
         }
+        
+        var backgroundCanvas: LinearGradient {
+            switch self {
+            case .fajr: 
+                return .init(colors: [.red, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+            case .dhuhr:
+                return .init(colors: [.orange, .yellow, .brown], startPoint: .topLeading, endPoint: .bottomTrailing)
+            case .asr:
+                return .init(colors: [.red, .red.opacity(0.5), .brown], startPoint: .topLeading, endPoint: .bottomTrailing)
+            case .maghrib:
+                return .init(colors: [.red, .purple, .brown], startPoint: .topLeading, endPoint: .bottomTrailing)
+            case .isha:
+                return .init(colors: [.purple, .indigo, .brown], startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+        }
     }
 }
 
