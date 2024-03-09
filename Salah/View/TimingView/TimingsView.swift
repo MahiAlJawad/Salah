@@ -18,12 +18,12 @@ struct TimingsView: View {
         List {
             Section {
                 TabView(selection: $viewModel.selectedCard) {
-                    WaqtDetailCard(viewModel: .init(dataResponse: data))
+                    WaqtDetailCard(viewModel: .init(dataResponse: data, waqtUpdater: viewModel.waqtUpdater))
                         .tag(0)
                         .scaleEffect(viewModel.waqtDetailCardScaleValue)
                         .animation(.default, value: viewModel.waqtDetailCardScaleValue)
                     
-                    WaqtDetailCard(viewModel: .init(dataResponse: data))
+                    WaqtDetailCard(viewModel: .init(dataResponse: data, waqtUpdater: viewModel.waqtUpdater))
                         .tag(1)
                         .scaleEffect(viewModel.fastingCardScaleValue)
                         .animation(.default, value: viewModel.fastingCardScaleValue)
@@ -39,6 +39,7 @@ struct TimingsView: View {
             Section {
                 ForEach(Salah.Waqt.allCases) { waqt in
                     SalahView(salah: .init(waqt: waqt, timingData: data.timings, cautionDelay: .IslamicFoundation))
+                        .listRowBackground(waqt == viewModel.currentWaqt ? Color.green.opacity(0.3) : Color.clear)
                 }
             }
         }

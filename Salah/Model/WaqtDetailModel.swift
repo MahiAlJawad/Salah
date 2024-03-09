@@ -110,7 +110,7 @@ struct WaqtDetailModel {
 }
 
 extension WaqtDetailModel {
-    static func getCurrentWaqtType(from timings: TimingResponse, currentTime: String) -> WaqtType {
+    static func getCurrentWaqtType(from timings: TimingResponse, currentTime: String, cautionDelay: CautionDelay) -> WaqtType {
         let currentTime = currentTime.toDateWithSeconds
         let imsak = timings.imsak.toDate
         let fajr = timings.fajr.toDate
@@ -118,7 +118,7 @@ extension WaqtDetailModel {
         let dhuhr = timings.dhuhr.toDate
         let asr = timings.asr.toDate
         let sunset = timings.sunset.toDate
-        let maghrib = timings.maghrib.toDate
+        let maghrib = timings.maghrib.addMinits(cautionDelay.delay).toDate
         let isha = timings.isha.toDate
         
         if currentTime < imsak {
@@ -134,9 +134,9 @@ extension WaqtDetailModel {
         } else if currentTime >= asr, currentTime < sunset {
             return .waqtOngoing(.asr, timings.asr, timings.sunset)
         } else if currentTime >= sunset, currentTime < maghrib {
-            return .waqtToStart(.maghrib, timings.sunset, timings.maghrib)
+            return .waqtToStart(.maghrib, timings.sunset, timings.maghrib.addMinits(cautionDelay.delay))
         } else if currentTime >= maghrib, currentTime < isha {
-            return .waqtOngoing(.maghrib, timings.maghrib, timings.isha)
+            return .waqtOngoing(.maghrib, timings.maghrib.addMinits(cautionDelay.delay), timings.isha)
         } else {
             return .waqtOngoing(.isha, timings.isha, timings.imsak)
         }

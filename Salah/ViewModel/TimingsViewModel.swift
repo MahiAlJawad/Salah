@@ -5,12 +5,16 @@
 //  Created by Mahi Al Jawad on 24/2/24.
 //
 
-import Foundation
 import SwiftUI
+import Combine
 
 @Observable
 class TimingsViewModel {
     private var salahAPIManager: SalahAPIManager
+    private var cancellable: Cancellable?
+    private(set) var waqtUpdater = PassthroughSubject<Salah.Waqt?, Never>()
+    
+    var currentWaqt: Salah.Waqt?
     var dataResponse: LoadingState<DataResponse> = .loading
     var selectedDate: Date = .now
     
@@ -27,6 +31,15 @@ class TimingsViewModel {
     
     init(salahAPIManager: SalahAPIManager) {
         self.salahAPIManager = salahAPIManager
+        observeWaqtChanges()
+    }
+    
+    func observeWaqtChanges() {
+        cancellable = waqtUpdater
+            .receive(on: RunLoop.main)
+            .map { $0 }
+            .removeDuplicates()
+            .assign(to: \.currentWaqt, on: self)
     }
     
     @MainActor

@@ -12,17 +12,28 @@ import Combine
 class WaqtDetailCardViewModel {
     typealias Model = WaqtDetailModel
     private let dataResponse: DataResponse
-    var currentWaqtType: Model.WaqtType
+    var currentWaqtType: Model.WaqtType {
+        didSet {
+            switch currentWaqtType {
+            case let .waqtOngoing(waqt, _, _):
+                timingsViewWaqtUpdater?.send(waqt)
+            case .waqtToStart(_, _, _):
+                timingsViewWaqtUpdater?.send(nil)
+            }
+        }
+    }
     
     var timerEventSubject = PassthroughSubject<Model.TimerEvent, Never>()
     private var currentTimeString: String
     private var cancellable: Cancellable?
+    private weak var timingsViewWaqtUpdater: PassthroughSubject<Salah.Waqt?, Never>?
     
-    init(dataResponse: DataResponse) {
+    init(dataResponse: DataResponse, waqtUpdater: PassthroughSubject<Salah.Waqt?, Never>) {
         self.dataResponse = dataResponse
         let time = Date().time24String
         currentTimeString = time
-        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: time)
+        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: time, cautionDelay: .IslamicFoundation)
+        timingsViewWaqtUpdater = waqtUpdater
         observeTimerEvents()
     }
     
@@ -55,7 +66,7 @@ class WaqtDetailCardViewModel {
     
     private func updateCurrentWaqtTimer() {
         currentTimeString = Date().time24String
-        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: currentTimeString)
+        currentWaqtType = Model.getCurrentWaqtType(from: dataResponse.timings, currentTime: currentTimeString, cautionDelay: .IslamicFoundation)
         
         timerEventSubject.send(
             .startTimer(
