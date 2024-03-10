@@ -4,11 +4,18 @@
 //
 //  Created by Mahi Al Jawad on 9/3/24.
 //
-/*
 
 import SwiftUI
+import Combine
+
+/*
+@Observable
+final class FastingCardViewModel {
+    var timerEventSubject = PassthroughSubject<Model.TimerEvent, Never>()
+}
 
 struct FastingCard: View {
+    
     var waqtTimerView: some View {
         VStack {
             Text("Sahri")
@@ -16,12 +23,7 @@ struct FastingCard: View {
                 .fontWeight(.bold)
             Text("Time ends in")
                 .font(.caption)
-            TimerView(
-                timerEventSubject: $viewModel.timerEventSubject,
-                totalDuration: viewModel.totalWaqtDuration,
-                progress: viewModel.elapsedTime,
-                isWaqtOngoing: viewModel.isWaqtOngoing
-            )
+            TimerView(timerEventSubject: <#T##Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>#>, totalDuration: <#T##Double#>, progress: <#T##Double#>, isWaqtOngoing: <#T##Bool#>)
             .frame(width: 100, height: 100)
         }
     }
@@ -72,4 +74,5 @@ struct FastingCard: View {
 #Preview {
     FastingCard()
 }
+
 */

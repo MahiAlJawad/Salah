@@ -40,7 +40,7 @@ struct TimerView: View {
             Text(remainingTimeString)
                 .monospacedDigit()
             ProgressView(value: progress, total: totalDuration)
-                .progressViewStyle(GaugeProgressStyle( isWaqtOngoing: $isWaqtOngoing))
+                .progressViewStyle(GaugeProgressStyle(isWaqtOngoing: $isWaqtOngoing))
                 .contentShape(Rectangle())
                 .onReceive(timer) { timer in
                     if progress >= totalDuration {

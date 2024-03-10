@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 @Observable
-class TimingsViewModel {
+final class TimingsViewModel {
     private var salahAPIManager: SalahAPIManager
     private var cancellable: Cancellable?
     private(set) var waqtUpdater = PassthroughSubject<Salah.Waqt?, Never>()

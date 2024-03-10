@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 @Observable
-class WaqtDetailCardViewModel {
+final class WaqtDetailCardViewModel {
     typealias Model = WaqtDetailModel
     private let dataResponse: DataResponse
     var currentWaqtType: Model.WaqtType {
