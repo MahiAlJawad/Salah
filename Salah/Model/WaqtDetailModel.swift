@@ -108,9 +108,7 @@ extension WaqtDetailModel {
         let maghrib = timings.maghrib.addMinits(cautionDelay.delay).toDate
         let isha = timings.isha.toDate
         
-        if currentTime < imsak {
-            return .waqtOngoing(.isha, timings.isha, timings.imsak)
-        } else if currentTime >= imsak, currentTime < fajr {
+        if currentTime >= imsak, currentTime < fajr {
             return .waqtToStart(.fajr, timings.imsak, timings.fajr)
         } else if currentTime >= fajr, currentTime < sunrise {
             return .waqtOngoing(.fajr, timings.fajr, timings.sunrise)

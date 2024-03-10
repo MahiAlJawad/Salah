@@ -23,7 +23,7 @@ struct TimingsView: View {
                         .scaleEffect(viewModel.waqtDetailCardScaleValue)
                         .animation(.default, value: viewModel.waqtDetailCardScaleValue)
                     
-                    WaqtDetailCard(viewModel: .init(dataResponse: data, waqtUpdater: viewModel.waqtUpdater))
+                    FastingCard(viewModel: .init(dataResponse: data))
                         .tag(1)
                         .scaleEffect(viewModel.fastingCardScaleValue)
                         .animation(.default, value: viewModel.fastingCardScaleValue)

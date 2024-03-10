@@ -13,11 +13,13 @@
 		5A78F9C02B8645B8009FE4DA /* APIResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */; };
 		5A78F9C22B8654B2009FE4DA /* Test.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A78F9C12B8654B2009FE4DA /* Test.json */; };
 		5A83221A2B9DA2090083917C /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8322192B9DA2090083917C /* TimerModel.swift */; };
+		5A83221C2B9DA6850083917C /* FastingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A83221B2B9DA6850083917C /* FastingModel.swift */; };
 		5A832D362B8E483B00C13AC7 /* WaqtDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A832D352B8E483B00C13AC7 /* WaqtDetailModel.swift */; };
 		5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAD2B88A9F0000660EC /* TabBarView.swift */; };
 		5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAF2B88AA8B000660EC /* TabBarModel.swift */; };
 		5A843FB22B88B701000660EC /* TimingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FB12B88B701000660EC /* TimingsView.swift */; };
 		5A868ECA2B9CB87300DFC2FA /* FastingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A868EC92B9CB87300DFC2FA /* FastingCard.swift */; };
+		5A8AE2732B9DECAF007A8040 /* FastingCardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8AE2722B9DECAF007A8040 /* FastingCardViewModel.swift */; };
 		5A8C76452B9497F300A472A7 /* WaqtDetailCardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */; };
 		5A8C76472B94984900A472A7 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C76462B94984900A472A7 /* TimerView.swift */; };
 		5A8CDC562B89DE0800AD0A95 /* SalahView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8CDC552B89DE0800AD0A95 /* SalahView.swift */; };
@@ -40,11 +42,13 @@
 		5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponseModel.swift; sourceTree = "<group>"; };
 		5A78F9C12B8654B2009FE4DA /* Test.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Test.json; sourceTree = "<group>"; };
 		5A8322192B9DA2090083917C /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
+		5A83221B2B9DA6850083917C /* FastingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastingModel.swift; sourceTree = "<group>"; };
 		5A832D352B8E483B00C13AC7 /* WaqtDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaqtDetailModel.swift; sourceTree = "<group>"; };
 		5A843FAD2B88A9F0000660EC /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
 		5A843FAF2B88AA8B000660EC /* TabBarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarModel.swift; sourceTree = "<group>"; };
 		5A843FB12B88B701000660EC /* TimingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingsView.swift; sourceTree = "<group>"; };
 		5A868EC92B9CB87300DFC2FA /* FastingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastingCard.swift; sourceTree = "<group>"; };
+		5A8AE2722B9DECAF007A8040 /* FastingCardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastingCardViewModel.swift; sourceTree = "<group>"; };
 		5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaqtDetailCardViewModel.swift; sourceTree = "<group>"; };
 		5A8C76462B94984900A472A7 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		5A8CDC552B89DE0800AD0A95 /* SalahView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahView.swift; sourceTree = "<group>"; };
@@ -86,6 +90,7 @@
 			children = (
 				5A8CDC582B8A06F300AD0A95 /* TimingsViewModel.swift */,
 				5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */,
+				5A8AE2722B9DECAF007A8040 /* FastingCardViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -162,6 +167,7 @@
 				5A8F548A2B877F5400ED1BFC /* Settings.swift */,
 				5AA6AB652B81EA4700E2A7DB /* Salah.swift */,
 				5A832D352B8E483B00C13AC7 /* WaqtDetailModel.swift */,
+				5A83221B2B9DA6850083917C /* FastingModel.swift */,
 				5A843FAF2B88AA8B000660EC /* TabBarModel.swift */,
 				5A8322192B9DA2090083917C /* TimerModel.swift */,
 				5A78F9BF2B8645B8009FE4DA /* APIResponseModel.swift */,
@@ -272,9 +278,11 @@
 				5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */,
 				5A76B9272B8B81F6003CF702 /* Double+Extension.swift in Sources */,
 				5A76B9252B8B7634003CF702 /* WaqtDetailCard.swift in Sources */,
+				5A83221C2B9DA6850083917C /* FastingModel.swift in Sources */,
 				5AA6AB662B81EA4700E2A7DB /* Salah.swift in Sources */,
 				5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */,
 				5A8CDC592B8A06F300AD0A95 /* TimingsViewModel.swift in Sources */,
+				5A8AE2732B9DECAF007A8040 /* FastingCardViewModel.swift in Sources */,
 				5A8F54872B87638700ED1BFC /* SalahAPIManager.swift in Sources */,
 				5A8CDC562B89DE0800AD0A95 /* SalahView.swift in Sources */,
 				5A8F548B2B877F5400ED1BFC /* Settings.swift in Sources */,
@@ -428,7 +436,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = MahiAlJawad.SwiftUI.Salah;
+				PRODUCT_BUNDLE_IDENTIFIER = MahiAlJawad.SalahApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -456,7 +464,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = MahiAlJawad.SwiftUI.Salah;
+				PRODUCT_BUNDLE_IDENTIFIER = MahiAlJawad.SalahApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
