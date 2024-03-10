@@ -33,17 +33,10 @@ struct WaqtDetailModel {
             }
         }
         
-        var color: Color {
-            switch self {
-            case .sunrise: return .orange
-            case .sunset: return .red
-            }
-        }
-        
         var title: String {
             switch self {
-            case .sunrise: return "Sunrise: \(time)"
-            case .sunset: return "Sunset: \(time)"
+            case .sunrise: return "Sunrise    \(time)    "
+            case .sunset: return "Sunset    \(time)    "
             }
         }
     }

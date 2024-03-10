@@ -1,26 +1,20 @@
 //
-//  WaqtDetailCard.swift
+//  FastingCard.swift
 //  Salah
 //
-//  Created by Mahi Al Jawad on 25/2/24.
+//  Created by Mahi Al Jawad on 9/3/24.
 //
+/*
 
 import SwiftUI
-import Combine
 
-struct WaqtDetailCard: View {
-    @Bindable private var viewModel: WaqtDetailCardViewModel
-    
-    init(viewModel: WaqtDetailCardViewModel) {
-        self.viewModel = viewModel
-    }
-    
+struct FastingCard: View {
     var waqtTimerView: some View {
         VStack {
-            Text(viewModel.currentWaqt.title)
+            Text("Sahri")
                 .font(.title2)
                 .fontWeight(.bold)
-            Text(viewModel.currentWaqtType.timerIndicatorDescription)
+            Text("Time ends in")
                 .font(.caption)
             TimerView(
                 timerEventSubject: $viewModel.timerEventSubject,
@@ -35,9 +29,9 @@ struct WaqtDetailCard: View {
     var dayDescriptionView: some View {
         VStack {
             VStack {
-                Text(viewModel.dateSummary.hijri)
-                    .fontWeight(.bold)
                 Text(viewModel.dateSummary.gregorian)
+                    .fontWeight(.bold)
+                Text(viewModel.dateSummary.hijri)
                     .fontWeight(.bold)
             }
             .padding(.init(top: 0, leading: 0, bottom: 10, trailing: 0))
@@ -45,10 +39,12 @@ struct WaqtDetailCard: View {
             VStack {
                 HStack {
                     Image(systemName: viewModel.sunriseSchedule.icon)
+                        .foregroundStyle(viewModel.sunriseSchedule.color)
                     Text(viewModel.sunriseSchedule.title)
                 }
                 HStack {
                     Image(systemName: viewModel.sunsetSchedule.icon)
+                        .foregroundStyle(viewModel.sunsetSchedule.color)
                     Text(viewModel.sunsetSchedule.title)
                 }
             }
@@ -74,6 +70,6 @@ struct WaqtDetailCard: View {
 }
 
 #Preview {
-    WaqtDetailCard(
-        viewModel: .init(dataResponse: .init(timings: .init(imsak: "05:02", fajr: "05:12", sunrise: "06:28", dhuhr: "12:12", asr: "16:14", sunset: "17:30", maghrib: "17:57", isha: "19:13"), date: .init(hijri: .init(date: "3-10-1439", day: "12", month: .init(en: "Shaban")), gregorian: .init(date: "10-03-2024", day: "25", weekday: .init(en: "Sunday"), month: .init(en: "February")))), waqtUpdater: .init()))
+    FastingCard()
 }
+*/

@@ -16,6 +16,7 @@
 		5A843FAE2B88A9F0000660EC /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAD2B88A9F0000660EC /* TabBarView.swift */; };
 		5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FAF2B88AA8B000660EC /* TabBarModel.swift */; };
 		5A843FB22B88B701000660EC /* TimingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A843FB12B88B701000660EC /* TimingsView.swift */; };
+		5A868ECA2B9CB87300DFC2FA /* FastingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A868EC92B9CB87300DFC2FA /* FastingCard.swift */; };
 		5A8C76452B9497F300A472A7 /* WaqtDetailCardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */; };
 		5A8C76472B94984900A472A7 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C76462B94984900A472A7 /* TimerView.swift */; };
 		5A8CDC562B89DE0800AD0A95 /* SalahView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8CDC552B89DE0800AD0A95 /* SalahView.swift */; };
@@ -41,6 +42,7 @@
 		5A843FAD2B88A9F0000660EC /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
 		5A843FAF2B88AA8B000660EC /* TabBarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarModel.swift; sourceTree = "<group>"; };
 		5A843FB12B88B701000660EC /* TimingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingsView.swift; sourceTree = "<group>"; };
+		5A868EC92B9CB87300DFC2FA /* FastingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastingCard.swift; sourceTree = "<group>"; };
 		5A8C76442B9497F300A472A7 /* WaqtDetailCardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaqtDetailCardViewModel.swift; sourceTree = "<group>"; };
 		5A8C76462B94984900A472A7 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		5A8CDC552B89DE0800AD0A95 /* SalahView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahView.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 				5A8CDC552B89DE0800AD0A95 /* SalahView.swift */,
 				5A76B9242B8B7634003CF702 /* WaqtDetailCard.swift */,
 				5A8C76462B94984900A472A7 /* TimerView.swift */,
+				5A868EC92B9CB87300DFC2FA /* FastingCard.swift */,
 			);
 			path = TimingView;
 			sourceTree = "<group>";
@@ -260,6 +263,7 @@
 				5A8C76472B94984900A472A7 /* TimerView.swift in Sources */,
 				5A76B9292B8B86CC003CF702 /* Int+Extension.swift in Sources */,
 				5A832D362B8E483B00C13AC7 /* WaqtDetailModel.swift in Sources */,
+				5A868ECA2B9CB87300DFC2FA /* FastingCard.swift in Sources */,
 				5A843FB02B88AA8B000660EC /* TabBarModel.swift in Sources */,
 				5AA6AB6A2B81FC0F00E2A7DB /* String+Extension.swift in Sources */,
 				5A76B9272B8B81F6003CF702 /* Double+Extension.swift in Sources */,
