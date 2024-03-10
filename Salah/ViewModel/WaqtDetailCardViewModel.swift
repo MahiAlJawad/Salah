@@ -23,7 +23,7 @@ final class WaqtDetailCardViewModel {
         }
     }
     
-    var timerEventSubject = PassthroughSubject<Model.TimerEvent, Never>()
+    var timerEventSubject = PassthroughSubject<TimerModel.TimerEvent, Never>()
     private var currentTimeString: String
     private var cancellable: Cancellable?
     private weak var timingsViewWaqtUpdater: PassthroughSubject<Salah.Waqt?, Never>?

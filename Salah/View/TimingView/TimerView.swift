@@ -15,11 +15,11 @@ struct TimerView: View {
     @State private var progress: Double = 0
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
-    @Binding private var timerEventSubject: PassthroughSubject<WaqtDetailModel.TimerEvent, Never>
+    @Binding private var timerEventSubject: PassthroughSubject<TimerModel.TimerEvent, Never>
     @State private var isWaqtOngoing: Bool = false
     
     init(
-        timerEventSubject: Binding<PassthroughSubject<WaqtDetailModel.TimerEvent, Never>>,
+        timerEventSubject: Binding<PassthroughSubject<TimerModel.TimerEvent, Never>>,
         totalDuration: Double,
         progress: Double,
         isWaqtOngoing: Bool
