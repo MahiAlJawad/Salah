@@ -32,7 +32,7 @@ final class CalendarViewModel {
                 settings: settings.calculation,
                 policy: policy
             )
-            trackerDays = Set((try? tracking.allRecords().filter(\.completed).map(\.localDay)) ?? [])
+            refreshTrackerDays()
             let days = loaded.map(\.value)
             if loaded.contains(where: \.isStale), let timestamp = days.map(\.fetchedAt).max() {
                 state = .offline(days, lastUpdated: timestamp)
@@ -55,6 +55,12 @@ final class CalendarViewModel {
         monthAnchor = LocalDay(year: local.year, month: local.month, day: 1)
         selectedDay = monthAnchor
         anchoredToToday = false
+    }
+
+    /// Re-reads which days have tracked prayers so month dots stay current
+    /// when completions change outside `load()` (e.g. the detail sheet).
+    func refreshTrackerDays() {
+        trackerDays = Set((try? tracking.allRecords().filter(\.completed).map(\.localDay)) ?? [])
     }
 
     /// Rolls selectedDay to the current day if still anchored.
@@ -176,6 +182,7 @@ struct PrayerCalendarView: View {
                                 let current = (try? container.trackingRepository.completedPrayerTypes(on: selected.localDay).contains(prayer)) ?? false
                                 try? container.trackingRepository.setCompleted(!current, prayer: prayer, day: selected.localDay, timeZone: selected.timeZone, source: "calendar")
                                 WidgetDataPublisher.updateCompletion(prayer: prayer, day: selected.localDay, completed: !current)
+                                viewModel.refreshTrackerDays()
                             }
                         }
                     }
