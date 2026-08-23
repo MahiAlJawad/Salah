@@ -149,6 +149,7 @@ struct TrackerView: View {
         .task {
             prepareLocalTrackers()
         }
+        .onAppear { viewModel.refresh() }
         .task(id: PrayerTimesQuery(
             day: viewModel.selectedDay,
             location: container.settings.location,

@@ -82,6 +82,24 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Fajr, completed"].waitForExistence(timeout: 3))
     }
 
+    func testMarkingInTodayUpdatesAlreadyVisitedTrackerTab() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-reset-state", "-reset-tracker", "-onboarding-complete"]
+        app.launch()
+
+        // Visit the Tracker first so its view model snapshots the empty state
+        // instead of being created lazily after the prayer is already marked.
+        app.tabBars.buttons["Tracker"].tap()
+        XCTAssertTrue(app.buttons["Fajr, not completed"].waitForExistence(timeout: 3))
+
+        app.tabBars.buttons["Today"].tap()
+        XCTAssertTrue(app.staticTexts["Prayer Schedule"].waitForExistence(timeout: 4))
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Fajr, starts'")).firstMatch.tap()
+
+        app.tabBars.buttons["Tracker"].tap()
+        XCTAssertTrue(app.buttons["Fajr, completed"].waitForExistence(timeout: 3))
+    }
+
     func testTrackerCompletionControlIsAccessible() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-onboarding-complete"]
