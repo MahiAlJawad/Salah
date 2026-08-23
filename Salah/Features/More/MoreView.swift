@@ -13,8 +13,11 @@ struct MoreView: View {
                 NavigationLink { RemindersView(container: container) } label: {
                     settingsLabel("Prayer Reminders", subtitle: "Optional local notifications", symbol: "bell.fill", tint: .orange)
                 }
-                NavigationLink { LocationCalculationView(container: container) } label: {
-                    settingsLabel("Location & Calculation", subtitle: container.localizedLocationName, symbol: "location.fill", tint: .blue)
+                NavigationLink { LocationView(container: container) } label: {
+                    settingsLabel("Location", subtitle: container.localizedLocationName, symbol: "location.fill", tint: .blue)
+                }
+                NavigationLink { CalculationView(container: container) } label: {
+                    settingsLabel("Calculation", subtitle: container.settings.calculation.method.title, symbol: "function", tint: .green)
                 }
                 NavigationLink { AppearanceView(container: container) } label: {
                     settingsLabel("Appearances & Theme", subtitle: "Display mode and colors", symbol: "paintpalette.fill", tint: palette.accent)
