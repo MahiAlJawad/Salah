@@ -46,7 +46,8 @@
 		FB0000000000000000000009 /* MoreSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000009 /* MoreSupport.swift */; };
 		FB000000000000000000000A /* LanguageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000A /* LanguageSettingsView.swift */; };
 		FB000000000000000000000B /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000B /* RemindersView.swift */; };
-		FB000000000000000000000C /* LocationCalculationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000C /* LocationCalculationView.swift */; };
+		FB0000000000000000000013 /* LocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000013 /* LocationView.swift */; };
+		FB0000000000000000000014 /* CalculationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000014 /* CalculationView.swift */; };
 		FB000000000000000000000D /* AppearanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000D /* AppearanceView.swift */; };
 		FB000000000000000000000E /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000E /* PrivacyView.swift */; };
 		FB000000000000000000000F /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000F /* AboutView.swift */; };
@@ -139,7 +140,8 @@
 		FA0000000000000000000009 /* MoreSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreSupport.swift; sourceTree = "<group>"; };
 		FA000000000000000000000A /* LanguageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSettingsView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000B /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
-		FA000000000000000000000C /* LocationCalculationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCalculationView.swift; sourceTree = "<group>"; };
+		FA0000000000000000000013 /* LocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationView.swift; sourceTree = "<group>"; };
+		FA0000000000000000000014 /* CalculationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculationView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000D /* AppearanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000E /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000F /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
@@ -371,7 +373,8 @@
 				FA000000000000000000000A /* LanguageSettingsView.swift */,
 				FA000000000000000000000B /* RemindersView.swift */,
 				D10000000000000000000011 /* PrayerReminderSettingsView.swift */,
-				FA000000000000000000000C /* LocationCalculationView.swift */,
+				FA0000000000000000000013 /* LocationView.swift */,
+				FA0000000000000000000014 /* CalculationView.swift */,
 				FA000000000000000000000D /* AppearanceView.swift */,
 				FA000000000000000000000E /* PrivacyView.swift */,
 				FA000000000000000000000F /* AboutView.swift */,
@@ -641,7 +644,8 @@
 				FB000000000000000000000A /* LanguageSettingsView.swift in Sources */,
 				FB000000000000000000000B /* RemindersView.swift in Sources */,
 				D20000000000000000000011 /* PrayerReminderSettingsView.swift in Sources */,
-				FB000000000000000000000C /* LocationCalculationView.swift in Sources */,
+				FB0000000000000000000013 /* LocationView.swift in Sources */,
+				FB0000000000000000000014 /* CalculationView.swift in Sources */,
 				FB000000000000000000000D /* AppearanceView.swift in Sources */,
 				FB000000000000000000000E /* PrivacyView.swift in Sources */,
 				FB000000000000000000000F /* AboutView.swift in Sources */,
