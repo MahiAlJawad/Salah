@@ -209,7 +209,7 @@ struct PrayerCalendarView: View {
             ZStack(alignment: .bottom) {
                 Text("\(day.localDay.day)")
                     .font(.body.weight(selected ? .bold : .regular))
-                    .foregroundStyle(selected ? .white : .primary)
+                    .foregroundStyle(selected ? .white : (isFuture ? .secondary : .primary))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(selected ? palette.accent : .clear, in: RoundedRectangle(cornerRadius: 12))
                     .overlay {
@@ -217,12 +217,13 @@ struct PrayerCalendarView: View {
                             RoundedRectangle(cornerRadius: 12).stroke(palette.accent, lineWidth: 2)
                         }
                     }
-                if viewModel.trackerDays.contains(day.localDay) {
+                    .opacity(isFuture ? 0.4 : 1.0)
+                if viewModel.trackerDays.contains(day.localDay), !isFuture {
                     Circle().fill(selected ? .white : palette.accent).frame(width: 5, height: 5).padding(.bottom, 4)
                 }
             }
         }
-        .accessibilityLabel("\(day.gregorianSummary)\(day.localDay == today ? ", today" : "")\(viewModel.trackerDays.contains(day.localDay) ? ", has tracker records" : "")")
+        .accessibilityLabel("\(day.gregorianSummary)\(day.localDay == today ? ", today" : "")\(viewModel.trackerDays.contains(day.localDay) ? ", has tracker records" : "")\(isFuture ? ", future date" : "")")
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
