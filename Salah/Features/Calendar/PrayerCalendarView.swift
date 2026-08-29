@@ -197,9 +197,14 @@ struct PrayerCalendarView: View {
     private func calendarCell(_ day: PrayerDay) -> some View {
         let today = LocalDay(.now, timeZone: day.timeZone)
         let selected = day.localDay == viewModel.selectedDay
+        let isFuture = day.localDay > today
         return Button {
-            viewModel.selectedDay = day.localDay
-            viewModel.anchoredToToday = (day.localDay == today)
+            if isFuture {
+                showingFutureSalahAlert = true
+            } else {
+                viewModel.selectedDay = day.localDay
+                viewModel.anchoredToToday = (day.localDay == today)
+            }
         } label: {
             ZStack(alignment: .bottom) {
                 Text("\(day.localDay.day)")
