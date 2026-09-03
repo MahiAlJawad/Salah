@@ -118,7 +118,7 @@ enum AppTab: Hashable, CaseIterable, Identifiable {
         case .calendar: "calendar"
         case .tracker: "checklist"
         case .qibla: "location.north.circle.fill"
-        case .more: "ellipsis.circle.fill"
+        case .more: "ellipsis.circle"
         }
     }
 }

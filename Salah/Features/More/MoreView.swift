@@ -12,27 +12,25 @@ struct MoreView: View {
             LazyVStack(alignment: .leading, spacing: 22) {
                 titleView
 
-                MoreSectionHeader("Prayer & Reminders", symbol: "bell", tint: .green)
+                MoreSectionHeader("Prayer & Reminders", symbol: "bell")
                 MoreSectionCard {
                     NavigationLink { RemindersView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Prayer Reminders",
                             subtitle: "Timings, alerts & notifications",
-                            symbol: "bell.fill",
-                            tint: .orange
+                            symbol: "bell"
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Location & Calculation", symbol: "location", tint: .green)
+                MoreSectionHeader("Location & Calculation", symbol: "location")
                 MoreSectionCard {
                     NavigationLink { LocationView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Location",
                             subtitle: container.localizedLocationName,
-                            symbol: "location.fill",
-                            tint: .blue
+                            symbol: "location"
                         )
                     }
                     .buttonStyle(.plain)
@@ -43,8 +41,7 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Calculation Method",
                             subtitle: container.settings.calculation.method.title,
-                            symbol: "function",
-                            tint: .green
+                            symbol: "function"
                         )
                     }
                     .buttonStyle(.plain)
@@ -55,21 +52,19 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Adjustments",
                             subtitle: "Manual time adjustments",
-                            symbol: "calendar.badge.clock",
-                            tint: .teal
+                            symbol: "calendar.badge.clock"
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Appearance", symbol: "paintpalette", tint: .indigo)
+                MoreSectionHeader("Appearance", symbol: "paintpalette")
                 MoreSectionCard {
                     NavigationLink { AppearanceView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Display & Theme",
                             subtitle: "Mode, colors & fonts",
-                            symbol: "paintpalette.fill",
-                            tint: palette.accent
+                            symbol: "paintpalette"
                         )
                     }
                     .buttonStyle(.plain)
@@ -80,34 +75,31 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Language",
                             subtitle: container.settings.language.selectorTitle,
-                            symbol: "character.textbox",
-                            tint: .indigo
+                            symbol: "character.textbox"
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Giving & Charity", symbol: "heart", tint: .pink)
+                MoreSectionHeader("Giving & Charity", symbol: "heart")
                 MoreSectionCard {
                     NavigationLink { CharityHistoryView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Sadaqah",
                             subtitle: "A private giving intention",
-                            symbol: "heart.fill",
-                            tint: .pink
+                            symbol: "heart"
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Privacy & Support", symbol: "shield", tint: .blue)
+                MoreSectionHeader("Privacy & Support", symbol: "shield")
                 MoreSectionCard {
                     NavigationLink { PrivacyView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Privacy & Data",
                             subtitle: "Local-first and transparent",
-                            symbol: "lock.shield.fill",
-                            tint: .blue
+                            symbol: "lock.shield"
                         )
                     }
                     .buttonStyle(.plain)
@@ -118,8 +110,7 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "About Salah",
                             subtitle: "Charitable and open source",
-                            symbol: "info.circle.fill",
-                            tint: .purple
+                            symbol: "info.circle"
                         )
                     }
                     .buttonStyle(.plain)
@@ -131,8 +122,7 @@ struct MoreView: View {
                             MoreSettingsRow(
                                 title: "Support & Contact",
                                 subtitle: "Contact the project maintainer",
-                                symbol: "headphones",
-                                tint: .teal
+                                symbol: "headphones"
                             )
                         }
                         .buttonStyle(.plain)
@@ -169,14 +159,13 @@ struct MoreView: View {
 }
 
 private struct MoreSectionHeader: View {
+    @Environment(\.salahPalette) private var palette
     let title: String
     let symbol: String
-    let tint: Color
 
-    init(_ title: String, symbol: String, tint: Color) {
+    init(_ title: String, symbol: String) {
         self.title = title
         self.symbol = symbol
-        self.tint = tint
     }
 
     var body: some View {
@@ -188,7 +177,7 @@ private struct MoreSectionHeader: View {
         } icon: {
             Image(systemName: symbol)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(tint)
+                .foregroundStyle(palette.accent)
                 .frame(width: 28)
         }
         .padding(.horizontal, 6)
@@ -217,18 +206,18 @@ private struct MoreSectionCard<Content: View>: View {
 }
 
 private struct MoreSettingsRow: View {
+    @Environment(\.salahPalette) private var palette
     let title: String
     let subtitle: String
     let symbol: String
-    let tint: Color
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             Image(systemName: symbol)
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 52, height: 52)
-                .background(iconBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .font(.headline)
+                .foregroundStyle(palette.accentForeground)
+                .frame(width: 40, height: 40)
+                .background(palette.accentSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -248,26 +237,19 @@ private struct MoreSettingsRow: View {
                 .foregroundStyle(.tertiary)
                 .accessibilityHidden(true)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.vertical, 8)
+        .frame(minHeight: 64)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-    }
-
-    private var iconBackground: LinearGradient {
-        LinearGradient(
-            colors: [tint.opacity(0.88), tint],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
     }
 }
 
 private struct MoreRowDivider: View {
     var body: some View {
         Divider()
-            .padding(.leading, 88)
-            .padding(.trailing, 24)
+            .padding(.leading, 68)
+            .padding(.trailing, 16)
     }
 }
 
