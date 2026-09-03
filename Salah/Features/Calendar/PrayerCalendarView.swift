@@ -108,6 +108,7 @@ struct PrayerCalendarView: View {
             }
         }
         .navigationTitle("Calendar")
+        .toolbar(.hidden, for: .navigationBar)
         .alert("Future Salah is not trackable", isPresented: $showingFutureSalahAlert) {
             Button("OK", role: .cancel) { }
         }
@@ -129,6 +130,10 @@ struct PrayerCalendarView: View {
     private func calendar(days: [PrayerDay], offline: Date?) -> some View {
         ScrollView {
             LazyVStack(spacing: 16) {
+                Text("Calendar")
+                    .font(.largeTitle.bold())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 if let offline { OfflineBanner(lastUpdated: offline) }
                 HStack {
                     Button { viewModel.moveMonth(-1) } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
@@ -188,7 +193,8 @@ struct PrayerCalendarView: View {
                     }
                 }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.bottom)
         }
         .refreshable { await viewModel.load(policy: .reload) }
         .background(palette.screenBackground)
