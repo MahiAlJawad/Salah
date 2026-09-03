@@ -9,6 +9,13 @@ struct MoreView: View {
 
     var body: some View {
         List {
+            Text("More")
+                .font(.largeTitle.bold())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+
             Section {
                 NavigationLink { RemindersView(container: container) } label: {
                     settingsLabel("Prayer Reminders", subtitle: "Optional local notifications", symbol: "bell.fill", tint: .orange)
@@ -56,6 +63,7 @@ struct MoreView: View {
             }
         }
         .navigationTitle("More")
+        .toolbar(.hidden, for: .navigationBar)
         #if DEBUG
         .sheet(isPresented: $showingDebugDrawer) {
             DebugDrawerView(container: container)

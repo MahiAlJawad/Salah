@@ -120,9 +120,14 @@ struct TrackerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            Text("Tracker")
+                .font(.largeTitle.bold())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.bottom, 14)
+
             trackerSectionPicker
                 .padding(.horizontal)
-                .padding(.top, 8)
 
             if selection == .tasbih {
                 tasbihTracker
@@ -143,6 +148,7 @@ struct TrackerView: View {
         }
         .background(palette.screenBackground.ignoresSafeArea())
         .navigationTitle("Tracker")
+        .toolbar(.hidden, for: .navigationBar)
         .alert("Future Salah is not trackable", isPresented: $showingFutureSalahAlert) {
             Button("OK", role: .cancel) { }
         }

@@ -88,6 +88,10 @@ struct QiblaView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 22) {
+                Text("Qibla")
+                    .font(.largeTitle.bold())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 Label(container.localizedLocationName, systemImage: "location.fill")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -129,10 +133,12 @@ struct QiblaView: View {
                     }
                 }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.bottom)
         }
         .background(palette.screenBackground.ignoresSafeArea())
         .navigationTitle("Qibla")
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear { headingProvider.start() }
         .onDisappear { headingProvider.stop() }
     }
