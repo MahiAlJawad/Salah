@@ -197,27 +197,11 @@ struct TrackerView: View {
 
     @ViewBuilder
     private var prayerTracker: some View {
-        SalahCard(isTransparent: true) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(isToday ? L10n.string("Today’s Salah") : PrayerDateFormatting.fullDate(viewModel.selectedDay, timeZone: container.settings.location.timeZone))
-                        .font(.title3.bold())
-                    Text("Private and stored on this device")
-                        .font(.caption).foregroundStyle(.white.opacity(0.82))
-                }
-                Spacer()
-                Text("\(viewModel.completedCount)/5")
-                    .font(.largeTitle.bold().monospacedDigit())
-            }
-            ProgressView(value: viewModel.progress)
-                .tint(.white)
-                .accessibilityLabel("Daily completion")
-                .accessibilityValue("\(viewModel.completedCount) of 5 prayers completed")
-        }
-        .foregroundStyle(.white)
-        .background(
-            LinearGradient(colors: [palette.heroStart, palette.heroEnd], startPoint: .topLeading, endPoint: .bottomTrailing),
-            in: RoundedRectangle(cornerRadius: 20)
+        TrackerPrayerSummary(
+            viewModel: viewModel,
+            title: isToday
+                ? L10n.string("Today’s Salah")
+                : PrayerDateFormatting.fullDate(viewModel.selectedDay, timeZone: container.settings.location.timeZone)
         )
 
         if let message = viewModel.errorMessage {
@@ -227,7 +211,7 @@ struct TrackerView: View {
 
         VStack(spacing: 10) {
             ForEach(PrayerType.allCases) { prayer in
-                TrackerPrayerRow(prayer: prayer, completed: viewModel.completed.contains(prayer)) {
+                TrackerPrayerRow(prayer: prayer, viewModel: viewModel) {
                     if viewModel.isMidnightToFajrWindow {
                         showingFutureSalahAlert = true
                     } else {
