@@ -75,7 +75,42 @@ struct PrayerScheduleRow: View {
     let isActive: Bool
     let isCompleted: Bool
     var showsDisclosure = true
+    private let trailingContent: (() -> AnyView)?
     @Environment(\.salahPalette) private var palette
+
+    init(
+        window: PrayerWindow,
+        day: PrayerDay,
+        preference: TimeFormatPreference,
+        isActive: Bool,
+        isCompleted: Bool,
+        showsDisclosure: Bool = true
+    ) {
+        self.window = window
+        self.day = day
+        self.preference = preference
+        self.isActive = isActive
+        self.isCompleted = isCompleted
+        self.showsDisclosure = showsDisclosure
+        trailingContent = nil
+    }
+
+    init<Trailing: View>(
+        window: PrayerWindow,
+        day: PrayerDay,
+        preference: TimeFormatPreference,
+        isActive: Bool,
+        showsDisclosure: Bool = false,
+        @ViewBuilder trailing: @escaping () -> Trailing
+    ) {
+        self.window = window
+        self.day = day
+        self.preference = preference
+        self.isActive = isActive
+        isCompleted = false
+        self.showsDisclosure = showsDisclosure
+        trailingContent = { AnyView(trailing()) }
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -96,28 +131,38 @@ struct PrayerScheduleRow: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .layoutPriority(1)
-            if isCompleted {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(palette.accent)
-                    .accessibilityLabel("Completed")
-            } else if !showsDisclosure {
-                Image(systemName: "circle")
-                    .font(.title3)
-                    .foregroundStyle(.tertiary)
-                    .accessibilityLabel("Not completed")
-            }
+
             if showsDisclosure {
+                if isCompleted { completionImage }
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+            } else if let trailingContent {
+                trailingContent()
+            } else {
+                completionImage
             }
         }
         .padding(.horizontal)
         .frame(minHeight: 64)
         .background(isActive ? palette.accentSoft : .clear)
         .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: trailingContent == nil ? .combine : .contain)
         .accessibilityLabel("\(window.prayer.title), starts \(PrayerDateFormatting.time(window.start, preference: preference, timeZone: day.timeZone)), ends \(PrayerDateFormatting.time(window.displayEnd, preference: preference, timeZone: day.timeZone))\(isActive ? ", current prayer" : "")\(isCompleted ? ", completed" : "")")
         .accessibilityHint(L10n.dynamic(showsDisclosure ? "Opens prayer details" : (isCompleted ? "Marks this prayer as not completed" : "Marks this prayer as completed")))
+    }
+
+    @ViewBuilder
+    private var completionImage: some View {
+        if isCompleted {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title3)
+                .foregroundStyle(palette.accent)
+                .accessibilityHidden(true)
+        } else {
+            Image(systemName: "circle")
+                .font(.title3)
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+        }
     }
 
     private var currentBadge: some View {
@@ -135,6 +180,46 @@ struct PrayerScheduleRow: View {
         .foregroundStyle(palette.accent)
         .background(palette.accentSoft, in: Capsule())
         .accessibilityLabel("Current prayer")
+    }
+}
+
+struct PrayerCompletionControl: View {
+    let viewModel: TodayViewModel
+    let prayer: PrayerType
+    let toggle: () -> Void
+    @Environment(\.salahPalette) private var palette
+
+    var body: some View {
+        let isCompleted = viewModel.completed.contains(prayer)
+        Button(action: toggle) {
+            Group {
+                if isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(palette.accent)
+                } else {
+                    Image(systemName: "circle")
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .font(.title3)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+        // Preserve the original 20-point trailing-icon footprint in the row.
+        .padding(.horizontal, -12)
+        .accessibilityLabel(isCompleted ? "Completed" : "Not completed")
+        .accessibilityHint(L10n.dynamic(isCompleted ? "Marks this prayer as not completed" : "Marks this prayer as completed"))
+    }
+}
+
+struct PrayerCompletionSummary: View {
+    let viewModel: TodayViewModel
+
+    var body: some View {
+        Text("\(viewModel.completed.count) of 5 prayed")
+            .font(.caption)
+            .foregroundStyle(.secondary)
     }
 }
 

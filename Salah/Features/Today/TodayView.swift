@@ -226,27 +226,23 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                         .accessibilityLabel("Prayer Schedule")
                     Spacer()
-                    Text("\(viewModel.completed.count) of 5 prayed")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    PrayerCompletionSummary(viewModel: viewModel)
                 }
                 .padding(.horizontal, 4)
 
                 VStack(spacing: 0) {
                     ForEach(day.windows) { window in
-                        Button {
-                            handleScheduleTap(window, day: day)
-                        } label: {
-                            PrayerScheduleRow(
-                                window: window,
-                                day: day,
-                                preference: container.settings.calculation.timeFormat,
-                                isActive: isActive(window, day: day),
-                                isCompleted: viewModel.completed.contains(window.prayer),
-                                showsDisclosure: false
-                            )
+                        PrayerScheduleRow(
+                            window: window,
+                            day: day,
+                            preference: container.settings.calculation.timeFormat,
+                            isActive: isActive(window, day: day),
+                            showsDisclosure: false
+                        ) {
+                            PrayerCompletionControl(viewModel: viewModel, prayer: window.prayer) {
+                                handleScheduleTap(window, day: day)
+                            }
                         }
-                        .buttonStyle(.plain)
                         if window.prayer != .isha { Divider().padding(.leading, 62) }
                     }
                 }
