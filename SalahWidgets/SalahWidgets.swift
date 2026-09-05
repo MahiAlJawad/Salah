@@ -52,6 +52,8 @@ struct SalahWidgetsEntryView : View {
     var body: some View {
         Group {
             switch family {
+            case .accessoryInline:
+                InlineWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(snapshot: entry.snapshot)
             case .systemLarge:
@@ -64,6 +66,66 @@ struct SalahWidgetsEntryView : View {
         .containerBackground(for: .widget) {
             WidgetTheme.background
         }
+    }
+}
+
+private struct InlineWidgetView: View {
+    let snapshot: WidgetSnapshot?
+
+    var body: some View {
+        if let prayer = snapshot?.currentPrayer {
+            InlinePrayerContent(
+                prayer: prayer,
+                status: WidgetLocalization.dynamic("Ends"),
+                countdownDate: prayer.end
+            )
+        } else if let prayer = snapshot?.nextPrayer {
+            InlinePrayerContent(
+                prayer: prayer,
+                status: "",
+                countdownDate: prayer.time
+            )
+        } else {
+            Label(
+                WidgetLocalization.dynamic("Open Salah to load prayer times"),
+                systemImage: "moon.stars.fill"
+            )
+        }
+    }
+}
+
+private struct InlinePrayerContent: View {
+    let prayer: WidgetPrayer
+    let status: String
+    let countdownDate: Date
+
+    var body: some View {
+        // Accessory-inline widgets are rendered most reliably as one Text
+        // value. Separate HStack children can be compressed independently by
+        // the Lock Screen host, which previously left only the prayer name.
+        inlineText
+        .font(.caption2)
+        .fontWeight(.semibold)
+        .lineLimit(1)
+        .minimumScaleFactor(0.65)
+        .widgetAccentable()
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var inlineText: Text {
+        Text(Image(systemName: prayer.symbolName))
+            + Text(" \(prayer.name)\(status.isEmpty ? "" : " \(status)") ")
+            + Text(countdownDate, format: .relative(
+                presentation: .numeric,
+                unitsStyle: .abbreviated
+            ))
+    }
+
+    private var accessibilityText: Text {
+        Text("\(prayer.name), \(status), ") + Text(countdownDate, format: .relative(
+            presentation: .numeric,
+            unitsStyle: .wide
+        ))
     }
 }
 
@@ -413,7 +475,9 @@ struct SalahWidgets: Widget {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             SalahWidgetsEntryView(entry: entry)
         }
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .configurationDisplayName("Prayer Times")
+        .description("Shows the current prayer and its remaining time.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryInline])
         .contentMarginsDisabled()
     }
 }
@@ -458,6 +522,12 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
 }
 
 #Preview(as: .systemLarge) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
+}
+
+#Preview(as: .accessoryInline) {
     SalahWidgets()
 } timeline: {
     SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))

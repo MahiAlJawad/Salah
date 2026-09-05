@@ -35,6 +35,9 @@
 		D20000000000000000000013 /* QiblaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000013 /* QiblaView.swift */; };
 		D20000000000000000000014 /* CharityHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* CharityHistoryView.swift */; };
 		D20000000000000000000016 /* TasbihViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* TasbihViews.swift */; };
+		D50000000000000000000001 /* SalahDomainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000001 /* SalahDomainTests.swift */; };
+		D50000000000000000000002 /* SalahUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000002 /* SalahUITests.swift */; };
+		E10000000000000000000001 /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = E30000000000000000000001 /* Adhan */; };
 		FB0000000000000000000001 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* OnboardingFlow.swift */; };
 		FB0000000000000000000002 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000002 /* SharedComponents.swift */; };
 		FB0000000000000000000003 /* LocationEducationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000003 /* LocationEducationView.swift */; };
@@ -46,17 +49,14 @@
 		FB0000000000000000000009 /* MoreSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000009 /* MoreSupport.swift */; };
 		FB000000000000000000000A /* LanguageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000A /* LanguageSettingsView.swift */; };
 		FB000000000000000000000B /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000B /* RemindersView.swift */; };
-		FB0000000000000000000013 /* LocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000013 /* LocationView.swift */; };
-		FB0000000000000000000014 /* CalculationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000014 /* CalculationView.swift */; };
 		FB000000000000000000000D /* AppearanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000D /* AppearanceView.swift */; };
 		FB000000000000000000000E /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000E /* PrivacyView.swift */; };
 		FB000000000000000000000F /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000000000000000000000F /* AboutView.swift */; };
 		FB0000000000000000000010 /* CharityDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000010 /* CharityDomain.swift */; };
 		FB0000000000000000000011 /* TasbihDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000011 /* TasbihDomain.swift */; };
 		FB0000000000000000000012 /* TrackerInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000012 /* TrackerInsights.swift */; };
-		D50000000000000000000001 /* SalahDomainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000001 /* SalahDomainTests.swift */; };
-		D50000000000000000000002 /* SalahUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000002 /* SalahUITests.swift */; };
-		E10000000000000000000001 /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = E30000000000000000000001 /* Adhan */; };
+		FB0000000000000000000013 /* LocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000013 /* LocationView.swift */; };
+		FB0000000000000000000014 /* CalculationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000014 /* CalculationView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -129,6 +129,10 @@
 		D10000000000000000000013 /* QiblaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaView.swift; sourceTree = "<group>"; };
 		D10000000000000000000014 /* CharityHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityHistoryView.swift; sourceTree = "<group>"; };
 		D10000000000000000000016 /* TasbihViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihViews.swift; sourceTree = "<group>"; };
+		D40000000000000000000001 /* SalahDomainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahDomainTests.swift; sourceTree = "<group>"; };
+		D40000000000000000000002 /* SalahUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahUITests.swift; sourceTree = "<group>"; };
+		D40000000000000000000003 /* SalahTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalahTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D40000000000000000000004 /* SalahUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalahUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA0000000000000000000001 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
 		FA0000000000000000000002 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		FA0000000000000000000003 /* LocationEducationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationEducationView.swift; sourceTree = "<group>"; };
@@ -140,18 +144,14 @@
 		FA0000000000000000000009 /* MoreSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreSupport.swift; sourceTree = "<group>"; };
 		FA000000000000000000000A /* LanguageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSettingsView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000B /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
-		FA0000000000000000000013 /* LocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationView.swift; sourceTree = "<group>"; };
-		FA0000000000000000000014 /* CalculationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculationView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000D /* AppearanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000E /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		FA000000000000000000000F /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		FA0000000000000000000010 /* CharityDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityDomain.swift; sourceTree = "<group>"; };
 		FA0000000000000000000011 /* TasbihDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihDomain.swift; sourceTree = "<group>"; };
 		FA0000000000000000000012 /* TrackerInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerInsights.swift; sourceTree = "<group>"; };
-		D40000000000000000000001 /* SalahDomainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahDomainTests.swift; sourceTree = "<group>"; };
-		D40000000000000000000002 /* SalahUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahUITests.swift; sourceTree = "<group>"; };
-		D40000000000000000000003 /* SalahTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalahTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D40000000000000000000004 /* SalahUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalahUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA0000000000000000000013 /* LocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationView.swift; sourceTree = "<group>"; };
+		FA0000000000000000000014 /* CalculationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -316,6 +316,16 @@
 			path = Features;
 			sourceTree = "<group>";
 		};
+		D30000000000000000000006 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D1000000000000000000000B /* Localizable.xcstrings */,
+				D1000000000000000000000C /* PrivacyInfo.xcprivacy */,
+				5A8F54882B87696500ED1BFC /* Location/districts.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		D30000000000000000000007 /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -380,16 +390,6 @@
 				FA000000000000000000000F /* AboutView.swift */,
 			);
 			path = More;
-			sourceTree = "<group>";
-		};
-		D30000000000000000000006 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				D1000000000000000000000B /* Localizable.xcstrings */,
-				D1000000000000000000000C /* PrivacyInfo.xcprivacy */,
-				5A8F54882B87696500ED1BFC /* Location/districts.json */,
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 		D80000000000000000000001 /* SalahTests */ = {
@@ -704,7 +704,7 @@
 				INFOPLIST_FILE = SalahWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SalahWidgets;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -736,7 +736,7 @@
 				INFOPLIST_FILE = SalahWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SalahWidgets;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
