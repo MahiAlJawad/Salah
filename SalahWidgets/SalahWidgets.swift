@@ -418,20 +418,6 @@ struct SalahWidgets: Widget {
     }
 }
 
-extension ConfigurationAppIntent {
-    fileprivate static var smiley: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "😀"
-        return intent
-    }
-
-    fileprivate static var starEyes: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "🤩"
-        return intent
-    }
-}
-
 /// Sample snapshot whose Dhuhr window contains "now", so previews exercise the
 /// current-prayer UI (live countdown to the waqt's end).
 private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
@@ -462,17 +448,17 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
 #Preview(as: .systemSmall) {
     SalahWidgets()
 } timeline: {
-    SimpleEntry(date: .now, configuration: .smiley, snapshot: sampleSnapshot().snapshot(at: .now))
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
 }
 
 #Preview(as: .systemMedium) {
     SalahWidgets()
 } timeline: {
-    SimpleEntry(date: .now, configuration: .smiley, snapshot: sampleSnapshot().snapshot(at: .now))
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
 }
 
 #Preview(as: .systemLarge) {
     SalahWidgets()
 } timeline: {
-    SimpleEntry(date: .now, configuration: .smiley, snapshot: sampleSnapshot().snapshot(at: .now))
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
 }

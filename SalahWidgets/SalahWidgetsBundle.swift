@@ -12,7 +12,5 @@ import SwiftUI
 struct SalahWidgetsBundle: WidgetBundle {
     var body: some Widget {
         SalahWidgets()
-        SalahWidgetsControl()
-        SalahWidgetsLiveActivity()
     }
 }
