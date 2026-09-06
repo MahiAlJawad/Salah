@@ -54,6 +54,10 @@ struct SalahWidgetsEntryView : View {
             switch family {
             case .accessoryInline:
                 InlineWidgetView(snapshot: entry.snapshot)
+            case .accessoryCircular:
+                CircularWidgetView(date: entry.date, snapshot: entry.snapshot)
+            case .accessoryRectangular:
+                RectangularWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(snapshot: entry.snapshot)
             case .systemLarge:
@@ -126,6 +130,200 @@ private struct InlinePrayerContent: View {
             presentation: .numeric,
             unitsStyle: .wide
         ))
+    }
+}
+
+private struct CircularWidgetView: View {
+    let date: Date
+    let snapshot: WidgetSnapshot?
+
+    private var featured: WidgetPrayer? {
+        snapshot?.currentPrayer ?? snapshot?.nextPrayer
+    }
+
+    private var isCurrent: Bool {
+        snapshot?.currentPrayer != nil
+    }
+
+    private var countdownDate: Date? {
+        guard let featured else { return nil }
+        return isCurrent ? featured.end : featured.time
+    }
+
+    private var progress: Double {
+        guard isCurrent, let featured else { return 0 }
+        let duration = featured.end.timeIntervalSince(featured.time)
+        guard duration > 0 else { return 0 }
+        return min(max(date.timeIntervalSince(featured.time) / duration, 0), 1)
+    }
+
+    var body: some View {
+        ZStack {
+            CircularProgressRing(progress: progress)
+
+            if let featured, let countdownDate {
+                VStack(spacing: 0) {
+                    Image(systemName: featured.symbolName)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(WidgetTheme.accent)
+                        .widgetAccentable()
+
+                    Text(featured.name)
+                        .font(.system(size: 13, weight: .medium, design: .serif))
+                        .foregroundStyle(WidgetTheme.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
+
+                    Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundStyle(WidgetTheme.accent)
+                        .lineLimit(1)
+
+                    Text(countdownDate, style: .timer)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(WidgetTheme.primary)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: 52)
+                .offset(y: -3)
+
+                Image(systemName: "bell.fill")
+                    .font(.system(size: 7, weight: .semibold))
+                    .foregroundStyle(WidgetTheme.primary.opacity(0.8))
+                    .offset(y: 24)
+            } else {
+                VStack(spacing: 2) {
+                    Image(systemName: "moon.stars.fill")
+                    Text(WidgetLocalization.dynamic("Open Salah"))
+                        .font(.system(size: 9, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                }
+                .foregroundStyle(WidgetTheme.secondary)
+                .frame(maxWidth: 58)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: Text {
+        guard let featured, let countdownDate else {
+            return Text(WidgetLocalization.dynamic("Open Salah to load prayer times"))
+        }
+        return Text("\(featured.name), ")
+            + Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
+            + Text(", ")
+            + Text(countdownDate, format: .relative(presentation: .numeric, unitsStyle: .wide))
+    }
+}
+
+private struct CircularProgressRing: View {
+    let progress: Double
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(WidgetTheme.primary.opacity(0.28), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(WidgetTheme.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .padding(5)
+        .widgetAccentable()
+    }
+}
+
+private struct RectangularWidgetView: View {
+    let snapshot: WidgetSnapshot?
+
+    private var prayer: WidgetPrayer? {
+        snapshot?.currentPrayer ?? snapshot?.nextPrayer
+    }
+
+    private var isCurrent: Bool {
+        snapshot?.currentPrayer != nil
+    }
+
+    var body: some View {
+        if let snapshot, let prayer {
+            HStack(spacing: 0) {
+                Image(systemName: prayer.symbolName)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(WidgetTheme.accent)
+                    .frame(width: 25)
+                    .widgetAccentable()
+
+                Rectangle()
+                    .fill(WidgetTheme.divider)
+                    .frame(width: 1, height: 30)
+                    .padding(.horizontal, 4)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(prayer.name)
+                        .font(.system(size: 16, weight: .medium, design: .serif))
+                        .foregroundStyle(WidgetTheme.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 3) {
+                        Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
+                        Text(isCurrent ? prayer.end : prayer.time, style: .timer)
+                            .monospacedDigit()
+                    }
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(WidgetTheme.accent)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Rectangle()
+                    .fill(WidgetTheme.divider)
+                    .frame(width: 1, height: 30)
+                    .padding(.horizontal, 4)
+
+                HStack(spacing: 5) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 14, weight: .medium))
+                    Text(WidgetTimeFormatter.time(
+                        isCurrent ? prayer.end : prayer.time,
+                        timezoneIdentifier: snapshot.timeZoneIdentifier
+                    ))
+                    .monospacedDigit()
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(WidgetTheme.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .frame(width: 58)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel(snapshot: snapshot, prayer: prayer))
+        } else {
+            Label(
+                WidgetLocalization.dynamic("Open Salah to load prayer times"),
+                systemImage: "moon.stars.fill"
+            )
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(WidgetTheme.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        }
+    }
+
+    private func accessibilityLabel(snapshot: WidgetSnapshot, prayer: WidgetPrayer) -> Text {
+        let target = isCurrent ? prayer.end : prayer.time
+        return Text("\(prayer.name), ")
+            + Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
+            + Text(", ")
+            + Text(target, format: .relative(presentation: .numeric, unitsStyle: .wide))
+            + Text(", ")
+            + Text(WidgetTimeFormatter.time(target, timezoneIdentifier: snapshot.timeZoneIdentifier))
     }
 }
 
@@ -477,7 +675,14 @@ struct SalahWidgets: Widget {
         }
         .configurationDisplayName("Prayer Times")
         .description("Shows the current prayer and its remaining time.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryInline])
+        .supportedFamilies([
+            .systemSmall,
+            .systemMedium,
+            .systemLarge,
+            .accessoryInline,
+            .accessoryCircular,
+            .accessoryRectangular
+        ])
         .contentMarginsDisabled()
     }
 }
@@ -531,4 +736,53 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
     SalahWidgets()
 } timeline: {
     SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
+}
+
+#Preview(as: .accessoryCircular) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(
+        date: .now,
+        configuration: ConfigurationAppIntent(),
+        snapshot: sampleSnapshot().snapshot(at: .now)
+    )
+}
+
+#Preview("Rectangular current", as: .accessoryRectangular) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(
+        date: .now,
+        configuration: ConfigurationAppIntent(),
+        snapshot: sampleSnapshot().snapshot(at: .now)
+    )
+}
+
+#Preview("Rectangular next", as: .accessoryRectangular) {
+    SalahWidgets()
+} timeline: {
+    let now = Date()
+    let snapshot = sampleSnapshot(now: now)
+    SimpleEntry(
+        date: now,
+        configuration: ConfigurationAppIntent(),
+        snapshot: WidgetSnapshot(
+            updatedAt: snapshot.updatedAt,
+            localDayKey: snapshot.localDayKey,
+            gregorianSummary: snapshot.gregorianSummary,
+            hijriSummary: snapshot.hijriSummary,
+            timeZoneIdentifier: snapshot.timeZoneIdentifier,
+            prayers: snapshot.prayers,
+            currentPrayer: nil,
+            nextPrayer: snapshot.prayers.last,
+            tomorrowFajr: snapshot.tomorrowFajr,
+            nextDay: snapshot.nextDay
+        )
+    )
+}
+
+#Preview("Rectangular empty", as: .accessoryRectangular) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: nil)
 }
