@@ -16,7 +16,7 @@ file_length:
 
 identifier_name:
   min_length:
-    warning: 2
+    warning: 1
   max_length:
     warning: 1000
 
