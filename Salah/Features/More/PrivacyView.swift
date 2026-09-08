@@ -17,7 +17,6 @@ struct PrivacyView: View {
                 privacyRow("Prayer tracking", detail: "Completion records and notes stay in local SwiftData on this device.", symbol: "checkmark.circle.fill")
                 privacyRow("Notifications", detail: "Optional reminders are scheduled locally. No marketing notification service is used.", symbol: "bell.fill")
                 privacyRow("Advertising and analytics", detail: "The app contains no advertising identifier, tracking SDK, or unnecessary analytics.", symbol: "eye.slash.fill")
-                privacyRow("Data sale", detail: "The project does not sell personal data.", symbol: "dollarsign.circle.fill")
             }
             Section {
                 Button("Clear Local Tracker Data", role: .destructive) { showingClearConfirmation = true }
