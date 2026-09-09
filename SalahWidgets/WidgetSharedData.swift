@@ -136,6 +136,36 @@ struct WidgetSnapshot: Codable, Sendable {
     let nextPrayer: WidgetPrayer?
     let tomorrowFajr: WidgetPrayer?
     let nextDay: WidgetDaySchedule?
+    /// Additional locally calculated days. Keeping several days in the App
+    /// Group lets WidgetKit advance predictable prayer transitions without
+    /// requiring the containing app to be opened every day.
+    let futureDays: [WidgetDaySchedule]?
+
+    init(
+        updatedAt: Date,
+        localDayKey: String,
+        gregorianSummary: String,
+        hijriSummary: String,
+        timeZoneIdentifier: String,
+        prayers: [WidgetPrayer],
+        currentPrayer: WidgetPrayer?,
+        nextPrayer: WidgetPrayer?,
+        tomorrowFajr: WidgetPrayer?,
+        nextDay: WidgetDaySchedule?,
+        futureDays: [WidgetDaySchedule]? = nil
+    ) {
+        self.updatedAt = updatedAt
+        self.localDayKey = localDayKey
+        self.gregorianSummary = gregorianSummary
+        self.hijriSummary = hijriSummary
+        self.timeZoneIdentifier = timeZoneIdentifier
+        self.prayers = prayers
+        self.currentPrayer = currentPrayer
+        self.nextPrayer = nextPrayer
+        self.tomorrowFajr = tomorrowFajr
+        self.nextDay = nextDay
+        self.futureDays = futureDays
+    }
 }
 
 extension WidgetSnapshot {
@@ -219,11 +249,20 @@ extension WidgetSnapshot {
         )
     }
 
-    func snapshot(at date: Date) -> WidgetSnapshot {
+    /// Returns a snapshot only when the supplied date is covered by the saved
+    /// schedule. Falling back to an older day's times would be misleading.
+    func snapshot(at date: Date) -> WidgetSnapshot? {
         let dateKey = Self.localDayKey(for: date, timeZoneIdentifier: timeZoneIdentifier)
-        let usesNextDay = nextDay?.localDayKey == dateKey
-        let activePrayers = usesNextDay ? (nextDay?.prayers ?? prayers) : prayers
-        let activeTomorrowFajr = usesNextDay ? nil : tomorrowFajr
+        let schedules = allSchedules
+        guard let activeIndex = schedules.firstIndex(where: { $0.localDayKey == dateKey }) else {
+            return nil
+        }
+
+        let activeSchedule = schedules[activeIndex]
+        let followingSchedule = schedules[safe: activeIndex + 1]
+        let activePrayers = activeSchedule.prayers
+        let activeTomorrowFajr = followingSchedule?.prayers.first { $0.kind == .fajr }
+            ?? (activeIndex == 0 ? tomorrowFajr : nil)
         let moment = Self.moment(
             at: date,
             prayers: activePrayers,
@@ -248,21 +287,32 @@ extension WidgetSnapshot {
 
         return WidgetSnapshot(
             updatedAt: updatedAt,
-            localDayKey: usesNextDay ? (nextDay?.localDayKey ?? localDayKey) : localDayKey,
-            gregorianSummary: usesNextDay ? (nextDay?.gregorianSummary ?? gregorianSummary) : gregorianSummary,
-            hijriSummary: usesNextDay ? (nextDay?.hijriSummary ?? hijriSummary) : hijriSummary,
+            localDayKey: activeSchedule.localDayKey,
+            gregorianSummary: activeSchedule.gregorianSummary,
+            hijriSummary: activeSchedule.hijriSummary,
             timeZoneIdentifier: timeZoneIdentifier,
             prayers: updatedPrayers,
             currentPrayer: current,
             nextPrayer: next,
             tomorrowFajr: activeTomorrowFajr,
-            nextDay: usesNextDay ? nil : nextDay
+            nextDay: followingSchedule,
+            futureDays: Array(schedules.dropFirst(activeIndex + 2))
         )
     }
 
-    func transitionDates(after date: Date, horizon: TimeInterval = 26 * 60 * 60) -> [Date] {
+    /// The next obligatory prayer for the inline Lock Screen widget. This
+    /// intentionally omits optional prayer windows so its purpose is always
+    /// clear at a glance.
+    func nextObligatoryPrayer(after date: Date) -> WidgetPrayer? {
+        let upcoming = prayers
+            .filter { $0.kind.isObligatory && $0.time > date }
+            .min { $0.time < $1.time }
+        return upcoming ?? tomorrowFajr
+    }
+
+    func transitionDates(after date: Date, horizon: TimeInterval = 8 * 24 * 60 * 60) -> [Date] {
         let limit = date.addingTimeInterval(horizon)
-        let schedules = [prayers, nextDay?.prayers].compactMap { $0 }
+        let schedules = allSchedules.map(\.prayers)
         var dates = Set<Date>()
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
@@ -281,11 +331,22 @@ extension WidgetSnapshot {
                 dates.insert(calendar.startOfDay(for: fajr.time))
             }
         }
-        if let tomorrowFajr {
-            dates.insert(calendar.startOfDay(for: tomorrowFajr.time))
-            dates.insert(tomorrowFajr.time)
-        }
         return dates.filter { $0 > date && $0 <= limit }.sorted()
+    }
+
+    private var allSchedules: [WidgetDaySchedule] {
+        let currentDay = WidgetDaySchedule(
+            localDayKey: localDayKey,
+            gregorianSummary: gregorianSummary,
+            hijriSummary: hijriSummary,
+            prayers: prayers
+        )
+        let candidates = [currentDay] + [nextDay].compactMap { $0 } + (futureDays ?? [])
+        var uniqueSchedules: [String: WidgetDaySchedule] = [:]
+        for schedule in candidates {
+            uniqueSchedules[schedule.localDayKey] = schedule
+        }
+        return uniqueSchedules.values.sorted { $0.localDayKey < $1.localDayKey }
     }
 
     private static func windowEnd(
@@ -338,6 +399,12 @@ extension WidgetSnapshot {
         formatter.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
     }
 }
 
