@@ -34,8 +34,13 @@ struct Provider: AppIntentTimelineProvider {
             )
         }
 
-        // Future entries switch the card exactly at prayer and Nafl boundaries.
-        return Timeline(entries: entries, policy: .after(now.addingTimeInterval(6 * 60 * 60)))
+        // The saved multi-day schedule covers every predictable transition.
+        // WidgetKit may render an entry after its requested date, but it can
+        // advance without needing the containing app to be opened each day.
+        let policy: TimelineReloadPolicy = transitionDates.isEmpty
+            ? .after(now.addingTimeInterval(6 * 60 * 60))
+            : .atEnd
+        return Timeline(entries: entries, policy: policy)
     }
 }
 
@@ -52,6 +57,8 @@ struct SalahWidgetsEntryView : View {
     var body: some View {
         Group {
             switch family {
+            case .accessoryInline:
+                InlineWidgetView(date: entry.date, snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(snapshot: entry.snapshot)
             case .systemLarge:
@@ -64,6 +71,36 @@ struct SalahWidgetsEntryView : View {
         .containerBackground(for: .widget) {
             WidgetTheme.background
         }
+    }
+}
+
+private struct InlineWidgetView: View {
+    let date: Date
+    let snapshot: WidgetSnapshot?
+
+    var body: some View {
+        if let snapshot, let prayer = snapshot.nextObligatoryPrayer(after: date) {
+            InlinePrayerTime(
+                prayer: prayer,
+                timeZoneIdentifier: snapshot.timeZoneIdentifier
+            )
+        } else {
+            Text(WidgetLocalization.dynamic("Open Salah to refresh times"))
+        }
+    }
+}
+
+private struct InlinePrayerTime: View {
+    let prayer: WidgetPrayer
+    let timeZoneIdentifier: String
+
+    var body: some View {
+        Text(Image(systemName: prayer.symbolName))
+            + Text(" \(prayer.name) · \(displayTime)")
+    }
+
+    private var displayTime: String {
+        WidgetTimeFormatter.time(prayer.time, timezoneIdentifier: timeZoneIdentifier)
     }
 }
 
@@ -418,7 +455,8 @@ struct SalahWidgets: Widget {
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
-            .systemLarge
+            .systemLarge,
+            .accessoryInline
         ])
         .contentMarginsDisabled()
     }
@@ -428,6 +466,11 @@ struct SalahWidgets: Widget {
 /// current-prayer UI (live countdown to the waqt's end).
 private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
     func minutes(_ value: Double) -> Date { now.addingTimeInterval(value * 60) }
+    let dayFormatter = DateFormatter()
+    dayFormatter.calendar = Calendar(identifier: .gregorian)
+    dayFormatter.locale = Locale(identifier: "en_US_POSIX")
+    dayFormatter.timeZone = .current
+    dayFormatter.dateFormat = "yyyy-MM-dd"
     let prayers = [
         WidgetPrayer(name: "Fajr", time: minutes(-360), end: minutes(-240), symbolName: "moon.stars.fill", completed: true, isNext: false, isCurrent: false),
         WidgetPrayer(name: "Sunrise", time: minutes(-240), end: minutes(-240), symbolName: "sunrise.fill", completed: false, isNext: false, isCurrent: false),
@@ -439,7 +482,7 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
     let tomorrowFajr = WidgetPrayer(name: "Fajr", time: minutes(1440), end: minutes(1560), symbolName: "moon.stars.fill", completed: false, isNext: false, isCurrent: false)
     return WidgetSnapshot(
         updatedAt: now,
-        localDayKey: "sample",
+        localDayKey: dayFormatter.string(from: now),
         gregorianSummary: "Saturday, 9 August",
         hijriSummary: "15 Safar 1448",
         timeZoneIdentifier: TimeZone.current.identifier,
@@ -464,6 +507,12 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
 }
 
 #Preview(as: .systemLarge) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
+}
+
+#Preview(as: .accessoryInline) {
     SalahWidgets()
 } timeline: {
     SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))

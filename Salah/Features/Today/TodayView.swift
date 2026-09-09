@@ -43,16 +43,23 @@ final class TodayViewModel {
                 location: location,
                 policy: .cacheFirst
             )
+            async let future = additionalWidgetDays(
+                after: day,
+                location: location,
+                calculation: calculation
+            )
             let loaded = try await main
             let priorLoaded = await prior
             let tomorrowLoaded = await tomorrow
+            let futureDays = await future
             guard requestID == token else { return }
             previousDay = priorLoaded?.value
             completed = (try? trackingRepository.completedPrayerTypes(on: day)) ?? []
             WidgetDataPublisher.save(
                 prayerDay: loaded.value,
                 completed: completed,
-                nextDay: tomorrowLoaded?.value
+                nextDay: tomorrowLoaded?.value,
+                futureDays: futureDays
             )
             state = loaded.isStale
                 ? .offline(loaded.value, lastUpdated: loaded.value.fetchedAt)
@@ -64,6 +71,27 @@ final class TodayViewModel {
         } catch {
             if requestID == token { state = .failed(.transport(error.localizedDescription)) }
         }
+    }
+
+    /// The widget needs a local schedule beyond tomorrow because WidgetKit may
+    /// not ask the app for fresh data every day. Prayer times are calculated
+    /// on-device, so extending this horizon does not make network requests.
+    private func additionalWidgetDays(
+        after day: LocalDay,
+        location: PrayerLocation,
+        calculation: CalculationSettings
+    ) async -> [PrayerDay] {
+        var days: [PrayerDay] = []
+        for offset in 2...7 {
+            let futureDay = day.adding(days: offset, in: location.timeZone)
+            guard let loaded = try? await repository.day(
+                for: PrayerTimesQuery(day: futureDay, location: location, settings: calculation),
+                location: location,
+                policy: .cacheFirst
+            ) else { continue }
+            days.append(loaded.value)
+        }
+        return days
     }
 
     func toggle(_ prayer: PrayerType, on day: LocalDay, timeZone: TimeZone, source: String = "today") {

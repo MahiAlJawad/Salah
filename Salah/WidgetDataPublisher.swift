@@ -4,7 +4,8 @@ enum WidgetDataPublisher {
     static func save(
         prayerDay: PrayerDay,
         completed: Set<PrayerType>,
-        nextDay: PrayerDay? = nil
+        nextDay: PrayerDay? = nil,
+        futureDays: [PrayerDay] = []
     ) {
         let today = LocalDay(.now, timeZone: prayerDay.timeZone)
         guard prayerDay.localDay == today else { return }
@@ -12,14 +13,20 @@ enum WidgetDataPublisher {
         let now = Date()
 
         let scheduleItems = makeScheduleItems(day: prayerDay, completed: completed)
-        let nextDaySchedule = nextDay.map {
-            WidgetDaySchedule(
-                localDayKey: $0.localDay.key,
-                gregorianSummary: $0.gregorianSummary,
-                hijriSummary: $0.hijriSummary,
-                prayers: makeScheduleItems(day: $0, completed: [])
-            )
-        }
+        let upcomingSchedules = ([nextDay].compactMap { $0 } + futureDays)
+            .filter { $0.localDay > prayerDay.localDay }
+            .reduce(into: [String: WidgetDaySchedule]()) { schedules, day in
+                schedules[day.localDay.key] = WidgetDaySchedule(
+                    localDayKey: day.localDay.key,
+                    gregorianSummary: day.gregorianSummary,
+                    hijriSummary: day.hijriSummary,
+                    prayers: makeScheduleItems(day: day, completed: [])
+                )
+            }
+            .values
+            .sorted { $0.localDayKey < $1.localDayKey }
+        let nextDaySchedule = upcomingSchedules.first
+        let additionalFutureSchedules = Array(upcomingSchedules.dropFirst())
         let tomorrowItem = nextDaySchedule?.prayers.first { $0.kind == .fajr }
 
         let moment = WidgetSnapshot.moment(
@@ -51,7 +58,8 @@ enum WidgetDataPublisher {
             currentPrayer: moment.current,
             nextPrayer: moment.next,
             tomorrowFajr: tomorrowItem,
-            nextDay: nextDaySchedule
+            nextDay: nextDaySchedule,
+            futureDays: additionalFutureSchedules
         )
 
         WidgetDataStore.save(snapshot)
@@ -89,7 +97,8 @@ enum WidgetDataPublisher {
             currentPrayer: updating(snapshot.currentPrayer, prayer: prayer, completed: completed),
             nextPrayer: updating(snapshot.nextPrayer, prayer: prayer, completed: completed),
             tomorrowFajr: snapshot.tomorrowFajr,
-            nextDay: snapshot.nextDay
+            nextDay: snapshot.nextDay,
+            futureDays: snapshot.futureDays
         )
 
         WidgetDataStore.save(updated)

@@ -535,12 +535,51 @@ final class SalahDomainTests: XCTestCase {
         )
         let duringDhuhr = try XCTUnwrap(tomorrow.date(in: zone, hour: 13))
 
-        let updated = snapshot.snapshot(at: duringDhuhr)
+        let updated = try XCTUnwrap(snapshot.snapshot(at: duringDhuhr))
 
         XCTAssertEqual(updated.localDayKey, tomorrow.key)
         XCTAssertEqual(updated.gregorianSummary, "Tuesday, 21 July")
         XCTAssertEqual(updated.currentPrayer?.kind, .dhuhr)
         XCTAssertTrue(updated.prayers.first(where: { $0.kind == .dhuhr })?.isCurrent == true)
+    }
+
+    func testWidgetSnapshotUsesFutureScheduleAndInlineSelectsNextObligatoryPrayer() throws {
+        let tomorrow = day.adding(days: 1, in: zone)
+        let dayAfterTomorrow = tomorrow.adding(days: 1, in: zone)
+        let today = try fixture(day: day)
+        let nextDay = try fixture(day: tomorrow)
+        let futureDay = try fixture(day: dayAfterTomorrow)
+        let snapshot = WidgetSnapshot(
+            updatedAt: .now,
+            localDayKey: today.localDay.key,
+            gregorianSummary: today.gregorianSummary,
+            hijriSummary: today.hijriSummary,
+            timeZoneIdentifier: zone.identifier,
+            prayers: widgetPrayers(from: today),
+            currentPrayer: nil,
+            nextPrayer: nil,
+            tomorrowFajr: widgetPrayers(from: nextDay).first { $0.kind == .fajr },
+            nextDay: WidgetDaySchedule(
+                localDayKey: nextDay.localDay.key,
+                gregorianSummary: nextDay.gregorianSummary,
+                hijriSummary: nextDay.hijriSummary,
+                prayers: widgetPrayers(from: nextDay)
+            ),
+            futureDays: [
+                WidgetDaySchedule(
+                    localDayKey: futureDay.localDay.key,
+                    gregorianSummary: futureDay.gregorianSummary,
+                    hijriSummary: futureDay.hijriSummary,
+                    prayers: widgetPrayers(from: futureDay)
+                )
+            ]
+        )
+        let duringAsr = try XCTUnwrap(dayAfterTomorrow.date(in: zone, hour: 16, minute: 30))
+
+        let updated = try XCTUnwrap(snapshot.snapshot(at: duringAsr))
+
+        XCTAssertEqual(updated.localDayKey, dayAfterTomorrow.key)
+        XCTAssertEqual(updated.nextObligatoryPrayer(after: duringAsr)?.kind, .maghrib)
     }
 
     @MainActor
