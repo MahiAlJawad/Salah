@@ -191,17 +191,17 @@ struct InsightsView: View {
     @Environment(\.salahPalette) private var palette
     @State private var selection = InsightDateSelection()
     @State private var prayerRecords: [PrayerRecordSnapshot] = []
-    @AppStorage(TasbihHistoryLedger.storageKey) private var tasbihHistoryData = Data()
-    @AppStorage(NaflHistoryLedger.storageKey) private var naflHistoryData = Data()
-    @AppStorage(CharityLedger.storageKey) private var charityEntriesData = Data()
+    @State private var tasbihRecords: [TasbihDailyRecord] = []
+    @State private var naflRecords: [NaflDailyRecord] = []
+    @State private var charityEntries: [CharityEntry] = []
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
 
     private var data: InsightsDataSet {
         InsightsDataSet(
             prayerRecords: prayerRecords,
-            tasbihRecords: TasbihHistoryLedger.decode(tasbihHistoryData),
-            naflRecords: NaflHistoryLedger.decode(naflHistoryData),
-            charityEntries: CharityLedger.decode(charityEntriesData),
+            tasbihRecords: tasbihRecords,
+            naflRecords: naflRecords,
+            charityEntries: charityEntries,
             charityGoal: charityGoal,
             currencyCode: CharityCurrency.code(),
             timeZone: container.settings.location.timeZone
@@ -316,6 +316,9 @@ struct InsightsView: View {
 
     private func refresh() {
         prayerRecords = (try? container.trackingRepository.allRecords()) ?? []
+        tasbihRecords = (try? container.trackerHistoryRepository.tasbihRecords()) ?? []
+        naflRecords = (try? container.trackerHistoryRepository.naflRecords()) ?? []
+        charityEntries = (try? container.trackerHistoryRepository.charityEntries()) ?? []
     }
 }
 

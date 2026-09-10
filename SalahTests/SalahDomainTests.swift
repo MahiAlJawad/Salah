@@ -150,6 +150,114 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(try repository.records(on: day).first?.completed, false)
     }
 
+    @MainActor
+    func testSwiftDataTrackerHistoryRepositoryPersistsAndUpdatesEveryHistoryType() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let container = try ModelContainer(
+            for: TasbihHistoryRecord.self,
+            NaflHistoryRecord.self,
+            CharityHistoryRecord.self,
+            configurations: configuration
+        )
+        let repository = SwiftDataTrackerHistoryRepository(container: container)
+
+        try repository.setTasbihCount(3, goal: 33, on: day)
+        try repository.incrementTasbih(goal: 33, on: day)
+        XCTAssertEqual(try repository.tasbihRecords().count, 1)
+        XCTAssertEqual(try repository.tasbihRecord(on: day)?.count, 4)
+
+        try repository.setNaflCompletedMask(0b00001, on: day)
+        try repository.setNaflCompletedMask(0b10101, on: day)
+        XCTAssertEqual(try repository.naflRecords().count, 1)
+        XCTAssertEqual(try repository.naflRecord(on: day)?.completedCount, 3)
+
+        let entry = CharityEntry(amount: 25, date: .now, category: .sadaqah)
+        try repository.addCharityEntry(entry)
+        var updatedEntry = entry
+        updatedEntry.amount = 40
+        try repository.addCharityEntry(updatedEntry)
+        XCTAssertEqual(try repository.charityEntries().count, 1)
+        XCTAssertEqual(try repository.charityEntries().first?.amount, 40)
+
+        try repository.deleteCharityEntries(ids: [entry.id])
+        XCTAssertTrue(try repository.charityEntries().isEmpty)
+    }
+
+    @MainActor
+    func testTrackerHistoryMigrationMovesLegacyJSONOnce() throws {
+        let suiteName = "TrackerHistoryMigrationTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let tasbih = TasbihDailyRecord(day: day, count: 17, goal: 33, updatedAt: .now)
+        let nafl = NaflDailyRecord(day: day, completedMask: 0b00101, updatedAt: .now)
+        let charity = CharityEntry(amount: 75, date: .now, category: .education)
+        defaults.set(TasbihHistoryLedger.encode([tasbih]), forKey: TasbihHistoryLedger.storageKey)
+        defaults.set(NaflHistoryLedger.encode([nafl]), forKey: NaflHistoryLedger.storageKey)
+        defaults.set(CharityLedger.encode([charity]), forKey: CharityLedger.storageKey)
+
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let container = try ModelContainer(
+            for: TasbihHistoryRecord.self,
+            NaflHistoryRecord.self,
+            CharityHistoryRecord.self,
+            configurations: configuration
+        )
+        let repository = SwiftDataTrackerHistoryRepository(container: container)
+
+        try TrackerHistoryMigration.migrateIfNeeded(to: repository, defaults: defaults)
+        try TrackerHistoryMigration.migrateIfNeeded(to: repository, defaults: defaults)
+
+        XCTAssertEqual(try repository.tasbihRecords().map(\.count), [17])
+        XCTAssertEqual(try repository.naflRecords().map(\.completedMask), [0b00101])
+        XCTAssertEqual(try repository.charityEntries().map(\.id), [charity.id])
+        XCTAssertTrue(defaults.bool(forKey: TrackerHistoryMigration.completionKey))
+        XCTAssertNil(defaults.data(forKey: TasbihHistoryLedger.storageKey))
+        XCTAssertNil(defaults.data(forKey: NaflHistoryLedger.storageKey))
+        XCTAssertNil(defaults.data(forKey: CharityLedger.storageKey))
+    }
+
+    @MainActor
+    func testAddingTrackerModelsPreservesExistingPrayerStore() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storeURL = directory.appending(path: "tracker.store")
+
+        try autoreleasepool {
+            let prayerSchema = Schema([PrayerRecord.self])
+            let configuration = ModelConfiguration(
+                schema: prayerSchema,
+                url: storeURL,
+                cloudKitDatabase: .none
+            )
+            let container = try ModelContainer(for: prayerSchema, configurations: [configuration])
+            let repository = SwiftDataPrayerTrackingRepository(container: container)
+            try repository.setCompleted(true, prayer: .fajr, day: day, timeZone: zone, source: "test")
+        }
+
+        try autoreleasepool {
+            let trackerSchema = Schema([
+                PrayerRecord.self,
+                TasbihHistoryRecord.self,
+                NaflHistoryRecord.self,
+                CharityHistoryRecord.self
+            ])
+            let configuration = ModelConfiguration(
+                schema: trackerSchema,
+                url: storeURL,
+                cloudKitDatabase: .none
+            )
+            let container = try ModelContainer(for: trackerSchema, configurations: [configuration])
+            let prayerRepository = SwiftDataPrayerTrackingRepository(container: container)
+            let historyRepository = SwiftDataTrackerHistoryRepository(container: container)
+
+            XCTAssertEqual(try prayerRepository.records(on: day).map(\.prayer), [.fajr])
+            try historyRepository.setTasbihCount(1, goal: 33, on: day)
+            XCTAssertEqual(try historyRepository.tasbihRecord(on: day)?.count, 1)
+        }
+    }
+
     func testStreakAndFirstTrackingDateDenominator() {
         let prior = day.adding(days: -1, in: zone)
         let records = [prior, day].flatMap { date in

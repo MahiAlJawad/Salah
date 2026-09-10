@@ -3,14 +3,13 @@ import SwiftUI
 struct CharityHistoryView: View {
     @Bindable var container: AppContainer
     @Environment(\.salahPalette) private var palette
-    @AppStorage(CharityLedger.storageKey) private var entriesData = Data()
     @AppStorage("salah.deeds.charity-total") private var legacyTotal = 0
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
+    @State private var entries: [CharityEntry] = []
     @State private var showingAddEntry = false
     @State private var showingGoalEditor = false
 
     private var currencyCode: String { CharityCurrency.code() }
-    private var entries: [CharityEntry] { CharityLedger.decode(entriesData).sorted { $0.date > $1.date } }
     private var monthlyTotal: Double {
         CharityLedger.total(entries.filter { $0.currencyCode == currencyCode }, inMonthContaining: .now)
     }
@@ -74,27 +73,28 @@ struct CharityHistoryView: View {
                 charityGoal = $0
             }
         }
-        .task {
-            if CharityLedger.needsCurrencyMigration(entriesData) {
-                entriesData = CharityLedger.encode(entries)
-            }
-        }
+        .task { refresh() }
+        .onAppear { refresh() }
     }
 
     private func addEntry(_ entry: CharityEntry) {
-        var updated = entries
-        updated.append(entry)
-        save(updated)
+        try? container.trackerHistoryRepository.addCharityEntry(entry)
+        refresh()
+        updateLegacyTotal()
     }
 
     private func deleteEntries(at offsets: IndexSet) {
-        var updated = entries
-        updated.remove(atOffsets: offsets)
-        save(updated)
+        let ids = Set(offsets.compactMap { entries.indices.contains($0) ? entries[$0].id : nil })
+        try? container.trackerHistoryRepository.deleteCharityEntries(ids: ids)
+        refresh()
+        updateLegacyTotal()
     }
 
-    private func save(_ entries: [CharityEntry]) {
-        entriesData = CharityLedger.encode(entries)
+    private func refresh() {
+        entries = (try? container.trackerHistoryRepository.charityEntries()) ?? []
+    }
+
+    private func updateLegacyTotal() {
         legacyTotal = Int(
             CharityLedger.total(
                 entries.filter { $0.currencyCode == currencyCode },

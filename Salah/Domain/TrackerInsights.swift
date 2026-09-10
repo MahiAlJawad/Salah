@@ -1,5 +1,28 @@
 import Foundation
 
+@MainActor
+protocol TrackerHistoryRepository: AnyObject {
+    func tasbihRecords() throws -> [TasbihDailyRecord]
+    func tasbihRecord(on day: LocalDay) throws -> TasbihDailyRecord?
+    func setTasbihCount(_ count: Int, goal: Int, on day: LocalDay) throws
+    func incrementTasbih(goal: Int, on day: LocalDay) throws
+
+    func naflRecords() throws -> [NaflDailyRecord]
+    func naflRecord(on day: LocalDay) throws -> NaflDailyRecord?
+    func setNaflCompletedMask(_ mask: Int, on day: LocalDay) throws
+
+    func charityEntries() throws -> [CharityEntry]
+    func addCharityEntry(_ entry: CharityEntry) throws
+    func deleteCharityEntries(ids: Set<UUID>) throws
+
+    func importLegacy(
+        tasbihRecords: [TasbihDailyRecord],
+        naflRecords: [NaflDailyRecord],
+        charityEntries: [CharityEntry]
+    ) throws
+    func clearAll() throws
+}
+
 struct TrackerInsights: Equatable, Sendable {
     var currentStreak: Int
     var bestStreak: Int
