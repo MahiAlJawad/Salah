@@ -17,18 +17,15 @@ struct DebugDrawerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.salahPalette) private var palette
 
-    // Mirror the same AppStorage keys used by TrackerView in TrackerHistory.swift.
+    // Lightweight live-state values remain in AppStorage; histories use SwiftData.
     @AppStorage("salah.deeds.istighfar-count") private var tasbihCount = 0
     @AppStorage("salah.deeds.tasbih-goal") private var tasbihGoal = 0
     @AppStorage("salah.deeds.tasbih-day") private var tasbihDay = ""
-    @AppStorage(TasbihHistoryLedger.storageKey) private var tasbihHistoryData = Data()
     @AppStorage("salah.deeds.good-deeds-mask") private var goodDeedsMask = 0
     @AppStorage("salah.deeds.good-deeds-day")  private var goodDeedsDay = ""
-    @AppStorage(NaflHistoryLedger.storageKey) private var naflHistoryData = Data()
     @AppStorage("salah.deeds.charity-total")   private var charityTotal = 0
     @AppStorage("salah.deeds.charity-goal")    private var charityGoal = 100
     @AppStorage("salah.deeds.charity-month")   private var charityMonth = ""
-    @AppStorage(CharityLedger.storageKey)       private var charityEntriesData = Data()
 
     @State private var seedMessage: String?
     @State private var deleteMessage: String?
@@ -101,6 +98,7 @@ struct DebugDrawerView: View {
     private func seedDummyData() {
         let timeZone = container.settings.location.timeZone
         let today = LocalDay(.now, timeZone: timeZone)
+        try? container.trackerHistoryRepository.clearAll()
 
         // ── Salah: 30 past days, 3–5 random prayers completed each day ──
         let prayers = PrayerType.allCases
@@ -121,24 +119,20 @@ struct DebugDrawerView: View {
         tasbihCount = Int.random(in: 40...99)
         tasbihGoal = 100
         tasbihDay = today.key
-        var tasbihData = Data()
         for offset in 0..<30 {
             let day = today.adding(days: -offset, in: timeZone)
             let count = offset == 0 ? tasbihCount : Int.random(in: 0...180)
-            tasbihData = TasbihHistoryLedger.recording(count: count, goal: 100, on: day, in: tasbihData)
+            try? container.trackerHistoryRepository.setTasbihCount(count, goal: 100, on: day)
         }
-        tasbihHistoryData = tasbihData
 
         // ── Nafl: seed 30 days and mark all five items for today ──
         goodDeedsDay = today.key
         goodDeedsMask = 0b1_1111
-        var naflData = Data()
         for offset in 0..<30 {
             let day = today.adding(days: -offset, in: timeZone)
             let mask = offset == 0 ? goodDeedsMask : Int.random(in: 0...0b1_1111)
-            naflData = NaflHistoryLedger.recording(mask: mask, on: day, in: naflData)
+            try? container.trackerHistoryRepository.setNaflCompletedMask(mask, on: day)
         }
-        naflHistoryData = naflData
 
         // ── Charity: plausible amount for the current month ──
         let components = Calendar.current.dateComponents([.year, .month], from: .now)
@@ -153,7 +147,9 @@ struct DebugDrawerView: View {
                 recipient: ["Local food bank", "Education fund", "Emergency appeal"][index]
             )
         }
-        charityEntriesData = CharityLedger.encode(entries)
+        for entry in entries {
+            try? container.trackerHistoryRepository.addCharityEntry(entry)
+        }
         charityTotal = amounts.reduce(0, +)
 
         seedMessage = "Dummy data seeded for all Deeds sections ✓"
@@ -170,18 +166,16 @@ struct DebugDrawerView: View {
         tasbihCount = 0
         tasbihGoal = 0
         tasbihDay = ""
-        tasbihHistoryData = Data()
 
         // ── Good Deeds ──
         goodDeedsMask = 0
         goodDeedsDay = ""
-        naflHistoryData = Data()
 
         // ── Charity ──
         charityTotal = 0
         charityGoal = 100
         charityMonth = ""
-        charityEntriesData = Data()
+        try? container.trackerHistoryRepository.clearAll()
 
         deleteMessage = "All dummy data deleted ✓"
         seedMessage = nil   // clear any prior seed confirmation

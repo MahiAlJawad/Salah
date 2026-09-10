@@ -33,6 +33,7 @@ struct PrivacyView: View {
         .confirmationDialog("Clear all tracker data?", isPresented: $showingClearConfirmation, titleVisibility: .visible) {
             Button("Clear Tracker Data", role: .destructive) {
                 try? container.trackingRepository.clearAll()
+                try? container.trackerHistoryRepository.clearAll()
                 UserDefaults.standard.set(0, forKey: "salah.deeds.istighfar-count")
                 UserDefaults.standard.set(0, forKey: "salah.deeds.tasbih-goal")
                 UserDefaults.standard.removeObject(forKey: "salah.deeds.tasbih-day")

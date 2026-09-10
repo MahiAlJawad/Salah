@@ -321,6 +321,7 @@ final class AppContainer {
     let locationProvider: any LocationProviding
     let notificationScheduler: any NotificationScheduling
     let trackingRepository: any PrayerTrackingRepository
+    let trackerHistoryRepository: any TrackerHistoryRepository
     let syncCoordinator: any TrackerSyncCoordinating
     let modelContainer: ModelContainer?
     let districts: [District]
@@ -340,7 +341,8 @@ final class AppContainer {
         prayerTimesRepository: (any PrayerTimesRepository)? = nil,
         locationProvider: (any LocationProviding)? = nil,
         notificationScheduler: (any NotificationScheduling)? = nil,
-        trackingRepository: (any PrayerTrackingRepository)? = nil
+        trackingRepository: (any PrayerTrackingRepository)? = nil,
+        trackerHistoryRepository: (any TrackerHistoryRepository)? = nil
     ) {
         let arguments = ProcessInfo.processInfo.arguments
         let isUITesting = arguments.contains("-ui-testing")
@@ -390,18 +392,36 @@ final class AppContainer {
         }
         #endif
 
+        let localConfiguration = ModelConfiguration(cloudKitDatabase: .none)
+        let persistentContainer = try? ModelContainer(
+            for: PrayerRecord.self,
+            TasbihHistoryRecord.self,
+            NaflHistoryRecord.self,
+            CharityHistoryRecord.self,
+            configurations: localConfiguration
+        )
+        modelContainer = persistentContainer
+
         if let trackingRepository {
             self.trackingRepository = trackingRepository
-            modelContainer = nil
-        } else if let container = try? ModelContainer(for: PrayerRecord.self) {
-            modelContainer = container
-            self.trackingRepository = SwiftDataPrayerTrackingRepository(container: container)
+        } else if let persistentContainer {
+            self.trackingRepository = SwiftDataPrayerTrackingRepository(container: persistentContainer)
         } else {
-            modelContainer = nil
             self.trackingRepository = InMemoryPrayerTrackingRepository()
+        }
+
+        if let trackerHistoryRepository {
+            self.trackerHistoryRepository = trackerHistoryRepository
+        } else if let persistentContainer {
+            let repository = SwiftDataTrackerHistoryRepository(container: persistentContainer)
+            self.trackerHistoryRepository = repository
+            try? TrackerHistoryMigration.migrateIfNeeded(to: repository)
+        } else {
+            self.trackerHistoryRepository = InMemoryTrackerHistoryRepository()
         }
         if isUITesting, arguments.contains("-reset-tracker") {
             try? self.trackingRepository.clearAll()
+            try? self.trackerHistoryRepository.clearAll()
             UserDefaults.standard.set(0, forKey: "salah.deeds.istighfar-count")
             UserDefaults.standard.set(0, forKey: "salah.deeds.tasbih-goal")
             UserDefaults.standard.removeObject(forKey: "salah.deeds.tasbih-day")

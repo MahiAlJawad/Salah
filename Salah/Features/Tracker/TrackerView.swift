@@ -101,14 +101,12 @@ struct TrackerView: View {
     @AppStorage("salah.deeds.istighfar-count") private var tasbihCount = 0
     @AppStorage("salah.deeds.tasbih-goal") private var tasbihGoal = 0
     @AppStorage("salah.deeds.tasbih-day") private var tasbihDay = ""
-    @AppStorage(TasbihHistoryLedger.storageKey) private var tasbihHistoryData = Data()
     @AppStorage("salah.deeds.good-deeds-mask") private var goodDeedsMask = 0
     @AppStorage("salah.deeds.good-deeds-day") private var goodDeedsDay = ""
-    @AppStorage(NaflHistoryLedger.storageKey) private var naflHistoryData = Data()
     @AppStorage("salah.deeds.charity-total") private var charityTotal = 0
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
     @AppStorage("salah.deeds.charity-month") private var charityMonth = ""
-    @AppStorage(CharityLedger.storageKey) private var charityEntriesData = Data()
+    @State private var charityEntries: [CharityEntry] = []
     @State private var showingAddCharity = false
     @State private var showingCharityGoal = false
     @State private var showingFutureSalahAlert = false
@@ -152,10 +150,10 @@ struct TrackerView: View {
         .alert("Future Salah is not trackable", isPresented: $showingFutureSalahAlert) {
             Button("OK", role: .cancel) { }
         }
-        .task {
+        .onAppear {
+            viewModel.refresh()
             prepareLocalTrackers()
         }
-        .onAppear { viewModel.refresh() }
         .task(id: PrayerTimesQuery(
             day: viewModel.selectedDay,
             location: container.settings.location,
@@ -172,9 +170,6 @@ struct TrackerView: View {
                 }
                 .accessibilityIdentifier("tracker.insights")
             }
-        }
-        .task {
-            prepareLocalTrackers()
         }
         .task {
             while !Task.isCancelled {
@@ -224,7 +219,7 @@ struct TrackerView: View {
 
     private var tasbihTracker: some View {
         TasbihCounterPad(count: $tasbihCount, goal: $tasbihGoal) {
-            tasbihHistoryData = TasbihHistoryLedger.incrementing(goal: tasbihGoal, on: today, in: tasbihHistoryData)
+            try? container.trackerHistoryRepository.incrementTasbih(goal: tasbihGoal, on: today)
         }
     }
 
@@ -393,20 +388,21 @@ struct TrackerView: View {
         } else {
             goodDeedsMask |= (1 << id)
         }
-        naflHistoryData = NaflHistoryLedger.recording(mask: goodDeedsMask, on: today, in: naflHistoryData)
+        try? container.trackerHistoryRepository.setNaflCompletedMask(goodDeedsMask, on: today)
     }
 
     private func prepareLocalTrackers() {
         if tasbihDay.isEmpty {
             tasbihDay = today.key
-            if tasbihCount > 0, !TasbihHistoryLedger.decode(tasbihHistoryData).contains(where: { $0.day == today }) {
-                tasbihHistoryData = TasbihHistoryLedger.recording(count: tasbihCount, goal: tasbihGoal, on: today, in: tasbihHistoryData)
+            if tasbihCount > 0,
+               (try? container.trackerHistoryRepository.tasbihRecord(on: today)) == nil {
+                try? container.trackerHistoryRepository.setTasbihCount(tasbihCount, goal: tasbihGoal, on: today)
             }
         } else if tasbihDay != today.key {
             if let priorDay = LocalDay(stableKey: tasbihDay),
                tasbihCount > 0,
-               !TasbihHistoryLedger.decode(tasbihHistoryData).contains(where: { $0.day == priorDay }) {
-                tasbihHistoryData = TasbihHistoryLedger.recording(count: tasbihCount, goal: tasbihGoal, on: priorDay, in: tasbihHistoryData)
+               (try? container.trackerHistoryRepository.tasbihRecord(on: priorDay)) == nil {
+                try? container.trackerHistoryRepository.setTasbihCount(tasbihCount, goal: tasbihGoal, on: priorDay)
             }
             tasbihDay = today.key
             tasbihCount = 0
@@ -414,34 +410,29 @@ struct TrackerView: View {
 
         if goodDeedsDay != today.key {
             if let priorDay = LocalDay(stableKey: goodDeedsDay), goodDeedsMask > 0 {
-                naflHistoryData = NaflHistoryLedger.recording(mask: goodDeedsMask, on: priorDay, in: naflHistoryData)
+                try? container.trackerHistoryRepository.setNaflCompletedMask(goodDeedsMask, on: priorDay)
             }
             goodDeedsDay = today.key
             goodDeedsMask = 0
-            naflHistoryData = NaflHistoryLedger.recording(mask: 0, on: today, in: naflHistoryData)
-        } else if !NaflHistoryLedger.decode(naflHistoryData).contains(where: { $0.day == today }) {
-            naflHistoryData = NaflHistoryLedger.recording(mask: goodDeedsMask, on: today, in: naflHistoryData)
+            try? container.trackerHistoryRepository.setNaflCompletedMask(0, on: today)
+        } else if (try? container.trackerHistoryRepository.naflRecord(on: today)) == nil {
+            try? container.trackerHistoryRepository.setNaflCompletedMask(goodDeedsMask, on: today)
         }
         let month = String(format: "%04d-%02d", today.year, today.month)
-        var entries = charityEntries
-        if CharityLedger.needsCurrencyMigration(charityEntriesData) {
-            charityEntriesData = CharityLedger.encode(entries)
-        }
-        if entries.isEmpty, charityMonth == month, charityTotal > 0 {
-            entries = [
-                CharityEntry(
-                    amount: Double(charityTotal),
-                    date: .now,
-                    category: .other,
-                    note: L10n.string("Imported monthly total")
-                )
-            ]
-            charityEntriesData = CharityLedger.encode(entries)
+        refreshCharityEntries()
+        if charityEntries.isEmpty, charityMonth == month, charityTotal > 0 {
+            try? container.trackerHistoryRepository.addCharityEntry(CharityEntry(
+                amount: Double(charityTotal),
+                date: .now,
+                category: .other,
+                note: L10n.string("Imported monthly total")
+            ))
+            refreshCharityEntries()
         }
         charityMonth = month
         charityTotal = Int(
             CharityLedger.total(
-                entries.filter { $0.currencyCode == charityCurrencyCode },
+                charityEntries.filter { $0.currencyCode == charityCurrencyCode },
                 inMonthContaining: .now
             ).rounded()
         )
@@ -449,10 +440,6 @@ struct TrackerView: View {
 
     private var charityCurrencyCode: String {
         CharityCurrency.code()
-    }
-
-    private var charityEntries: [CharityEntry] {
-        CharityLedger.decode(charityEntriesData).sorted { $0.date > $1.date }
     }
 
     private var monthlyCharityEntries: [CharityEntry] {
@@ -485,15 +472,18 @@ struct TrackerView: View {
     }
 
     private func addCharityEntry(_ entry: CharityEntry) {
-        var entries = charityEntries
-        entries.append(entry)
-        charityEntriesData = CharityLedger.encode(entries)
+        try? container.trackerHistoryRepository.addCharityEntry(entry)
+        refreshCharityEntries()
         charityTotal = Int(
             CharityLedger.total(
-                entries.filter { $0.currencyCode == charityCurrencyCode },
+                charityEntries.filter { $0.currencyCode == charityCurrencyCode },
                 inMonthContaining: .now
             ).rounded()
         )
+    }
+
+    private func refreshCharityEntries() {
+        charityEntries = (try? container.trackerHistoryRepository.charityEntries()) ?? []
     }
 
     private var isToday: Bool {
