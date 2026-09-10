@@ -118,11 +118,9 @@ struct TrackerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Tracker")
-                .font(.largeTitle.bold())
-                .frame(maxWidth: .infinity, alignment: .leading)
+            trackerHeader
                 .padding(.horizontal)
-                .padding(.bottom, 14)
+                .padding(.bottom, 16)
 
             trackerSectionPicker
                 .padding(.horizontal)
@@ -162,20 +160,30 @@ struct TrackerView: View {
             await viewModel.loadPrayerDay()
         }
         .task {
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    InsightsView(container: container)
-                } label: {
-                    Label("Insights", systemImage: "chart.bar.xaxis")
-                }
-                .accessibilityIdentifier("tracker.insights")
-            }
-        }
-        .task {
             while !Task.isCancelled {
                 viewModel.syncDayToNow()
                 try? await Task.sleep(for: .seconds(30))
             }
+        }
+    }
+
+    private var trackerHeader: some View {
+        HStack {
+            Text("Tracker")
+                .font(.largeTitle.bold())
+
+            Spacer()
+
+            NavigationLink {
+                InsightsView(container: container)
+            } label: {
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Insights")
+            .accessibilityIdentifier("tracker.insights")
         }
     }
 
