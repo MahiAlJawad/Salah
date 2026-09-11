@@ -651,7 +651,7 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertTrue(updated.prayers.first(where: { $0.kind == .dhuhr })?.isCurrent == true)
     }
 
-    func testWidgetSnapshotUsesFutureScheduleAndInlineSelectsNextObligatoryPrayer() throws {
+    func testWidgetSnapshotUsesFutureScheduleAndInlineSelectsCurrentObligatoryPrayer() throws {
         let tomorrow = day.adding(days: 1, in: zone)
         let dayAfterTomorrow = tomorrow.adding(days: 1, in: zone)
         let today = try fixture(day: day)
@@ -687,7 +687,52 @@ final class SalahDomainTests: XCTestCase {
         let updated = try XCTUnwrap(snapshot.snapshot(at: duringAsr))
 
         XCTAssertEqual(updated.localDayKey, dayAfterTomorrow.key)
-        XCTAssertEqual(updated.nextObligatoryPrayer(after: duringAsr)?.kind, .maghrib)
+        XCTAssertEqual(updated.currentObligatoryPrayer(at: duringAsr)?.kind, .asr)
+        XCTAssertEqual(
+            updated.currentObligatoryPrayer(at: duringAsr)?.end,
+            try XCTUnwrap(dayAfterTomorrow.date(in: zone, hour: 18, minute: 30))
+        )
+    }
+
+    func testInlineWidgetTransitionsOnlyAtObligatoryPrayerStarts() throws {
+        let tomorrow = day.adding(days: 1, in: zone)
+        let today = try fixture(day: day)
+        let nextDay = try fixture(day: tomorrow)
+        let snapshot = WidgetSnapshot(
+            updatedAt: .now,
+            localDayKey: today.localDay.key,
+            gregorianSummary: today.gregorianSummary,
+            hijriSummary: today.hijriSummary,
+            timeZoneIdentifier: zone.identifier,
+            prayers: widgetPrayers(from: today),
+            currentPrayer: nil,
+            nextPrayer: nil,
+            tomorrowFajr: widgetPrayers(from: nextDay).first { $0.kind == .fajr },
+            nextDay: WidgetDaySchedule(
+                localDayKey: nextDay.localDay.key,
+                gregorianSummary: nextDay.gregorianSummary,
+                hijriSummary: nextDay.hijriSummary,
+                prayers: widgetPrayers(from: nextDay)
+            )
+        )
+        let afterFajr = try XCTUnwrap(day.date(in: zone, hour: 6, minute: 30))
+
+        let transitions = snapshot.inlineTransitionDates(after: afterFajr)
+
+        XCTAssertEqual(
+            transitions,
+            [
+                try XCTUnwrap(day.date(in: zone, hour: 12, minute: 10)),
+                try XCTUnwrap(day.date(in: zone, hour: 16)),
+                try XCTUnwrap(day.date(in: zone, hour: 18, minute: 33)),
+                try XCTUnwrap(day.date(in: zone, hour: 20)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 5, minute: 5)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 12, minute: 10)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 16)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 18, minute: 33)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 20))
+            ]
+        )
     }
 
     @MainActor

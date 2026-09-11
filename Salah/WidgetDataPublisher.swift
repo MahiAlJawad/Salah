@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 
 enum WidgetDataPublisher {
     static func save(
@@ -63,6 +64,7 @@ enum WidgetDataPublisher {
         )
 
         WidgetDataStore.save(snapshot)
+        WidgetCenter.shared.reloadTimelines(ofKind: "SalahWidgets")
     }
 
     static func updateCompletion(
@@ -102,6 +104,7 @@ enum WidgetDataPublisher {
         )
 
         WidgetDataStore.save(updated)
+        WidgetCenter.shared.reloadTimelines(ofKind: "SalahWidgets")
     }
 
     /// Returns `item` with `completed` updated, but only when its name matches
