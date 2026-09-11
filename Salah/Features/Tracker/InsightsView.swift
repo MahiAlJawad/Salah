@@ -195,6 +195,7 @@ struct InsightsView: View {
     @State private var naflRecords: [NaflDailyRecord] = []
     @State private var charityEntries: [CharityEntry] = []
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
+    @AppStorage(CharityCurrency.storageKey) private var charityCurrencyCode = CharityCurrency.code()
 
     private var data: InsightsDataSet {
         InsightsDataSet(
@@ -203,7 +204,7 @@ struct InsightsView: View {
             naflRecords: naflRecords,
             charityEntries: charityEntries,
             charityGoal: charityGoal,
-            currencyCode: CharityCurrency.code(),
+            currencyCode: charityCurrencyCode,
             timeZone: container.settings.location.timeZone
         )
     }

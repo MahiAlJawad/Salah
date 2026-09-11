@@ -34,8 +34,44 @@ enum CharityCategory: String, Codable, CaseIterable, Identifiable, Sendable {
 }
 
 enum CharityCurrency {
+    struct Option: Identifiable, Equatable {
+        let code: String
+        let countryNames: [String]
+
+        var id: String { code }
+    }
+
+    static let storageKey = "salah.deeds.charity-currency"
+
     static func code(for locale: Locale = .current) -> String {
         locale.currency?.identifier ?? "USD"
+    }
+
+    static func options(for locale: Locale = .current) -> [Option] {
+        let countriesByCurrency = Dictionary(grouping: Locale.Region.isoRegions) { region in
+            Locale(identifier: "und_\(region.identifier)").currency?.identifier
+        }
+
+        return Locale.Currency.isoCurrencies.map { currency in
+            let countryNames = countriesByCurrency[currency.identifier, default: []]
+                .compactMap { locale.localizedString(forRegionCode: $0.identifier) }
+                .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            return Option(code: currency.identifier, countryNames: countryNames)
+        }
+        .sorted { $0.code < $1.code }
+    }
+
+    static func filteredOptions(
+        matching query: String,
+        locale: Locale = .current
+    ) -> [Option] {
+        let options = options(for: locale)
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return options }
+        return options.filter { option in
+            option.code.localizedCaseInsensitiveContains(query)
+                || option.countryNames.contains { $0.localizedCaseInsensitiveContains(query) }
+        }
     }
 }
 
