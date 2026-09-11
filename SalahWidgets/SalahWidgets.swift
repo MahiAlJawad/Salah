@@ -24,8 +24,16 @@ struct Provider: AppIntentTimelineProvider {
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
         let now = Date()
         let stored = WidgetDataStore.load()
-        let transitionDates = stored?.transitionDates(after: now) ?? []
-        let entryDates = [now] + transitionDates.map { $0.addingTimeInterval(1) }
+        let isInline = context.family == .accessoryInline
+        let transitionDates = isInline
+            ? stored?.inlineTransitionDates(after: now) ?? []
+            : stored?.transitionDates(after: now) ?? []
+        let entryDates = [now] + transitionDates.map {
+            // For the inline widget, an entry at a prayer's start must select
+            // the following prayer as "next". Other families retain their
+            // existing post-transition card behavior.
+            isInline ? $0 : $0.addingTimeInterval(1)
+        }
         let entries = entryDates.map { date in
             SimpleEntry(
                 date: date,
@@ -74,14 +82,27 @@ struct SalahWidgetsEntryView : View {
     }
 }
 
+/// Shows the active obligatory prayer with its precomputed end time. The
+/// timeline advances at each next-prayer start; WidgetKit ultimately controls
+/// when that requested transition is rendered.
 private struct InlineWidgetView: View {
     let date: Date
     let snapshot: WidgetSnapshot?
 
     var body: some View {
-        if let snapshot, let prayer = snapshot.nextObligatoryPrayer(after: date) {
+        if let snapshot, let prayer = snapshot.currentObligatoryPrayer(at: date) {
             InlinePrayerTime(
                 prayer: prayer,
+                time: prayer.end,
+                timeZoneIdentifier: snapshot.timeZoneIdentifier
+            )
+        } else if let snapshot, let prayer = snapshot.nextObligatoryPrayer(after: date) {
+            // There is no active obligatory waqt in short gaps such as the
+            // period after Asr ends and before Maghrib begins. Show the next
+            // start time rather than incorrectly extending the prior prayer.
+            InlinePrayerTime(
+                prayer: prayer,
+                time: prayer.time,
                 timeZoneIdentifier: snapshot.timeZoneIdentifier
             )
         } else {
@@ -92,15 +113,49 @@ private struct InlineWidgetView: View {
 
 private struct InlinePrayerTime: View {
     let prayer: WidgetPrayer
+    let time: Date
     let timeZoneIdentifier: String
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            fullLabel
+                .fixedSize(horizontal: true, vertical: false)
+            nameAndTimeLabel
+                .fixedSize(horizontal: true, vertical: false)
+            iconAndTimeLabel
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .lineLimit(1)
+    }
+
+    private var fullLabel: Text {
         Text(Image(systemName: prayer.symbolName))
-            + Text(" \(prayer.name) · \(displayTime)")
+            + Text(verbatim: " ")
+            + Text(verbatim: prayer.name)
+            + Text(verbatim: " ")
+            + Text(verbatim: WidgetLocalization.dynamic("Until"))
+            + Text(verbatim: " ")
+            + Text(verbatim: displayTime)
+    }
+
+    private var nameAndTimeLabel: Text {
+        Text(Image(systemName: prayer.symbolName))
+            + Text(verbatim: " ")
+            + Text(verbatim: prayer.name)
+            + Text(verbatim: " · ")
+            + Text(verbatim: displayTime)
+    }
+
+    // Preserve the time, which is the critical information, if a narrow Lock
+    // Screen layout cannot accommodate the localized prayer name.
+    private var iconAndTimeLabel: Text {
+        Text(Image(systemName: prayer.symbolName))
+            + Text(verbatim: " ")
+            + Text(verbatim: displayTime)
     }
 
     private var displayTime: String {
-        WidgetTimeFormatter.time(prayer.time, timezoneIdentifier: timeZoneIdentifier)
+        WidgetTimeFormatter.time(time, timezoneIdentifier: timeZoneIdentifier)
     }
 }
 

@@ -300,14 +300,33 @@ extension WidgetSnapshot {
         )
     }
 
-    /// The next obligatory prayer for the inline Lock Screen widget. This
-    /// intentionally omits optional prayer windows so its purpose is always
-    /// clear at a glance.
+    /// The active obligatory prayer for the inline Lock Screen widget. Its end
+    /// comes from the calculated prayer window, rather than a countdown.
+    func currentObligatoryPrayer(at date: Date) -> WidgetPrayer? {
+        prayers
+            .filter { $0.kind.isObligatory && $0.time <= date && $0.end > date }
+            .max { $0.time < $1.time }
+    }
+
+    /// The next obligatory prayer is used only when no obligatory prayer is
+    /// active (for example, in a short gap before Maghrib).
     func nextObligatoryPrayer(after date: Date) -> WidgetPrayer? {
         let upcoming = prayers
             .filter { $0.kind.isObligatory && $0.time > date }
             .min { $0.time < $1.time }
         return upcoming ?? tomorrowFajr
+    }
+
+    /// Predictable inline-widget changes: one entry per obligatory prayer
+    /// start. This avoids dense end/start entries while providing WidgetKit
+    /// enough future data to advance without opening the app each day.
+    func inlineTransitionDates(after date: Date, horizon: TimeInterval = 8 * 24 * 60 * 60) -> [Date] {
+        let limit = date.addingTimeInterval(horizon)
+        return allSchedules
+            .flatMap(\.prayers)
+            .filter { $0.kind.isObligatory && $0.time > date && $0.time <= limit }
+            .map(\.time)
+            .sorted()
     }
 
     func transitionDates(after date: Date, horizon: TimeInterval = 8 * 24 * 60 * 60) -> [Date] {
