@@ -106,6 +106,7 @@ struct TrackerView: View {
     @AppStorage("salah.deeds.charity-total") private var charityTotal = 0
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
     @AppStorage("salah.deeds.charity-month") private var charityMonth = ""
+    @AppStorage(CharityCurrency.storageKey) private var charityCurrencyCode = CharityCurrency.code()
     @State private var charityEntries: [CharityEntry] = []
     @State private var showingAddCharity = false
     @State private var showingCharityGoal = false
@@ -367,7 +368,7 @@ struct TrackerView: View {
                 .foregroundStyle(.secondary)
         }
         .sheet(isPresented: $showingAddCharity) {
-            AddCharityEntryView(currencyCode: charityCurrencyCode) { entry in
+            AddCharityEntryView(currencyCode: $charityCurrencyCode) { entry in
                 addCharityEntry(entry)
             }
         }
@@ -444,10 +445,6 @@ struct TrackerView: View {
                 inMonthContaining: .now
             ).rounded()
         )
-    }
-
-    private var charityCurrencyCode: String {
-        CharityCurrency.code()
     }
 
     private var monthlyCharityEntries: [CharityEntry] {

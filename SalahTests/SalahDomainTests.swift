@@ -389,6 +389,12 @@ final class SalahDomainTests: XCTestCase {
 
         XCTAssertEqual(CharityCurrency.code(for: Locale(identifier: "bn_BD")), "BDT")
         XCTAssertEqual(CharityCurrency.code(for: Locale(identifier: "en_US")), "USD")
+        XCTAssertTrue(CharityCurrency.options().contains { $0.code == "BDT" })
+        XCTAssertTrue(CharityCurrency.options().contains { $0.code == "USD" })
+        XCTAssertEqual(
+            CharityCurrency.filteredOptions(matching: "Bangladesh", locale: Locale(identifier: "en_US")),
+            [CharityCurrency.Option(code: "BDT", countryNames: ["Bangladesh"])]
+        )
 
         let legacy = LegacyEntry(
             id: UUID(),

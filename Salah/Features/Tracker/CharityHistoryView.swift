@@ -5,11 +5,11 @@ struct CharityHistoryView: View {
     @Environment(\.salahPalette) private var palette
     @AppStorage("salah.deeds.charity-total") private var legacyTotal = 0
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
+    @AppStorage(CharityCurrency.storageKey) private var currencyCode = CharityCurrency.code()
     @State private var entries: [CharityEntry] = []
     @State private var showingAddEntry = false
     @State private var showingGoalEditor = false
 
-    private var currencyCode: String { CharityCurrency.code() }
     private var monthlyTotal: Double {
         CharityLedger.total(entries.filter { $0.currencyCode == currencyCode }, inMonthContaining: .now)
     }
@@ -66,7 +66,7 @@ struct CharityHistoryView: View {
             }
         }
         .sheet(isPresented: $showingAddEntry) {
-            AddCharityEntryView(currencyCode: currencyCode, onSave: addEntry)
+            AddCharityEntryView(currencyCode: $currencyCode, onSave: addEntry)
         }
         .sheet(isPresented: $showingGoalEditor) {
             CharityGoalEditor(goal: charityGoal, currencyCode: currencyCode) {
@@ -136,7 +136,7 @@ struct CharityEntryRow: View {
 }
 
 struct AddCharityEntryView: View {
-    let currencyCode: String
+    @Binding var currencyCode: String
     let onSave: (CharityEntry) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var amountText = ""
@@ -160,7 +160,11 @@ struct AddCharityEntryView: View {
         NavigationStack {
             Form {
                 Section("Amount") {
-                    LabeledContent("Currency", value: currencyCode)
+                    NavigationLink {
+                        CharityCurrencyPicker(selection: $currencyCode)
+                    } label: {
+                        LabeledContent("Currency", value: currencyCode)
+                    }
 
                     TextField("0", text: $amountText)
                         .keyboardType(.decimalPad)
@@ -215,6 +219,45 @@ struct AddCharityEntryView: View {
                     }
                     .disabled(amount == nil)
                 }
+            }
+        }
+    }
+}
+
+private struct CharityCurrencyPicker: View {
+    @Binding var selection: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+
+    private var options: [CharityCurrency.Option] {
+        CharityCurrency.filteredOptions(matching: searchText)
+    }
+
+    var body: some View {
+        List(options) { option in
+            Button {
+                selection = option.code
+                dismiss()
+            } label: {
+                HStack {
+                    Text(option.code)
+                    Spacer()
+                    if option.code == selection {
+                        Image(systemName: "checkmark")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.tint)
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            .foregroundStyle(.primary)
+        }
+        .navigationTitle("Currency")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $searchText, prompt: "Country or currency code")
+        .overlay {
+            if options.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             }
         }
     }
