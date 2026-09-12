@@ -151,6 +151,41 @@ final class SalahDomainTests: XCTestCase {
     }
 
     @MainActor
+    func testSwiftDataRepositoryConsumesWidgetCompletionWithoutOpeningApp() throws {
+        let suiteName = "WidgetPrayerCompletionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: PrayerRecord.self, configurations: configuration)
+        let repository = SwiftDataPrayerTrackingRepository(
+            container: container,
+            widgetCompletionDefaults: defaults
+        )
+
+        WidgetPrayerCompletionStore.record(
+            prayerKind: .fajr,
+            localDayKey: day.key,
+            timeZoneIdentifier: zone.identifier,
+            completed: true,
+            defaults: defaults
+        )
+
+        XCTAssertEqual(try repository.completedPrayerTypes(on: day), [.fajr])
+        XCTAssertEqual(try repository.records(on: day).first?.source, "widget")
+        XCTAssertTrue(WidgetPrayerCompletionStore.pendingChanges(defaults: defaults).isEmpty)
+
+        WidgetPrayerCompletionStore.record(
+            prayerKind: .fajr,
+            localDayKey: day.key,
+            timeZoneIdentifier: zone.identifier,
+            completed: false,
+            defaults: defaults
+        )
+        XCTAssertTrue(try repository.completedPrayerTypes(on: day).isEmpty)
+        XCTAssertEqual(try repository.records(on: day).first?.completed, false)
+    }
+
+    @MainActor
     func testSwiftDataTrackerHistoryRepositoryPersistsAndUpdatesEveryHistoryType() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(

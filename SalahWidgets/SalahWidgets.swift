@@ -7,6 +7,7 @@
 
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
@@ -250,11 +251,41 @@ private struct SmallWidgetView: View {
                 let countdownDate = isCurrent ? featured.end : featured.time
 
                 VStack(alignment: .center, spacing: 2) {
-                    Text(featured.name)
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(WidgetTheme.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                    Text(WidgetLocalization.dynamic(isCurrent ? "Current Salah" : "Next Salah"))
+                        .font(.caption2)
+                        .foregroundStyle(WidgetTheme.secondary)
+
+                    ZStack {
+                        Text(featured.name)
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(WidgetTheme.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .padding(.horizontal, isCurrent && featured.kind.isObligatory ? 28 : 0)
+
+                        if isCurrent, featured.kind.isObligatory {
+                            HStack {
+                                Spacer()
+                                Button(intent: SetPrayerCompletionIntent(
+                                    prayerKind: featured.kind,
+                                    localDayKey: snapshot.localDayKey,
+                                    timeZoneIdentifier: snapshot.timeZoneIdentifier,
+                                    completed: !featured.completed
+                                )) {
+                                    Image(systemName: featured.completed ? "checkmark.circle.fill" : "circle")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(featured.completed ? WidgetTheme.accent : WidgetTheme.secondary)
+                                        .frame(width: 28, height: 28)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(WidgetLocalization.dynamic(
+                                    featured.completed ? "Mark as Not Completed" : "Mark as Completed"
+                                ))
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
 
                     Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
                         .font(.system(size: 18, weight: .semibold))
@@ -273,18 +304,6 @@ private struct SmallWidgetView: View {
                 .padding(.vertical, 8)
 
                 Spacer(minLength: 0)
-
-                HStack(spacing: 24) {
-                    Image(systemName: "clock")
-                        .font(.title3)
-                    Image(systemName: "building.columns")
-                        .font(.title3)
-                    Image(systemName: "star")
-                        .font(.title3)
-                }
-                .foregroundStyle(WidgetTheme.primary.opacity(0.35))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 5)
             } else {
                 Text("Open Salah to load prayer times")
                     .font(.caption)

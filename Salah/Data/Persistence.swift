@@ -140,13 +140,19 @@ extension LocalDay {
 @MainActor
 final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
     private let context: ModelContext
+    private let widgetCompletionDefaults: UserDefaults?
 
-    init(container: ModelContainer) {
+    init(
+        container: ModelContainer,
+        widgetCompletionDefaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.groupID)
+    ) {
         context = ModelContext(container)
         context.autosaveEnabled = true
+        self.widgetCompletionDefaults = widgetCompletionDefaults
     }
 
     func records(on day: LocalDay) throws -> [PrayerRecordSnapshot] {
+        try synchronizeWidgetCompletions()
         let key = day.key
         let descriptor = FetchDescriptor<PrayerRecord>(
             predicate: #Predicate { $0.localDateKey == key },
@@ -160,27 +166,21 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
     }
 
     func setCompleted(_ completed: Bool, prayer: PrayerType, day: LocalDay, timeZone: TimeZone, source: String) throws {
-        let uniqueKey = "\(day.key)|\(prayer.rawValue)"
-        let descriptor = FetchDescriptor<PrayerRecord>(predicate: #Predicate { $0.uniquenessKey == uniqueKey })
-        if let existing = try context.fetch(descriptor).first {
-            existing.isCompleted = completed
-            existing.completedAt = completed ? .now : nil
-            existing.completionSource = source
-            existing.updatedAt = .now
-        } else {
-            context.insert(PrayerRecord(
-                prayer: prayer,
-                localDay: day,
-                timeZoneIdentifier: timeZone.identifier,
-                isCompleted: completed,
-                completedAt: completed ? .now : nil,
-                completionSource: source
-            ))
-        }
+        try synchronizeWidgetCompletions()
+        let now = Date()
+        try upsert(
+            completed: completed,
+            prayer: prayer,
+            day: day,
+            timeZoneIdentifier: timeZone.identifier,
+            source: source,
+            changedAt: now
+        )
         try context.save()
     }
 
     func allRecords() throws -> [PrayerRecordSnapshot] {
+        try synchronizeWidgetCompletions()
         let descriptor = FetchDescriptor<PrayerRecord>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
         return try context.fetch(descriptor).compactMap(\.snapshot)
     }
@@ -188,6 +188,59 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
     func clearAll() throws {
         try context.delete(model: PrayerRecord.self)
         try context.save()
+        WidgetPrayerCompletionStore.removeAll(defaults: widgetCompletionDefaults)
+    }
+
+    private func synchronizeWidgetCompletions() throws {
+        let changes = WidgetPrayerCompletionStore.pendingChanges(defaults: widgetCompletionDefaults)
+            .sorted { $0.changedAt < $1.changedAt }
+        guard !changes.isEmpty else { return }
+
+        var consumedKeys = Set<String>()
+        for change in changes {
+            guard let prayer = PrayerType(rawValue: change.prayerKind.rawValue),
+                  let day = LocalDay(stableKey: change.localDayKey) else { continue }
+            try upsert(
+                completed: change.completed,
+                prayer: prayer,
+                day: day,
+                timeZoneIdentifier: change.timeZoneIdentifier,
+                source: "widget",
+                changedAt: change.changedAt
+            )
+            consumedKeys.insert(change.key)
+        }
+        try context.save()
+        WidgetPrayerCompletionStore.remove(keys: consumedKeys, defaults: widgetCompletionDefaults)
+    }
+
+    private func upsert(
+        completed: Bool,
+        prayer: PrayerType,
+        day: LocalDay,
+        timeZoneIdentifier: String,
+        source: String,
+        changedAt: Date
+    ) throws {
+        let uniqueKey = "\(day.key)|\(prayer.rawValue)"
+        let descriptor = FetchDescriptor<PrayerRecord>(predicate: #Predicate { $0.uniquenessKey == uniqueKey })
+        if let existing = try context.fetch(descriptor).first {
+            existing.isCompleted = completed
+            existing.completedAt = completed ? changedAt : nil
+            existing.completionSource = source
+            existing.updatedAt = changedAt
+        } else {
+            let record = PrayerRecord(
+                prayer: prayer,
+                localDay: day,
+                timeZoneIdentifier: timeZoneIdentifier,
+                isCompleted: completed,
+                completedAt: completed ? changedAt : nil,
+                completionSource: source
+            )
+            record.updatedAt = changedAt
+            context.insert(record)
+        }
     }
 }
 

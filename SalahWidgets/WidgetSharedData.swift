@@ -446,6 +446,119 @@ enum WidgetDataStore {
 
         return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
     }
+
+    static func updateCompletion(
+        kind: WidgetPrayerKind,
+        localDayKey: String,
+        completed: Bool
+    ) {
+        guard let snapshot = load() else { return }
+
+        func updating(_ prayer: WidgetPrayer) -> WidgetPrayer {
+            guard prayer.kind == kind else { return prayer }
+            return WidgetPrayer(
+                name: prayer.name,
+                time: prayer.time,
+                end: prayer.end,
+                symbolName: prayer.symbolName,
+                completed: completed,
+                isNext: prayer.isNext,
+                isCurrent: prayer.isCurrent,
+                kind: prayer.kind
+            )
+        }
+
+        func updating(_ schedule: WidgetDaySchedule?) -> WidgetDaySchedule? {
+            guard let schedule, schedule.localDayKey == localDayKey else { return schedule }
+            return WidgetDaySchedule(
+                localDayKey: schedule.localDayKey,
+                gregorianSummary: schedule.gregorianSummary,
+                hijriSummary: schedule.hijriSummary,
+                prayers: schedule.prayers.map(updating)
+            )
+        }
+
+        let updatesCurrentDay = snapshot.localDayKey == localDayKey
+        let updated = WidgetSnapshot(
+            updatedAt: .now,
+            localDayKey: snapshot.localDayKey,
+            gregorianSummary: snapshot.gregorianSummary,
+            hijriSummary: snapshot.hijriSummary,
+            timeZoneIdentifier: snapshot.timeZoneIdentifier,
+            prayers: updatesCurrentDay ? snapshot.prayers.map(updating) : snapshot.prayers,
+            currentPrayer: updatesCurrentDay ? snapshot.currentPrayer.map(updating) : snapshot.currentPrayer,
+            nextPrayer: updatesCurrentDay ? snapshot.nextPrayer.map(updating) : snapshot.nextPrayer,
+            tomorrowFajr: snapshot.tomorrowFajr,
+            nextDay: updating(snapshot.nextDay),
+            futureDays: snapshot.futureDays?.map { updating($0) ?? $0 }
+        )
+        save(updated)
+    }
+}
+
+struct WidgetPrayerCompletionChange: Codable, Sendable {
+    let prayerKind: WidgetPrayerKind
+    let localDayKey: String
+    let timeZoneIdentifier: String
+    let completed: Bool
+    let changedAt: Date
+
+    var key: String { "\(localDayKey)|\(prayerKind.rawValue)" }
+}
+
+enum WidgetPrayerCompletionStore {
+    private static let storageKey = "salah.widget.pending-prayer-completions"
+
+    static func record(
+        prayerKind: WidgetPrayerKind,
+        localDayKey: String,
+        timeZoneIdentifier: String,
+        completed: Bool,
+        changedAt: Date = .now,
+        defaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.groupID)
+    ) {
+        guard let defaults else { return }
+        var changes = Dictionary(uniqueKeysWithValues: pendingChanges(defaults: defaults).map { ($0.key, $0) })
+        let change = WidgetPrayerCompletionChange(
+            prayerKind: prayerKind,
+            localDayKey: localDayKey,
+            timeZoneIdentifier: timeZoneIdentifier,
+            completed: completed,
+            changedAt: changedAt
+        )
+        changes[change.key] = change
+        save(Array(changes.values), defaults: defaults)
+    }
+
+    static func pendingChanges(
+        defaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.groupID)
+    ) -> [WidgetPrayerCompletionChange] {
+        guard let data = defaults?.data(forKey: storageKey) else { return [] }
+        return (try? JSONDecoder().decode([WidgetPrayerCompletionChange].self, from: data)) ?? []
+    }
+
+    static func remove(
+        keys: Set<String>,
+        defaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.groupID)
+    ) {
+        guard let defaults, !keys.isEmpty else { return }
+        save(pendingChanges(defaults: defaults).filter { !keys.contains($0.key) }, defaults: defaults)
+    }
+
+    static func removeAll(
+        defaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.groupID)
+    ) {
+        defaults?.removeObject(forKey: storageKey)
+    }
+
+    private static func save(_ changes: [WidgetPrayerCompletionChange], defaults: UserDefaults) {
+        guard !changes.isEmpty else {
+            defaults.removeObject(forKey: storageKey)
+            return
+        }
+        guard let data = try? JSONEncoder().encode(changes) else { return }
+        defaults.set(data, forKey: storageKey)
+    }
 }
 
 // MARK: - Widget Theme Store

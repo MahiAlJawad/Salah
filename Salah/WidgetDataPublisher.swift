@@ -72,62 +72,8 @@ enum WidgetDataPublisher {
         day: LocalDay,
         completed: Bool
     ) {
-        guard let snapshot = WidgetDataStore.load(), snapshot.localDayKey == day.key else { return }
-
-        let updatedPrayers = snapshot.prayers.map { item in
-            item.name == prayer.title
-                ? WidgetPrayer(
-                    name: item.name,
-                    time: item.time,
-                    end: item.end,
-                    symbolName: item.symbolName,
-                    completed: completed,
-                    isNext: item.isNext,
-                    isCurrent: item.isCurrent,
-                    kind: item.kind
-                )
-                : item
-        }
-
-        let updated = WidgetSnapshot(
-            updatedAt: .now,
-            localDayKey: snapshot.localDayKey,
-            gregorianSummary: snapshot.gregorianSummary,
-            hijriSummary: snapshot.hijriSummary,
-            timeZoneIdentifier: snapshot.timeZoneIdentifier,
-            prayers: updatedPrayers,
-            currentPrayer: updating(snapshot.currentPrayer, prayer: prayer, completed: completed),
-            nextPrayer: updating(snapshot.nextPrayer, prayer: prayer, completed: completed),
-            tomorrowFajr: snapshot.tomorrowFajr,
-            nextDay: snapshot.nextDay,
-            futureDays: snapshot.futureDays
-        )
-
-        WidgetDataStore.save(updated)
-        WidgetCenter.shared.reloadTimelines(ofKind: "SalahWidgets")
-    }
-
-    /// Returns `item` with `completed` updated, but only when its name matches
-    /// `prayer`; otherwise `item` is left untouched.
-    private static func updating(
-        _ item: WidgetPrayer?,
-        prayer: PrayerType,
-        completed: Bool
-    ) -> WidgetPrayer? {
-        item.map { current in
-            current.name == prayer.title
-                ? WidgetPrayer(
-                    name: current.name,
-                    time: current.time,
-                    end: current.end,
-                    symbolName: current.symbolName,
-                    completed: completed,
-                    isNext: current.isNext,
-                    isCurrent: current.isCurrent,
-                    kind: current.kind
-                )
-                : current
-        }
+        guard let kind = WidgetPrayerKind(rawValue: prayer.rawValue) else { return }
+        WidgetDataStore.updateCompletion(kind: kind, localDayKey: day.key, completed: completed)
     }
 
     private static func makeScheduleItems(day: PrayerDay, completed: Set<PrayerType>) -> [WidgetPrayer] {
