@@ -698,6 +698,38 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertTrue(updated.prayers.first(where: { $0.kind == .dhuhr })?.isCurrent == true)
     }
 
+    func testWidgetSnapshotCompletionUpdatePersistsAcrossSchedulesAndReversal() throws {
+        let tomorrow = day.adding(days: 1, in: zone)
+        let today = try fixture(day: day)
+        let nextDay = try fixture(day: tomorrow)
+        let snapshot = WidgetSnapshot(
+            updatedAt: .now,
+            localDayKey: today.localDay.key,
+            gregorianSummary: today.gregorianSummary,
+            hijriSummary: today.hijriSummary,
+            timeZoneIdentifier: zone.identifier,
+            prayers: widgetPrayers(from: today),
+            currentPrayer: widgetPrayers(from: today).first { $0.kind == .fajr },
+            nextPrayer: nil,
+            tomorrowFajr: widgetPrayers(from: nextDay).first { $0.kind == .fajr },
+            nextDay: WidgetDaySchedule(
+                localDayKey: nextDay.localDay.key,
+                gregorianSummary: nextDay.gregorianSummary,
+                hijriSummary: nextDay.hijriSummary,
+                prayers: widgetPrayers(from: nextDay)
+            )
+        )
+
+        let checked = snapshot.applyingCompletion(kind: .fajr, localDayKey: day.key, completed: true)
+        XCTAssertTrue(checked.prayers.first(where: { $0.kind == .fajr })?.completed == true)
+        XCTAssertTrue(checked.currentPrayer?.completed == true)
+        XCTAssertFalse(checked.nextDay?.prayers.first(where: { $0.kind == .fajr })?.completed == true)
+
+        let unchecked = checked.applyingCompletion(kind: .fajr, localDayKey: day.key, completed: false)
+        XCTAssertFalse(unchecked.prayers.first(where: { $0.kind == .fajr })?.completed == true)
+        XCTAssertFalse(unchecked.currentPrayer?.completed == true)
+    }
+
     func testWidgetSnapshotUsesFutureScheduleAndInlineSelectsCurrentObligatoryPrayer() throws {
         let tomorrow = day.adding(days: 1, in: zone)
         let dayAfterTomorrow = tomorrow.adding(days: 1, in: zone)

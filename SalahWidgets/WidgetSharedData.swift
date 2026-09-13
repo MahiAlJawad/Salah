@@ -460,41 +460,12 @@ extension WidgetSnapshot {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }
-}
 
-private extension Array {
-    subscript(safe index: Int) -> Element? {
-        indices.contains(index) ? self[index] : nil
-    }
-}
-
-enum WidgetDataStore {
-    static let groupID = "group.com.prayer.salah"
-    private static let snapshotKey = "salah.widget.snapshot"
-
-    static func save(_ snapshot: WidgetSnapshot) {
-        guard let defaults = UserDefaults(suiteName: groupID),
-              let data = try? JSONEncoder().encode(snapshot) else { return }
-
-        defaults.set(data, forKey: snapshotKey)
-        WidgetCenter.shared.reloadTimelines(ofKind: "SalahWidgets")
-    }
-
-    static func load() -> WidgetSnapshot? {
-        guard let data = UserDefaults(suiteName: groupID)?.data(forKey: snapshotKey) else {
-            return nil
-        }
-
-        return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
-    }
-
-    static func updateCompletion(
+    func applyingCompletion(
         kind: WidgetPrayerKind,
         localDayKey: String,
         completed: Bool
-    ) {
-        guard let snapshot = load() else { return }
-
+    ) -> WidgetSnapshot {
         func updating(_ prayer: WidgetPrayer) -> WidgetPrayer {
             guard prayer.kind == kind else { return prayer }
             return WidgetPrayer(
@@ -521,23 +492,62 @@ enum WidgetDataStore {
             )
         }
 
-        let updatesCurrentDay = snapshot.localDayKey == localDayKey
-        let updated = WidgetSnapshot(
-            updatedAt: .now,
-            localDayKey: snapshot.localDayKey,
-            gregorianSummary: snapshot.gregorianSummary,
-            hijriSummary: snapshot.hijriSummary,
-            timeZoneIdentifier: snapshot.timeZoneIdentifier,
-            sahri: snapshot.sahri,
-            iftar: snapshot.iftar,
-            prayers: updatesCurrentDay ? snapshot.prayers.map(updating) : snapshot.prayers,
-            currentPrayer: updatesCurrentDay ? snapshot.currentPrayer.map(updating) : snapshot.currentPrayer,
-            nextPrayer: updatesCurrentDay ? snapshot.nextPrayer.map(updating) : snapshot.nextPrayer,
-            tomorrowFajr: snapshot.tomorrowFajr,
-            nextDay: updating(snapshot.nextDay),
-            futureDays: snapshot.futureDays?.map { updating($0) ?? $0 }
+        let updatesCurrentDay = self.localDayKey == localDayKey
+        return WidgetSnapshot(
+            updatedAt: updatedAt,
+            localDayKey: self.localDayKey,
+            gregorianSummary: gregorianSummary,
+            hijriSummary: hijriSummary,
+            timeZoneIdentifier: timeZoneIdentifier,
+            sahri: sahri,
+            iftar: iftar,
+            prayers: updatesCurrentDay ? prayers.map(updating) : prayers,
+            currentPrayer: updatesCurrentDay ? currentPrayer.map(updating) : currentPrayer,
+            nextPrayer: updatesCurrentDay ? nextPrayer.map(updating) : nextPrayer,
+            tomorrowFajr: tomorrowFajr,
+            nextDay: updating(nextDay),
+            futureDays: futureDays?.map { updating($0) ?? $0 }
         )
-        save(updated)
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}
+
+enum WidgetDataStore {
+    static let groupID = "group.com.prayer.salah"
+    private static let snapshotKey = "salah.widget.snapshot"
+
+    static func save(_ snapshot: WidgetSnapshot) {
+        guard let defaults = UserDefaults(suiteName: groupID),
+              let data = try? JSONEncoder().encode(snapshot.applyingPendingWidgetCompletions()) else { return }
+
+        defaults.set(data, forKey: snapshotKey)
+        WidgetCenter.shared.reloadTimelines(ofKind: "SalahWidgets")
+    }
+
+    static func load() -> WidgetSnapshot? {
+        guard let data = UserDefaults(suiteName: groupID)?.data(forKey: snapshotKey) else {
+            return nil
+        }
+
+        return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
+    }
+
+    static func updateCompletion(
+        kind: WidgetPrayerKind,
+        localDayKey: String,
+        completed: Bool
+    ) {
+        guard let snapshot = load() else { return }
+        save(snapshot.applyingCompletion(
+            kind: kind,
+            localDayKey: localDayKey,
+            completed: completed
+        ))
     }
 }
 
@@ -603,6 +613,24 @@ enum WidgetPrayerCompletionStore {
         }
         guard let data = try? JSONEncoder().encode(changes) else { return }
         defaults.set(data, forKey: storageKey)
+    }
+}
+
+private extension WidgetSnapshot {
+    /// An App Intent can finish before the containing app has synchronized its
+    /// SwiftData tracker. Preserve that newer widget action whenever the app
+    /// republishes a prayer schedule, so a stale tracker read cannot briefly
+    /// replace an optimistic checked state in an existing widget timeline.
+    func applyingPendingWidgetCompletions() -> WidgetSnapshot {
+        WidgetPrayerCompletionStore.pendingChanges()
+            .sorted { $0.changedAt < $1.changedAt }
+            .reduce(self) { snapshot, change in
+                snapshot.applyingCompletion(
+                    kind: change.prayerKind,
+                    localDayKey: change.localDayKey,
+                    completed: change.completed
+                )
+            }
     }
 }
 

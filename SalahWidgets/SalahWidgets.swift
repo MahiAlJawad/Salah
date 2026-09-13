@@ -70,8 +70,6 @@ struct SalahWidgetsEntryView : View {
                 InlineWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(date: entry.date, snapshot: entry.snapshot)
-            case .systemLarge:
-                LargeWidgetView(snapshot: entry.snapshot)
             default:
                 SmallWidgetView(snapshot: entry.snapshot)
             }
@@ -216,14 +214,6 @@ private enum WidgetDateFormatter {
 /// color so the active state has a single, unambiguous visual treatment.
 private extension WidgetPrayer {
     var mediumRowColor: Color {
-        if isCurrent { return WidgetTheme.accent }
-        return WidgetTheme.secondary
-    }
-    var largeRowColor: Color {
-        if isCurrent { return WidgetTheme.accent }
-        return WidgetTheme.primary
-    }
-    var largeIconColor: Color {
         if isCurrent { return WidgetTheme.accent }
         return WidgetTheme.secondary
     }
@@ -537,94 +527,6 @@ private struct MediumWidgetView: View {
     }
 }
 
-private struct LargeWidgetView: View {
-    let snapshot: WidgetSnapshot?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let snapshot, let featured = snapshot.currentPrayer ?? snapshot.nextPrayer {
-                let isCurrent = snapshot.currentPrayer != nil
-                let countdownDate = isCurrent ? featured.end : featured.time
-
-                HStack(spacing: 8) {
-                    Image(systemName: "calendar")
-                        .font(.caption)
-                        .foregroundStyle(WidgetTheme.accent)
-                        .padding(7)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(WidgetTheme.accent.opacity(0.7), lineWidth: 1)
-                        )
-                    Text(snapshot.hijriSummary)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(WidgetTheme.secondary)
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: 14)
-
-                Text(featuredHeading(featured, isCurrent: isCurrent))
-                    .font(.caption2.weight(.semibold))
-                    .tracking(1.1)
-                    .foregroundStyle(WidgetTheme.accent)
-                Text(featured.name)
-                    .font(.system(size: 36, weight: .medium, design: .serif))
-                    .foregroundStyle(WidgetTheme.primary)
-                    .lineLimit(1)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
-                    Text(countdownDate, style: .timer)
-                        .monospacedDigit()
-                }
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(WidgetTheme.accent)
-
-                Spacer(minLength: 14)
-
-                Rectangle()
-                    .fill(WidgetTheme.divider)
-                    .frame(height: 1)
-                    .padding(.bottom, 8)
-
-                VStack(spacing: 0) {
-                    ForEach(snapshot.prayers) { prayer in
-                        HStack(spacing: 9) {
-                            Image(systemName: prayer.symbolName)
-                                .font(.caption)
-                                .frame(width: 17)
-                                .foregroundStyle(prayer.largeIconColor)
-                            Text(prayer.name)
-                                .fontWeight(prayer.rowWeight)
-                                .foregroundStyle(prayer.largeRowColor)
-                                .lineLimit(1)
-                            Spacer(minLength: 8)
-                            Text(WidgetTimeFormatter.time(prayer.time, timezoneIdentifier: snapshot.timeZoneIdentifier))
-                                .font(.subheadline.monospacedDigit())
-                                .fontWeight(prayer.rowWeight)
-                                .foregroundStyle(prayer.largeRowColor)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 30)
-                    }
-                }
-            } else {
-                Text("Open Salah to load prayer times")
-                    .font(.subheadline)
-                    .foregroundStyle(WidgetTheme.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            }
-        }
-        .padding(20)
-    }
-}
-
-private func featuredHeading(_ prayer: WidgetPrayer, isCurrent: Bool) -> String {
-    if prayer.isNafl {
-        return isCurrent ? WidgetLocalization.string("CURRENT NAFL PRAYER") : WidgetLocalization.string("NEXT NAFL PRAYER")
-    }
-    return isCurrent ? WidgetLocalization.string("CURRENT PRAYER") : WidgetLocalization.string("NEXT PRAYER")
-}
-
 struct SalahWidgets: Widget {
     let kind: String = "SalahWidgets"
 
@@ -637,7 +539,6 @@ struct SalahWidgets: Widget {
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
-            .systemLarge,
             .accessoryInline
         ])
         .contentMarginsDisabled()
@@ -683,12 +584,6 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
 }
 
 #Preview(as: .systemMedium) {
-    SalahWidgets()
-} timeline: {
-    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
-}
-
-#Preview(as: .systemLarge) {
     SalahWidgets()
 } timeline: {
     SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
