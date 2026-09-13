@@ -68,6 +68,8 @@ struct SalahWidgetsEntryView : View {
             switch family {
             case .accessoryInline:
                 InlineWidgetView(snapshot: entry.snapshot)
+            case .accessoryRectangular:
+                RectangularWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(date: entry.date, snapshot: entry.snapshot)
             default:
@@ -78,6 +80,58 @@ struct SalahWidgetsEntryView : View {
         .containerBackground(for: .widget) {
             WidgetTheme.background
         }
+    }
+}
+
+private struct RectangularWidgetView: View {
+    let snapshot: WidgetSnapshot?
+
+    var body: some View {
+        Group {
+            if let snapshot, let prayer = snapshot.currentPrayer ?? snapshot.nextPrayer {
+                let isCurrent = snapshot.currentPrayer != nil
+                let time = isCurrent ? prayer.displayEnd : prayer.time
+
+                HStack(alignment: .center, spacing: 8) {
+                    Image(systemName: prayer.symbolName)
+                        .font(.system(size: 22, weight: .semibold))
+                        .frame(width: 28)
+                        .widgetAccentable()
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(prayer.name)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+
+                        HStack(spacing: 3) {
+                            Text(WidgetLocalization.dynamic(isCurrent ? "Ends" : "Starts"))
+                            Text(WidgetTimeFormatter.time(
+                                time,
+                                timezoneIdentifier: snapshot.timeZoneIdentifier
+                            ))
+                            .monospacedDigit()
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    }
+                    .layoutPriority(1)
+
+                    Spacer(minLength: 0)
+                }
+                .accessibilityElement(children: .combine)
+            } else {
+                Text(WidgetLocalization.dynamic("Open Salah to refresh times"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
     }
 }
 
@@ -560,7 +614,8 @@ struct SalahWidgets: Widget {
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
-            .accessoryInline
+            .accessoryInline,
+            .accessoryRectangular
         ])
         .contentMarginsDisabled()
     }
@@ -614,4 +669,35 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
     SalahWidgets()
 } timeline: {
     SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
+}
+
+#Preview("Rectangular Current", as: .accessoryRectangular) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
+}
+
+#Preview("Rectangular Upcoming", as: .accessoryRectangular) {
+    SalahWidgets()
+} timeline: {
+    let snapshot = sampleSnapshot()
+    SimpleEntry(
+        date: .now,
+        configuration: ConfigurationAppIntent(),
+        snapshot: WidgetSnapshot(
+            updatedAt: snapshot.updatedAt,
+            localDayKey: snapshot.localDayKey,
+            gregorianSummary: snapshot.gregorianSummary,
+            hijriSummary: snapshot.hijriSummary,
+            timeZoneIdentifier: snapshot.timeZoneIdentifier,
+            sahri: snapshot.sahri,
+            iftar: snapshot.iftar,
+            prayers: snapshot.prayers,
+            currentPrayer: nil,
+            nextPrayer: snapshot.prayers.first { $0.kind == .asr },
+            tomorrowFajr: snapshot.tomorrowFajr,
+            nextDay: snapshot.nextDay,
+            futureDays: snapshot.futureDays
+        )
+    )
 }

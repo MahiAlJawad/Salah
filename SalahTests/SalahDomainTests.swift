@@ -648,6 +648,52 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(moment.next?.kind, .maghrib)
     }
 
+    func testWidgetPrayerDisplayEndMatchesLastValidMinute() throws {
+        let asr = try XCTUnwrap(widgetPrayers(from: fixture(day: day)).first { $0.kind == .asr })
+
+        XCTAssertEqual(asr.displayEnd, asr.end.addingTimeInterval(-60))
+    }
+
+    func testRectangularWidgetTransitionsFromEndsToStartsAndBackToEnds() throws {
+        let today = try fixture(day: day)
+        let tomorrow = try fixture(day: day.adding(days: 1, in: zone))
+        let prayers = widgetPrayers(from: today)
+        let tomorrowPrayers = widgetPrayers(from: tomorrow)
+        let asr = try XCTUnwrap(prayers.first { $0.kind == .asr })
+        let maghrib = try XCTUnwrap(prayers.first { $0.kind == .maghrib })
+        let snapshot = WidgetSnapshot(
+            updatedAt: .now,
+            localDayKey: today.localDay.key,
+            gregorianSummary: today.gregorianSummary,
+            hijriSummary: today.hijriSummary,
+            timeZoneIdentifier: zone.identifier,
+            prayers: prayers,
+            currentPrayer: nil,
+            nextPrayer: nil,
+            tomorrowFajr: tomorrowPrayers.first { $0.kind == .fajr },
+            nextDay: WidgetDaySchedule(
+                localDayKey: tomorrow.localDay.key,
+                gregorianSummary: tomorrow.gregorianSummary,
+                hijriSummary: tomorrow.hijriSummary,
+                prayers: tomorrowPrayers
+            )
+        )
+
+        let beforeEnd = try XCTUnwrap(snapshot.snapshot(at: asr.end.addingTimeInterval(-1)))
+        let afterEnd = try XCTUnwrap(snapshot.snapshot(at: asr.end.addingTimeInterval(1)))
+        let afterNextStart = try XCTUnwrap(snapshot.snapshot(at: maghrib.time.addingTimeInterval(1)))
+        let transitions = snapshot.transitionDates(after: asr.end.addingTimeInterval(-1))
+
+        XCTAssertEqual(beforeEnd.currentPrayer?.kind, .asr)
+        XCTAssertEqual(beforeEnd.currentPrayer?.displayEnd, asr.end.addingTimeInterval(-60))
+        XCTAssertNil(afterEnd.currentPrayer)
+        XCTAssertEqual(afterEnd.nextPrayer?.kind, .maghrib)
+        XCTAssertEqual(afterEnd.nextPrayer?.time, maghrib.time)
+        XCTAssertEqual(afterNextStart.currentPrayer?.kind, .maghrib)
+        XCTAssertTrue(transitions.contains(asr.end))
+        XCTAssertTrue(transitions.contains(maghrib.time))
+    }
+
     func testWidgetShowsIshrakAsUpcomingAndCurrentLikeTodayCard() throws {
         let prayers = widgetPrayers(from: try fixture(day: day))
         let beforeIshrak = try XCTUnwrap(day.date(in: zone, hour: 6, minute: 25))

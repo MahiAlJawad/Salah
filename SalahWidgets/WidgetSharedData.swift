@@ -65,6 +65,7 @@ struct WidgetPrayer: Codable, Identifiable, Sendable {
 
     var id: String { kind.rawValue }
     var isNafl: Bool { kind.isNafl }
+    var displayEnd: Date { end.addingTimeInterval(-60) }
 
     init(
         name: String,
