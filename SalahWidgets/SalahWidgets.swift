@@ -69,7 +69,7 @@ struct SalahWidgetsEntryView : View {
             case .accessoryInline:
                 InlineWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
-                MediumWidgetView(snapshot: entry.snapshot)
+                MediumWidgetView(date: entry.date, snapshot: entry.snapshot)
             case .systemLarge:
                 LargeWidgetView(snapshot: entry.snapshot)
             default:
@@ -193,28 +193,60 @@ private enum WidgetTimeFormatter {
     }
 }
 
-/// Row highlighting helpers. The current waqt is the strongest; the next waqt
-/// is secondary; everything else uses the view's baseline color.
+private enum WidgetDateFormatter {
+    static func shortGregorianDate(_ localDayKey: String, timezoneIdentifier: String) -> String {
+        let parser = DateFormatter()
+        parser.calendar = Calendar(identifier: .gregorian)
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        parser.timeZone = TimeZone(identifier: timezoneIdentifier) ?? .current
+        parser.dateFormat = "yyyy-MM-dd"
+
+        guard let date = parser.date(from: localDayKey) else { return localDayKey }
+
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = WidgetLocalization.locale
+        formatter.timeZone = parser.timeZone
+        formatter.setLocalizedDateFormatFromTemplate("EEE d MMM")
+        return formatter.string(from: date)
+    }
+}
+
+/// Only the current waqt is highlighted; upcoming prayers retain the baseline
+/// color so the active state has a single, unambiguous visual treatment.
 private extension WidgetPrayer {
     var mediumRowColor: Color {
         if isCurrent { return WidgetTheme.accent }
-        if isNext { return WidgetTheme.accent.opacity(0.6) }
         return WidgetTheme.secondary
     }
     var largeRowColor: Color {
         if isCurrent { return WidgetTheme.accent }
-        if isNext { return WidgetTheme.accent.opacity(0.6) }
         return WidgetTheme.primary
     }
     var largeIconColor: Color {
         if isCurrent { return WidgetTheme.accent }
-        if isNext { return WidgetTheme.accent.opacity(0.6) }
         return WidgetTheme.secondary
     }
     var rowWeight: Font.Weight {
         if isCurrent { return .semibold }
-        if isNext { return .medium }
         return .regular
+    }
+}
+
+private extension WidgetSnapshot {
+    func fastingEvent(at date: Date) -> (title: String, time: Date, symbolName: String)? {
+        guard let maghrib = prayers.first(where: { $0.kind == .maghrib }) else { return nil }
+
+        if date < maghrib.time {
+            return (
+                WidgetLocalization.dynamic("Iftar"),
+                iftar ?? maghrib.time,
+                "sun.horizon.fill"
+            )
+        }
+
+        guard let sahri = nextDay?.sahri else { return nil }
+        return (WidgetLocalization.dynamic("Sahri"), sahri, "moon.stars.fill")
     }
 }
 
@@ -314,6 +346,7 @@ private struct SmallWidgetView: View {
 }
 
 private struct MediumWidgetView: View {
+    let date: Date
     let snapshot: WidgetSnapshot?
 
     var body: some View {
@@ -328,8 +361,12 @@ private struct MediumWidgetView: View {
                             .font(.caption)
                             .foregroundStyle(WidgetTheme.accent)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(snapshot.gregorianSummary)
+                            Text(WidgetDateFormatter.shortGregorianDate(
+                                snapshot.localDayKey,
+                                timezoneIdentifier: snapshot.timeZoneIdentifier
+                            ))
                                 .font(.caption2.weight(.semibold))
+                                .foregroundStyle(WidgetTheme.secondary)
                                 .lineLimit(1)
                             Text(snapshot.hijriSummary)
                                 .font(.caption2)
@@ -337,13 +374,10 @@ private struct MediumWidgetView: View {
                                 .lineLimit(1)
                         }
                     }
+                    .padding(.top, 5)
 
-                    Spacer(minLength: 5)
+                    Spacer()
 
-                    Text(featuredHeading(featured, isCurrent: isCurrent))
-                        .font(.caption2.weight(.semibold))
-                        .tracking(1.1)
-                        .foregroundStyle(WidgetTheme.accent)
                     Text(featured.name)
                         .font(.system(size: 31, weight: .medium, design: .serif))
                         .foregroundStyle(WidgetTheme.primary)
@@ -356,16 +390,22 @@ private struct MediumWidgetView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(WidgetTheme.accent)
 
-                    Spacer(minLength: 4)
+                    Spacer()
 
-                    HStack(spacing: 8) {
-                        Image(systemName: "moon.stars.fill")
-                            .font(.title3)
-                        Image(systemName: "building.columns.fill")
-                            .font(.title3)
-                            .opacity(0.35)
+                    if let fastingEvent = snapshot.fastingEvent(at: date) {
+                        HStack(spacing: 5) {
+                            Image(systemName: fastingEvent.symbolName)
+                            Text(fastingEvent.title)
+                            Text(WidgetTimeFormatter.time(
+                                fastingEvent.time,
+                                timezoneIdentifier: snapshot.timeZoneIdentifier
+                            ))
+                            .monospacedDigit()
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(WidgetTheme.secondary)
+                        .padding(.bottom, 5)
                     }
-                    .foregroundStyle(WidgetTheme.accent.opacity(0.7))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 

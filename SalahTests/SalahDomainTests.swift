@@ -671,6 +671,8 @@ final class SalahDomainTests: XCTestCase {
             gregorianSummary: today.gregorianSummary,
             hijriSummary: today.hijriSummary,
             timeZoneIdentifier: zone.identifier,
+            sahri: today.sahri,
+            iftar: today.iftar,
             prayers: widgetPrayers(from: today),
             currentPrayer: nil,
             nextPrayer: nil,
@@ -679,6 +681,8 @@ final class SalahDomainTests: XCTestCase {
                 localDayKey: nextDay.localDay.key,
                 gregorianSummary: "Tuesday, 21 July",
                 hijriSummary: "6 Safar 1448",
+                sahri: nextDay.sahri,
+                iftar: nextDay.iftar,
                 prayers: widgetPrayers(from: nextDay)
             )
         )
@@ -688,6 +692,8 @@ final class SalahDomainTests: XCTestCase {
 
         XCTAssertEqual(updated.localDayKey, tomorrow.key)
         XCTAssertEqual(updated.gregorianSummary, "Tuesday, 21 July")
+        XCTAssertEqual(updated.sahri, nextDay.sahri)
+        XCTAssertEqual(updated.iftar, nextDay.iftar)
         XCTAssertEqual(updated.currentPrayer?.kind, .dhuhr)
         XCTAssertTrue(updated.prayers.first(where: { $0.kind == .dhuhr })?.isCurrent == true)
     }

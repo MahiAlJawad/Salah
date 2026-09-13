@@ -21,6 +21,8 @@ enum WidgetDataPublisher {
                     localDayKey: day.localDay.key,
                     gregorianSummary: day.gregorianSummary,
                     hijriSummary: day.hijriSummary,
+                    sahri: day.sahri,
+                    iftar: day.iftar,
                     prayers: makeScheduleItems(day: day, completed: [])
                 )
             }
@@ -55,6 +57,8 @@ enum WidgetDataPublisher {
             gregorianSummary: prayerDay.gregorianSummary,
             hijriSummary: prayerDay.hijriSummary,
             timeZoneIdentifier: prayerDay.timeZoneIdentifier,
+            sahri: prayerDay.sahri,
+            iftar: prayerDay.iftar,
             prayers: flaggedItems,
             currentPrayer: moment.current,
             nextPrayer: moment.next,

@@ -122,7 +122,25 @@ struct WidgetDaySchedule: Codable, Sendable {
     let localDayKey: String
     let gregorianSummary: String
     let hijriSummary: String
+    let sahri: Date?
+    let iftar: Date?
     let prayers: [WidgetPrayer]
+
+    init(
+        localDayKey: String,
+        gregorianSummary: String,
+        hijriSummary: String,
+        sahri: Date? = nil,
+        iftar: Date? = nil,
+        prayers: [WidgetPrayer]
+    ) {
+        self.localDayKey = localDayKey
+        self.gregorianSummary = gregorianSummary
+        self.hijriSummary = hijriSummary
+        self.sahri = sahri
+        self.iftar = iftar
+        self.prayers = prayers
+    }
 }
 
 struct WidgetSnapshot: Codable, Sendable {
@@ -131,6 +149,8 @@ struct WidgetSnapshot: Codable, Sendable {
     let gregorianSummary: String
     let hijriSummary: String
     let timeZoneIdentifier: String
+    let sahri: Date?
+    let iftar: Date?
     let prayers: [WidgetPrayer]
     let currentPrayer: WidgetPrayer?
     let nextPrayer: WidgetPrayer?
@@ -147,6 +167,8 @@ struct WidgetSnapshot: Codable, Sendable {
         gregorianSummary: String,
         hijriSummary: String,
         timeZoneIdentifier: String,
+        sahri: Date? = nil,
+        iftar: Date? = nil,
         prayers: [WidgetPrayer],
         currentPrayer: WidgetPrayer?,
         nextPrayer: WidgetPrayer?,
@@ -159,6 +181,8 @@ struct WidgetSnapshot: Codable, Sendable {
         self.gregorianSummary = gregorianSummary
         self.hijriSummary = hijriSummary
         self.timeZoneIdentifier = timeZoneIdentifier
+        self.sahri = sahri
+        self.iftar = iftar
         self.prayers = prayers
         self.currentPrayer = currentPrayer
         self.nextPrayer = nextPrayer
@@ -291,6 +315,8 @@ extension WidgetSnapshot {
             gregorianSummary: activeSchedule.gregorianSummary,
             hijriSummary: activeSchedule.hijriSummary,
             timeZoneIdentifier: timeZoneIdentifier,
+            sahri: activeSchedule.sahri,
+            iftar: activeSchedule.iftar,
             prayers: updatedPrayers,
             currentPrayer: current,
             nextPrayer: next,
@@ -371,6 +397,8 @@ extension WidgetSnapshot {
             localDayKey: localDayKey,
             gregorianSummary: gregorianSummary,
             hijriSummary: hijriSummary,
+            sahri: sahri,
+            iftar: iftar,
             prayers: prayers
         )
         let candidates = [currentDay] + [nextDay].compactMap { $0 } + (futureDays ?? [])
@@ -487,6 +515,8 @@ enum WidgetDataStore {
                 localDayKey: schedule.localDayKey,
                 gregorianSummary: schedule.gregorianSummary,
                 hijriSummary: schedule.hijriSummary,
+                sahri: schedule.sahri,
+                iftar: schedule.iftar,
                 prayers: schedule.prayers.map(updating)
             )
         }
@@ -498,6 +528,8 @@ enum WidgetDataStore {
             gregorianSummary: snapshot.gregorianSummary,
             hijriSummary: snapshot.hijriSummary,
             timeZoneIdentifier: snapshot.timeZoneIdentifier,
+            sahri: snapshot.sahri,
+            iftar: snapshot.iftar,
             prayers: updatesCurrentDay ? snapshot.prayers.map(updating) : snapshot.prayers,
             currentPrayer: updatesCurrentDay ? snapshot.currentPrayer.map(updating) : snapshot.currentPrayer,
             nextPrayer: updatesCurrentDay ? snapshot.nextPrayer.map(updating) : snapshot.nextPrayer,
