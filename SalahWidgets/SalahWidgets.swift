@@ -73,7 +73,7 @@ struct SalahWidgetsEntryView : View {
             case .systemLarge:
                 LargeWidgetView(snapshot: entry.snapshot)
             default:
-                SmallWidgetView(date: entry.date, snapshot: entry.snapshot)
+                SmallWidgetView(snapshot: entry.snapshot)
             }
         }
         .environment(\.locale, WidgetLocalization.locale)
@@ -250,98 +250,155 @@ private extension WidgetSnapshot {
     }
 }
 
-private struct SmallWidgetView: View {
+private struct PrayerCompletionToggle: View {
+    let prayer: WidgetPrayer
+    let localDayKey: String
+    let timeZoneIdentifier: String
+    let size: CGFloat
+
+    var body: some View {
+        Toggle(
+            isOn: prayer.completed,
+            intent: SetPrayerCompletionIntent(
+                prayerKind: prayer.kind,
+                localDayKey: localDayKey,
+                timeZoneIdentifier: timeZoneIdentifier,
+                completed: !prayer.completed
+            )
+        ) {
+            EmptyView()
+        }
+        .toggleStyle(PrayerCompletionToggleStyle(size: size))
+    }
+}
+
+private struct PrayerCompletionToggleStyle: ToggleStyle {
+    let size: CGFloat
+
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            configuration.isOn.toggle()
+        } label: {
+            Image(systemName: configuration.isOn ? "checkmark.circle.fill" : "checkmark.circle")
+                .font(.system(size: size, weight: .semibold))
+                .foregroundStyle(configuration.isOn ? WidgetTheme.accent : WidgetTheme.secondary)
+                .frame(width: size + 8, height: size + 8)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(WidgetLocalization.dynamic(
+            configuration.isOn ? "Mark as Not Completed" : "Mark as Completed"
+        ))
+    }
+}
+
+private struct CountdownText: View {
+    let isCurrent: Bool
     let date: Date
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+            Text(date, style: .timer)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(WidgetTheme.accent)
+    }
+}
+
+private struct SmallWidgetView: View {
     let snapshot: WidgetSnapshot?
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Image(systemName: "moon.stars.fill")
-                    .font(.title3)
-                    .foregroundStyle(WidgetTheme.accent)
+        if let snapshot, let featured = snapshot.currentPrayer ?? snapshot.nextPrayer {
+            let isCurrent = snapshot.currentPrayer != nil
+            let countdownDate = isCurrent ? featured.end : featured.time
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 5) {
+                    Image(systemName: "calendar")
+                        .font(.caption)
+                        .foregroundStyle(WidgetTheme.accent)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(WidgetDateFormatter.shortGregorianDate(
+                            snapshot.localDayKey,
+                            timezoneIdentifier: snapshot.timeZoneIdentifier
+                        ))
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(WidgetTheme.secondary)
+                            .lineLimit(1)
+                        Text(snapshot.hijriSummary)
+                            .font(.caption2)
+                            .foregroundStyle(WidgetTheme.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .padding(.top, 5)
 
                 Spacer()
 
-                Text(WidgetTimeFormatter.time(
-                    date,
-                    timezoneIdentifier: snapshot?.timeZoneIdentifier ?? TimeZone.current.identifier
-                ))
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(WidgetTheme.accent)
-                .monospacedDigit()
-            }
+                HStack(spacing: 9) {
+                    Image(systemName: featured.symbolName)
+                        .font(.system(size: 30))
+                        .foregroundStyle(WidgetTheme.accent)
+                        .frame(width: 32)
 
-            Spacer(minLength: 4)
+                    VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 6) {
+                            Text(featured.name)
+                                .font(.system(size: 25, weight: .medium, design: .serif))
+                                .foregroundStyle(WidgetTheme.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
 
-            if let snapshot, let featured = snapshot.currentPrayer ?? snapshot.nextPrayer {
-                let isCurrent = snapshot.currentPrayer != nil
-                let countdownDate = isCurrent ? featured.end : featured.time
-
-                VStack(alignment: .center, spacing: 2) {
-                    Text(WidgetLocalization.dynamic(isCurrent ? "Current Salah" : "Next Salah"))
-                        .font(.caption2)
-                        .foregroundStyle(WidgetTheme.secondary)
-
-                    ZStack {
-                        Text(featured.name)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(WidgetTheme.primary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .padding(.horizontal, isCurrent && featured.kind.isObligatory ? 28 : 0)
-
-                        if isCurrent, featured.kind.isObligatory {
-                            HStack {
-                                Spacer()
-                                Button(intent: SetPrayerCompletionIntent(
-                                    prayerKind: featured.kind,
+                            if isCurrent, featured.kind.isObligatory {
+                                PrayerCompletionToggle(
+                                    prayer: featured,
                                     localDayKey: snapshot.localDayKey,
                                     timeZoneIdentifier: snapshot.timeZoneIdentifier,
-                                    completed: !featured.completed
-                                )) {
-                                    Image(systemName: featured.completed ? "checkmark.circle.fill" : "circle")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(featured.completed ? WidgetTheme.accent : WidgetTheme.secondary)
-                                        .frame(width: 28, height: 28)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(WidgetLocalization.dynamic(
-                                    featured.completed ? "Mark as Not Completed" : "Mark as Completed"
-                                ))
+                                    size: 18
+                                )
                             }
                         }
+                        CountdownText(isCurrent: isCurrent, date: countdownDate)
                     }
-                    .frame(maxWidth: .infinity)
-
-                    Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(WidgetTheme.accent)
-
-                    Text(countdownDate, style: .timer)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(WidgetTheme.accent)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                Spacer(minLength: 0)
-            } else {
-                Text("Open Salah to load prayer times")
-                    .font(.caption)
+                Spacer()
+
+                if let nextPrayer = snapshot.nextPrayer {
+                    HStack(spacing: 5) {
+                        Image(systemName: nextPrayer.symbolName)
+                        Text(nextPrayer.name)
+                        Text(WidgetTimeFormatter.time(
+                            nextPrayer.time,
+                            timezoneIdentifier: snapshot.timeZoneIdentifier
+                        ))
+                        .monospacedDigit()
+                    }
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(WidgetTheme.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .padding(.bottom, 5)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .padding(12)
+        } else {
+            Text("Open Salah to load prayer times")
+                .font(.caption)
+                .foregroundStyle(WidgetTheme.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(10)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(10)
     }
 }
 
@@ -378,17 +435,32 @@ private struct MediumWidgetView: View {
 
                     Spacer()
 
-                    Text(featured.name)
-                        .font(.system(size: 31, weight: .medium, design: .serif))
-                        .foregroundStyle(WidgetTheme.primary)
-                        .lineLimit(1)
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(WidgetLocalization.dynamic(isCurrent ? "ends in" : "in"))
-                        Text(countdownDate, style: .timer)
-                            .monospacedDigit()
+                    HStack(spacing: 9) {
+                        Image(systemName: featured.symbolName)
+                            .font(.system(size: 30))
+                            .foregroundStyle(WidgetTheme.accent)
+                            .frame(width: 32)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            HStack(spacing: 6) {
+                                Text(featured.name)
+                                    .font(.system(size: 25, weight: .medium, design: .serif))
+                                    .foregroundStyle(WidgetTheme.primary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
+
+                                if isCurrent, featured.kind.isObligatory {
+                                    PrayerCompletionToggle(
+                                        prayer: featured,
+                                        localDayKey: snapshot.localDayKey,
+                                        timeZoneIdentifier: snapshot.timeZoneIdentifier,
+                                        size: 18
+                                    )
+                                }
+                            }
+                            CountdownText(isCurrent: isCurrent, date: countdownDate)
+                        }
                     }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(WidgetTheme.accent)
 
                     Spacer()
 
