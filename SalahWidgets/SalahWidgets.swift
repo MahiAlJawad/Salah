@@ -67,7 +67,7 @@ struct SalahWidgetsEntryView : View {
         Group {
             switch family {
             case .accessoryInline:
-                InlineWidgetView(date: entry.date, snapshot: entry.snapshot)
+                InlineWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(snapshot: entry.snapshot)
             case .systemLarge:
@@ -87,20 +87,16 @@ struct SalahWidgetsEntryView : View {
 /// timeline advances at each next-prayer start; WidgetKit ultimately controls
 /// when that requested transition is rendered.
 private struct InlineWidgetView: View {
-    let date: Date
     let snapshot: WidgetSnapshot?
 
     var body: some View {
-        if let snapshot, let prayer = snapshot.currentObligatoryPrayer(at: date) {
+        if let snapshot, let prayer = snapshot.currentPrayer {
             InlinePrayerTime(
                 prayer: prayer,
                 time: prayer.end,
                 timeZoneIdentifier: snapshot.timeZoneIdentifier
             )
-        } else if let snapshot, let prayer = snapshot.nextObligatoryPrayer(after: date) {
-            // There is no active obligatory waqt in short gaps such as the
-            // period after Asr ends and before Maghrib begins. Show the next
-            // start time rather than incorrectly extending the prior prayer.
+        } else if let snapshot, let prayer = snapshot.nextPrayer {
             InlinePrayerTime(
                 prayer: prayer,
                 time: prayer.time,
