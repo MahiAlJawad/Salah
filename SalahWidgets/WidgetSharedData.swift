@@ -39,6 +39,18 @@ enum WidgetPrayerKind: String, Codable, Sendable {
         case .sunrise, .ishrak, .tahajjud: false
         }
     }
+
+    var iconTone: SalahIconTone {
+        switch self {
+        case .tahajjud: .midnightViolet
+        case .fajr: .predawnIndigo
+        case .sunrise, .ishrak: .sunriseAmber
+        case .dhuhr: .noonGold
+        case .asr: .afternoonOrange
+        case .maghrib: .sunsetCoral
+        case .isha: .nightBlue
+        }
+    }
 }
 
 struct WidgetPrayer: Codable, Identifiable, Sendable {

@@ -89,28 +89,33 @@ struct PrayerIcon: View {
     let prayer: PrayerType
     var active = false
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        let semanticColor = prayer.iconTone.color(for: colorScheme)
         Image(systemName: prayer.symbol)
             .font(.headline)
-            .foregroundStyle(active ? .white : palette.accentForeground)
+            .foregroundStyle(active ? .white : semanticColor)
             .frame(width: 40, height: 40)
-            .background(active ? palette.accent : palette.accentSoft, in: RoundedRectangle(cornerRadius: 10))
+            .background(active ? palette.accent : semanticColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
             .accessibilityHidden(true)
     }
 }
 
 struct TrackerSymbolIcon: View {
     let symbol: String
+    let tone: SalahIconTone
     var active = false
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        let semanticColor = tone.color(for: colorScheme)
         Image(systemName: symbol)
             .font(.headline)
-            .foregroundStyle(active ? .white : palette.accentForeground)
+            .foregroundStyle(active ? .white : semanticColor)
             .frame(width: 40, height: 40)
-            .background(active ? palette.accent : palette.accentSoft, in: RoundedRectangle(cornerRadius: 10))
+            .background(active ? palette.accent : semanticColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
             .accessibilityHidden(true)
     }
 }

@@ -217,6 +217,7 @@ struct RemindersView: View {
     @State private var charityReminderRepeat: CharityReminderRepeat
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.settingsOpener) private var settingsOpener
+    @Environment(\.colorScheme) private var colorScheme
 
     init(container: AppContainer) {
         self.container = container
@@ -370,7 +371,7 @@ struct RemindersView: View {
                     showingEducation = true
                 } label: {
                     HStack {
-                        Label(event.title, systemImage: event.symbol)
+                        prayerEventLabel(event)
                         Spacer()
                         Image(systemName: "circle").foregroundStyle(.secondary)
                     }
@@ -390,8 +391,7 @@ struct RemindersView: View {
                         }
                     } label: {
                         HStack(spacing: 10) {
-                            Label(event.title, systemImage: event.symbol)
-                                .foregroundStyle(.primary)
+                            prayerEventLabel(event)
                             Spacer()
                             if preference.enabled {
                                 Text(reminderSummary(for: preference))
@@ -420,6 +420,16 @@ struct RemindersView: View {
                 }
                 .frame(minHeight: 44)
             }
+        }
+    }
+
+    private func prayerEventLabel(_ event: PrayerEvent) -> some View {
+        Label {
+            Text(event.title)
+                .foregroundStyle(.primary)
+        } icon: {
+            Image(systemName: event.symbol)
+                .foregroundStyle(event.iconTone.color(for: colorScheme))
         }
     }
 

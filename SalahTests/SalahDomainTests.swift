@@ -6,6 +6,38 @@ final class SalahDomainTests: XCTestCase {
     private let zone = TimeZone(identifier: "Asia/Dhaka") ?? .gmt
     private let day = LocalDay(year: 2026, month: 7, day: 20)
 
+    func testPrayerAndFastingEventsUseSemanticIconTones() {
+        XCTAssertEqual(PrayerType.fajr.iconTone, .predawnIndigo)
+        XCTAssertEqual(PrayerType.dhuhr.iconTone, .noonGold)
+        XCTAssertEqual(PrayerType.asr.iconTone, .afternoonOrange)
+        XCTAssertEqual(PrayerType.maghrib.iconTone, .sunsetCoral)
+        XCTAssertEqual(PrayerType.isha.iconTone, .nightBlue)
+
+        XCTAssertEqual(PrayerEvent.sahri.iconTone, PrayerEvent.fajr.iconTone)
+        XCTAssertEqual(PrayerEvent.iftar.iconTone, PrayerEvent.maghrib.iconTone)
+        XCTAssertEqual(Set(PrayerType.allCases.map(\.iconTone)).count, PrayerType.allCases.count)
+    }
+
+    func testNaflPracticesUseSemanticIconTones() {
+        XCTAssertEqual(NaflPractice.tahajjud.iconTone, .midnightViolet)
+        XCTAssertEqual(NaflPractice.ishrak.iconTone, .sunriseAmber)
+        XCTAssertEqual(NaflPractice.morningAdhkar.iconTone, .sunriseAmber)
+        XCTAssertEqual(NaflPractice.eveningAdhkar.iconTone, .sunsetCoral)
+        XCTAssertEqual(NaflPractice.quran.iconTone, .quranEmerald)
+    }
+
+    func testWidgetPrayerKindsMirrorAppSemanticIconTones() {
+        XCTAssertEqual(WidgetPrayerKind.tahajjud.iconTone, .midnightViolet)
+        XCTAssertEqual(WidgetPrayerKind.fajr.iconTone, PrayerType.fajr.iconTone)
+        XCTAssertEqual(WidgetPrayerKind.sunrise.iconTone, .sunriseAmber)
+        XCTAssertEqual(WidgetPrayerKind.ishrak.iconTone, .sunriseAmber)
+        XCTAssertEqual(WidgetPrayerKind.dhuhr.iconTone, PrayerType.dhuhr.iconTone)
+        XCTAssertEqual(WidgetPrayerKind.asr.iconTone, PrayerType.asr.iconTone)
+        XCTAssertEqual(WidgetPrayerKind.maghrib.iconTone, PrayerType.maghrib.iconTone)
+        XCTAssertEqual(WidgetPrayerKind.isha.iconTone, PrayerType.isha.iconTone)
+        XCTAssertEqual(SalahIconTone.allCases.count, 8)
+    }
+
     func testCurrentAndNextPrayerAcrossDay() throws {
         let today = try fixture(day: day)
         let yesterday = try fixture(day: day.adding(days: -1, in: zone))

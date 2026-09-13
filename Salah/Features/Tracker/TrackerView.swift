@@ -248,6 +248,7 @@ struct TrackerView: View {
                     GoodDeedRow(
                         title: deed.title,
                         symbol: deed.symbol,
+                        tone: deed.iconTone,
                         completed: isGoodDeedCompleted(deed.id),
                         accent: palette.accent
                     ) {

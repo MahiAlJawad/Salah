@@ -35,6 +35,7 @@
 		D20000000000000000000013 /* QiblaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000013 /* QiblaView.swift */; };
 		D20000000000000000000014 /* CharityHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* CharityHistoryView.swift */; };
 		D20000000000000000000016 /* TasbihViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* TasbihViews.swift */; };
+		D20000000000000000000017 /* SalahIconTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000017 /* SalahIconTone.swift */; };
 		D50000000000000000000001 /* SalahDomainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000001 /* SalahDomainTests.swift */; };
 		D50000000000000000000002 /* SalahUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000002 /* SalahUITests.swift */; };
 		E10000000000000000000001 /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = E30000000000000000000001 /* Adhan */; };
@@ -129,6 +130,7 @@
 		D10000000000000000000013 /* QiblaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaView.swift; sourceTree = "<group>"; };
 		D10000000000000000000014 /* CharityHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityHistoryView.swift; sourceTree = "<group>"; };
 		D10000000000000000000016 /* TasbihViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihViews.swift; sourceTree = "<group>"; };
+		D10000000000000000000017 /* SalahIconTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SalahIconTone.swift; path = SalahWidgets/SalahIconTone.swift; sourceTree = "<group>"; };
 		D40000000000000000000001 /* SalahDomainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahDomainTests.swift; sourceTree = "<group>"; };
 		D40000000000000000000002 /* SalahUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahUITests.swift; sourceTree = "<group>"; };
 		D40000000000000000000003 /* SalahTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalahTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -224,6 +226,7 @@
 			isa = PBXGroup;
 			children = (
 				0C7044C83017C92200277BD4 /* SalahWidgetsExtension.entitlements */,
+				D10000000000000000000017 /* SalahIconTone.swift */,
 				D1000000000000000000000E /* WidgetSharedData.swift */,
 				0C6F31013013EF7F0065F050 /* .swiftlint.yml */,
 				5AA6AB552B81E90900E2A7DB /* Salah */,
@@ -623,6 +626,7 @@
 				D20000000000000000000004 /* PrayerData.swift in Sources */,
 				D20000000000000000000005 /* Persistence.swift in Sources */,
 				D20000000000000000000006 /* SalahTheme.swift in Sources */,
+				D20000000000000000000017 /* SalahIconTone.swift in Sources */,
 				FB0000000000000000000002 /* SharedComponents.swift in Sources */,
 				FB0000000000000000000003 /* LocationEducationView.swift in Sources */,
 				FB0000000000000000000004 /* DistrictPickerView.swift in Sources */,

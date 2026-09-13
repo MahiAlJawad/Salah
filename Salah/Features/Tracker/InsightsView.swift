@@ -479,6 +479,7 @@ private struct InsightDetailView: View {
     @Bindable var container: AppContainer
     let data: InsightsDataSet
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selection: InsightDateSelection
 
     init(category: InsightCategory, container: AppContainer, initialSelection: InsightDateSelection, data: InsightsDataSet) {
@@ -562,6 +563,7 @@ private struct InsightDetailView: View {
                     breakdownRow(
                         title: prayer.title,
                         symbol: prayer.symbol,
+                        tone: prayer.iconTone,
                         value: data.prayerRecords.filter {
                             $0.completed && $0.prayer == prayer && selection.bounds(timeZone: data.timeZone).contains($0.localDay)
                         }.count.formatted(.number.locale(L10n.locale))
@@ -582,6 +584,7 @@ private struct InsightDetailView: View {
                     breakdownRow(
                         title: practice.title,
                         symbol: practice.symbol,
+                        tone: practice.iconTone,
                         value: data.naflRecords.filter {
                             selection.bounds(timeZone: data.timeZone).contains($0.day) && $0.contains(practice)
                         }.count.formatted(.number.locale(L10n.locale))
@@ -696,9 +699,14 @@ private struct InsightDetailView: View {
         }
     }
 
-    private func breakdownRow(title: String, symbol: String, value: String) -> some View {
+    private func breakdownRow(title: String, symbol: String, tone: SalahIconTone? = nil, value: String) -> some View {
         HStack {
-            Label(title, systemImage: symbol)
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: symbol)
+                    .foregroundStyle(tone?.color(for: colorScheme) ?? Color.primary)
+            }
             Spacer()
             Text(value).fontWeight(.semibold).monospacedDigit()
         }

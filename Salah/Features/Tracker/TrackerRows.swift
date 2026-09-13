@@ -91,6 +91,7 @@ private struct TrackerPrayerStatus: View {
 struct GoodDeedRow: View {
     let title: String
     let symbol: String
+    let tone: SalahIconTone
     let completed: Bool
     let accent: Color
     let action: () -> Void
@@ -103,7 +104,7 @@ struct GoodDeedRow: View {
                 completed: completed,
                 accent: accent
             ) {
-                TrackerSymbolIcon(symbol: symbol)
+                TrackerSymbolIcon(symbol: symbol, tone: tone)
             }
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity, alignment: .leading)

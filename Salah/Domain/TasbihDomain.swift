@@ -28,6 +28,15 @@ enum NaflPractice: Int, CaseIterable, Codable, Identifiable, Sendable {
         case .quran: "book.closed.fill"
         }
     }
+
+    var iconTone: SalahIconTone {
+        switch self {
+        case .tahajjud: .midnightViolet
+        case .ishrak, .morningAdhkar: .sunriseAmber
+        case .eveningAdhkar: .sunsetCoral
+        case .quran: .quranEmerald
+        }
+    }
 }
 
 struct TasbihDailyRecord: Codable, Equatable, Identifiable, Sendable {

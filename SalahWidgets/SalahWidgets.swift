@@ -181,6 +181,20 @@ private enum WidgetTheme {
     static let divider   = Color.white.opacity(0.13)
 }
 
+private extension Image {
+    @ViewBuilder
+    func semanticWidgetTint(_ tone: SalahIconTone) -> some View {
+        if #available(iOS 18.0, *) {
+            renderingMode(.template)
+                .widgetAccentedRenderingMode(.fullColor)
+                .foregroundColor(tone.darkSurfaceColor)
+        } else {
+            renderingMode(.template)
+                .foregroundColor(tone.darkSurfaceColor)
+        }
+    }
+}
+
 private enum WidgetTimeFormatter {
     static func time(_ date: Date, timezoneIdentifier: String) -> String {
         let formatter = DateFormatter()
@@ -224,19 +238,20 @@ private extension WidgetPrayer {
 }
 
 private extension WidgetSnapshot {
-    func fastingEvent(at date: Date) -> (title: String, time: Date, symbolName: String)? {
+    func fastingEvent(at date: Date) -> (title: String, time: Date, symbolName: String, tone: SalahIconTone)? {
         guard let maghrib = prayers.first(where: { $0.kind == .maghrib }) else { return nil }
 
         if date < maghrib.time {
             return (
                 WidgetLocalization.dynamic("Iftar"),
                 iftar ?? maghrib.time,
-                "sun.horizon.fill"
+                "sun.horizon.fill",
+                .sunsetCoral
             )
         }
 
         guard let sahri = nextDay?.sahri else { return nil }
-        return (WidgetLocalization.dynamic("Sahri"), sahri, "moon.stars.fill")
+        return (WidgetLocalization.dynamic("Sahri"), sahri, "moon.stars.fill", .predawnIndigo)
     }
 }
 
@@ -334,9 +349,9 @@ private struct SmallWidgetView: View {
 
                 HStack(spacing: 9) {
                     Image(systemName: featured.symbolName)
-                        .font(.system(size: 30))
-                        .foregroundStyle(WidgetTheme.accent)
-                        .frame(width: 32)
+                        .semanticWidgetTint(featured.kind.iconTone)
+                        .font(.system(size: 24, weight: .medium))
+                        .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 6) {
@@ -365,15 +380,18 @@ private struct SmallWidgetView: View {
                 if let nextPrayer = snapshot.nextPrayer {
                     HStack(spacing: 5) {
                         Image(systemName: nextPrayer.symbolName)
-                        Text(nextPrayer.name)
-                        Text(WidgetTimeFormatter.time(
-                            nextPrayer.time,
-                            timezoneIdentifier: snapshot.timeZoneIdentifier
-                        ))
-                        .monospacedDigit()
+                            .semanticWidgetTint(nextPrayer.kind.iconTone)
+                        Group {
+                            Text(nextPrayer.name)
+                            Text(WidgetTimeFormatter.time(
+                                nextPrayer.time,
+                                timezoneIdentifier: snapshot.timeZoneIdentifier
+                            ))
+                            .monospacedDigit()
+                        }
+                        .foregroundStyle(WidgetTheme.secondary)
                     }
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(WidgetTheme.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .padding(.bottom, 5)
@@ -427,9 +445,9 @@ private struct MediumWidgetView: View {
 
                     HStack(spacing: 9) {
                         Image(systemName: featured.symbolName)
-                            .font(.system(size: 30))
-                            .foregroundStyle(WidgetTheme.accent)
-                            .frame(width: 32)
+                            .semanticWidgetTint(featured.kind.iconTone)
+                            .font(.system(size: 24, weight: .medium))
+                            .frame(width: 28)
 
                         VStack(alignment: .leading, spacing: 1) {
                             HStack(spacing: 6) {
@@ -457,15 +475,18 @@ private struct MediumWidgetView: View {
                     if let fastingEvent = snapshot.fastingEvent(at: date) {
                         HStack(spacing: 5) {
                             Image(systemName: fastingEvent.symbolName)
-                            Text(fastingEvent.title)
-                            Text(WidgetTimeFormatter.time(
-                                fastingEvent.time,
-                                timezoneIdentifier: snapshot.timeZoneIdentifier
-                            ))
-                            .monospacedDigit()
+                                .semanticWidgetTint(fastingEvent.tone)
+                            Group {
+                                Text(fastingEvent.title)
+                                Text(WidgetTimeFormatter.time(
+                                    fastingEvent.time,
+                                    timezoneIdentifier: snapshot.timeZoneIdentifier
+                                ))
+                                .monospacedDigit()
+                            }
+                            .foregroundStyle(WidgetTheme.secondary)
                         }
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(WidgetTheme.secondary)
                         .padding(.bottom, 5)
                     }
                 }
@@ -489,9 +510,9 @@ private struct MediumWidgetView: View {
                     ForEach(snapshot.prayers) { prayer in
                         HStack(spacing: 5) {
                             Image(systemName: prayer.symbolName)
+                                .semanticWidgetTint(prayer.kind.iconTone)
                                 .font(.system(size: 11))
                                 .frame(width: 15)
-                                .foregroundStyle(prayer.mediumRowColor)
                             Text(prayer.name)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)

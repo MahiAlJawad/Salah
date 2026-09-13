@@ -107,6 +107,7 @@ final class TodayViewModel {
 struct TodayView: View {
     @Bindable var container: AppContainer
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
     @State private var viewModel: TodayViewModel
     @State private var showingDistricts = false
     @State private var showingCurrentLocation = false
@@ -277,8 +278,8 @@ struct TodayView: View {
                 .background(palette.groupedSurface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                 HStack(spacing: 12) {
-                    eventCard(title: "Sunrise", date: day.sunrise, symbol: "sunrise.fill", day: day)
-                    eventCard(title: "Sunset", date: day.sunset, symbol: "sunset.fill", day: day)
+                    eventCard(title: "Sunrise", date: day.sunrise, symbol: "sunrise.fill", tone: .sunriseAmber, day: day)
+                    eventCard(title: "Sunset", date: day.sunset, symbol: "sunset.fill", tone: .sunsetCoral, day: day)
                 }
 
                 Text("FASTING")
@@ -287,8 +288,8 @@ struct TodayView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 4)
                 HStack(spacing: 12) {
-                    eventCard(title: "Sahri ends", date: day.sahri, symbol: "moon.stars.fill", day: day)
-                    eventCard(title: "Iftar begins", date: day.iftar, symbol: "sun.horizon.fill", day: day)
+                    eventCard(title: "Sahri ends", date: day.sahri, symbol: "moon.stars.fill", tone: .predawnIndigo, day: day)
+                    eventCard(title: "Iftar begins", date: day.iftar, symbol: "sun.horizon.fill", tone: .sunsetCoral, day: day)
                 }
 
                 Text("Times use \(day.methodName), \(container.settings.calculation.madhab.title). Confirm locally when necessary.")
@@ -332,9 +333,11 @@ struct TodayView: View {
         viewModel.toggle(window.prayer, on: day.localDay, timeZone: day.timeZone)
     }
 
-    private func eventCard(title: String, date: Date, symbol: String, day: PrayerDay) -> some View {
+    private func eventCard(title: String, date: Date, symbol: String, tone: SalahIconTone, day: PrayerDay) -> some View {
         SalahCard {
-            Image(systemName: symbol).foregroundStyle(palette.warm).accessibilityHidden(true)
+            Image(systemName: symbol)
+                .foregroundStyle(tone.color(for: colorScheme))
+                .accessibilityHidden(true)
             Text(L10n.dynamic(title)).font(.caption).foregroundStyle(.secondary)
             Text(PrayerDateFormatting.time(date, preference: container.settings.calculation.timeFormat, timeZone: day.timeZone))
                 .font(.headline.monospacedDigit())

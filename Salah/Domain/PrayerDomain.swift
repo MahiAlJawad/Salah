@@ -24,6 +24,16 @@ enum PrayerType: String, CaseIterable, Codable, Identifiable, Sendable {
         case .isha: "moon.fill"
         }
     }
+
+    var iconTone: SalahIconTone {
+        switch self {
+        case .fajr: .predawnIndigo
+        case .dhuhr: .noonGold
+        case .asr: .afternoonOrange
+        case .maghrib: .sunsetCoral
+        case .isha: .nightBlue
+        }
+    }
 }
 
 enum PrayerEvent: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -50,6 +60,16 @@ enum PrayerEvent: String, CaseIterable, Codable, Identifiable, Sendable {
         case .asr: "sun.min.fill"
         case .maghrib, .iftar: "sun.horizon.fill"
         case .isha: "moon.fill"
+        }
+    }
+
+    var iconTone: SalahIconTone {
+        switch self {
+        case .fajr, .sahri: .predawnIndigo
+        case .dhuhr: .noonGold
+        case .asr: .afternoonOrange
+        case .maghrib, .iftar: .sunsetCoral
+        case .isha: .nightBlue
         }
     }
 }
@@ -601,5 +621,4 @@ struct PrayerRecordSnapshot: Identifiable, Equatable, Sendable {
     var source: String?
     var notes: String?
 }
-
 
