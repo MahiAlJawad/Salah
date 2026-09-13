@@ -10,6 +10,7 @@
 		0C7044AE3017C6B800277BD4 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C7044AD3017C6B800277BD4 /* WidgetKit.framework */; };
 		0C7044B03017C6B800277BD4 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C7044AF3017C6B800277BD4 /* SwiftUI.framework */; };
 		0C7044C23017C6BA00277BD4 /* SalahWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C7044AB3017C6B800277BD4 /* SalahWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0CB08E2F30572003009C42B8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000000C /* PrivacyInfo.xcprivacy */; };
 		0CEE636C301BCC49000F3FF9 /* DebugDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEE636B301BCC41000F3FF9 /* DebugDrawerView.swift */; };
 		5A8F54892B87696500ED1BFC /* Location/districts.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A8F54882B87696500ED1BFC /* Location/districts.json */; };
 		5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB562B81E90900E2A7DB /* SalahApp.swift */; };
@@ -551,6 +552,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CB08E2F30572003009C42B8 /* PrivacyInfo.xcprivacy in Resources */,
 				D20000000000000000000010 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
