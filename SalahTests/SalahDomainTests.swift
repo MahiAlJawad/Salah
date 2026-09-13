@@ -735,7 +735,7 @@ final class SalahDomainTests: XCTestCase {
         )
     }
 
-    func testInlineWidgetTransitionsOnlyAtObligatoryPrayerStarts() throws {
+    func testInlineWidgetTransitionsAtMorningWaqtBoundaries() throws {
         let tomorrow = day.adding(days: 1, in: zone)
         let today = try fixture(day: day)
         let nextDay = try fixture(day: tomorrow)
@@ -763,11 +763,16 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(
             transitions,
             [
+                try XCTUnwrap(day.date(in: zone, hour: 6, minute: 35)),
+                try XCTUnwrap(day.date(in: zone, hour: 12)),
                 try XCTUnwrap(day.date(in: zone, hour: 12, minute: 10)),
                 try XCTUnwrap(day.date(in: zone, hour: 16)),
                 try XCTUnwrap(day.date(in: zone, hour: 18, minute: 33)),
                 try XCTUnwrap(day.date(in: zone, hour: 20)),
                 try XCTUnwrap(tomorrow.date(in: zone, hour: 5, minute: 5)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 6, minute: 15)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 6, minute: 35)),
+                try XCTUnwrap(tomorrow.date(in: zone, hour: 12)),
                 try XCTUnwrap(tomorrow.date(in: zone, hour: 12, minute: 10)),
                 try XCTUnwrap(tomorrow.date(in: zone, hour: 16)),
                 try XCTUnwrap(tomorrow.date(in: zone, hour: 18, minute: 33)),

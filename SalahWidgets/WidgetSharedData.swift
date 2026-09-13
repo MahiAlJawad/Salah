@@ -317,16 +317,29 @@ extension WidgetSnapshot {
         return upcoming ?? tomorrowFajr
     }
 
-    /// Predictable inline-widget changes: one entry per obligatory prayer
-    /// start. This avoids dense end/start entries while providing WidgetKit
-    /// enough future data to advance without opening the app each day.
+    /// Predictable inline-widget changes. Fajr's end and the two Ishrak
+    /// boundaries are included so the Lock Screen reflects the same morning
+    /// waqt as the app without requiring the containing app to be opened.
     func inlineTransitionDates(after date: Date, horizon: TimeInterval = 8 * 24 * 60 * 60) -> [Date] {
         let limit = date.addingTimeInterval(horizon)
-        return allSchedules
-            .flatMap(\.prayers)
-            .filter { $0.kind.isObligatory && $0.time > date && $0.time <= limit }
-            .map(\.time)
-            .sorted()
+        var dates = Set<Date>()
+
+        for schedule in allSchedules {
+            let prayers = schedule.prayers
+            for prayer in prayers where prayer.kind.isObligatory {
+                dates.insert(prayer.time)
+            }
+            if let fajr = prayers.first(where: { $0.kind == .fajr }), fajr.end > fajr.time {
+                dates.insert(fajr.end)
+            }
+            if let sunrise = prayers.first(where: { $0.kind == .sunrise }),
+               let dhuhr = prayers.first(where: { $0.kind == .dhuhr }) {
+                dates.insert(sunrise.time.addingTimeInterval(Self.ishrakSunriseBuffer))
+                dates.insert(dhuhr.time.addingTimeInterval(-Self.ishrakDhuhrBuffer))
+            }
+        }
+
+        return dates.filter { $0 > date && $0 <= limit }.sorted()
     }
 
     func transitionDates(after date: Date, horizon: TimeInterval = 8 * 24 * 60 * 60) -> [Date] {
