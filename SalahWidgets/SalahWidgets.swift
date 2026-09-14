@@ -90,7 +90,7 @@ private struct RectangularWidgetView: View {
         Group {
             if let snapshot, let prayer = snapshot.currentPrayer ?? snapshot.nextPrayer {
                 let isCurrent = snapshot.currentPrayer != nil
-                let time = isCurrent ? prayer.displayEnd : prayer.time
+                let time = isCurrent ? prayer.end : prayer.time
 
                 HStack(alignment: .center, spacing: 8) {
                     Image(systemName: prayer.symbolName)
@@ -105,7 +105,7 @@ private struct RectangularWidgetView: View {
                             .minimumScaleFactor(0.75)
 
                         HStack(spacing: 3) {
-                            Text(WidgetLocalization.dynamic(isCurrent ? "Ends" : "Starts"))
+                            Text(WidgetLocalization.dynamic(isCurrent ? "Until" : "Starts"))
                             Text(WidgetTimeFormatter.time(
                                 time,
                                 timezoneIdentifier: snapshot.timeZoneIdentifier
