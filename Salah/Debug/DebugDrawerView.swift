@@ -26,6 +26,7 @@ struct DebugDrawerView: View {
     @AppStorage("salah.deeds.charity-total")   private var charityTotal = 0
     @AppStorage("salah.deeds.charity-goal")    private var charityGoal = 100
     @AppStorage("salah.deeds.charity-month")   private var charityMonth = ""
+    @AppStorage("salah.debug.current-prayer-preview") private var currentPrayerPreview = ""
 
     @State private var seedMessage: String?
     @State private var deleteMessage: String?
@@ -55,6 +56,28 @@ struct DebugDrawerView: View {
                         Label(seedMessage, systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.footnote)
+                    }
+                }
+
+                Section("Today Tab Preview") {
+                    Button {
+                        currentPrayerPreview = PrayerType.dhuhr.rawValue
+                    } label: {
+                        Label("Preview Dhuhr as Current", systemImage: "sun.max.fill")
+                    }
+                    .foregroundStyle(palette.accent)
+
+                    Button {
+                        currentPrayerPreview = PrayerType.maghrib.rawValue
+                    } label: {
+                        Label("Preview Maghrib as Current", systemImage: "sun.horizon.fill")
+                    }
+                    .foregroundStyle(palette.accent)
+
+                    if !currentPrayerPreview.isEmpty {
+                        Button("Use Actual Current Prayer") {
+                            currentPrayerPreview = ""
+                        }
                     }
                 }
 

@@ -112,6 +112,9 @@ struct TodayView: View {
     @State private var showingDistricts = false
     @State private var showingCurrentLocation = false
     @State private var showingFutureSalahAlert = false
+    #if DEBUG
+    @AppStorage("salah.debug.current-prayer-preview") private var currentPrayerPreview = ""
+    #endif
 
     init(container: AppContainer) {
         self.container = container
@@ -233,7 +236,7 @@ struct TodayView: View {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         CurrentPrayerCard(
                             moment: PrayerTimeline.cardMoment(
-                                now: context.date,
+                                now: displayedNow(for: day, fallback: context.date),
                                 today: day,
                                 previous: viewModel.previousDay
                             )
@@ -265,7 +268,7 @@ struct TodayView: View {
                             window: window,
                             day: day,
                             preference: container.settings.calculation.timeFormat,
-                            isActive: isActive(window, day: day),
+                            isActive: isActive(window, day: day, now: displayedNow(for: day, fallback: .now)),
                             showsDisclosure: false
                         ) {
                             PrayerCompletionControl(viewModel: viewModel, prayer: window.prayer) {
@@ -306,14 +309,24 @@ struct TodayView: View {
         }
     }
 
-    private func isActive(_ window: PrayerWindow, day: PrayerDay) -> Bool {
+    private func isActive(_ window: PrayerWindow, day: PrayerDay, now: Date) -> Bool {
         guard day.localDay == LocalDay(.now, timeZone: day.timeZone) else { return false }
         let moment = PrayerTimeline.moment(
-            now: .now,
+            now: now,
             today: day,
             previous: viewModel.previousDay
         )
         return moment.current == window
+    }
+
+    private func displayedNow(for day: PrayerDay, fallback: Date) -> Date {
+        #if DEBUG
+        if let prayer = PrayerType(rawValue: currentPrayerPreview),
+           let window = day.window(for: prayer) {
+            return window.start.addingTimeInterval(window.end.timeIntervalSince(window.start) / 2)
+        }
+        #endif
+        return fallback
     }
 
     private func handleScheduleTap(_ window: PrayerWindow, day: PrayerDay, now: Date = .now) {

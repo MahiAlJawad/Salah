@@ -114,7 +114,7 @@ struct PrayerScheduleRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            PrayerIcon(prayer: window.prayer, active: isActive)
+            PrayerIcon(prayer: window.prayer)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(window.prayer.title)
