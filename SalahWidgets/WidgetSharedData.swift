@@ -131,6 +131,13 @@ struct WidgetPrayer: Codable, Identifiable, Sendable {
     }
 }
 
+struct WidgetFastingEvent: Sendable {
+    let name: String
+    let time: Date
+    let symbolName: String
+    let tone: SalahIconTone
+}
+
 struct WidgetDaySchedule: Codable, Sendable {
     let localDayKey: String
     let gregorianSummary: String
@@ -356,6 +363,50 @@ extension WidgetSnapshot {
         return upcoming ?? tomorrowFajr
     }
 
+    /// The next Sahri or Iftar across the saved schedules. The Lock Screen
+    /// fasting widget uses this rather than a prayer window because both
+    /// events are point-in-time milestones.
+    func nextFastingEvent(after date: Date) -> WidgetFastingEvent? {
+        allSchedules
+            .flatMap { schedule -> [WidgetFastingEvent] in
+                var events: [WidgetFastingEvent] = []
+                if let sahri = schedule.sahri {
+                    events.append(WidgetFastingEvent(
+                        name: WidgetLocalization.dynamic("Sahri"),
+                        time: sahri,
+                        symbolName: "moon.stars.fill",
+                        tone: .predawnIndigo
+                    ))
+                }
+                if let iftar = schedule.iftar
+                    ?? schedule.prayers.first(where: { $0.kind == .maghrib })?.time {
+                    events.append(WidgetFastingEvent(
+                        name: WidgetLocalization.dynamic("Iftar"),
+                        time: iftar,
+                        symbolName: "sun.horizon.fill",
+                        tone: .sunsetCoral
+                    ))
+                }
+                return events
+            }
+            .filter { $0.time > date }
+            .min { $0.time < $1.time }
+    }
+
+    /// The fasting widget changes only when Sahri or Iftar arrives.
+    func fastingTransitionDates(after date: Date, horizon: TimeInterval = 8 * 24 * 60 * 60) -> [Date] {
+        let limit = date.addingTimeInterval(horizon)
+        let dates = allSchedules.flatMap { schedule -> [Date] in
+            var events = [schedule.sahri].compactMap { $0 }
+            if let iftar = schedule.iftar
+                ?? schedule.prayers.first(where: { $0.kind == .maghrib })?.time {
+                events.append(iftar)
+            }
+            return events
+        }
+        return dates.filter { $0 > date && $0 <= limit }.sorted()
+    }
+
     /// Predictable inline-widget changes. Fajr's end and the two Ishrak
     /// boundaries are included so the Lock Screen reflects the same morning
     /// waqt as the app without requiring the containing app to be opened.
@@ -532,6 +583,7 @@ private extension Array {
 
 enum WidgetDataStore {
     static let groupID = "group.com.prayer.salah"
+    static let fastingWidgetKind = "SalahFastingTimesWidget"
     private static let snapshotKey = "salah.widget.snapshot"
 
     static func save(_ snapshot: WidgetSnapshot) {
@@ -540,6 +592,7 @@ enum WidgetDataStore {
 
         defaults.set(data, forKey: snapshotKey)
         WidgetCenter.shared.reloadTimelines(ofKind: "SalahWidgets")
+        WidgetCenter.shared.reloadTimelines(ofKind: fastingWidgetKind)
     }
 
     static func load() -> WidgetSnapshot? {

@@ -654,6 +654,42 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(asr.displayEnd, asr.end.addingTimeInterval(-60))
     }
 
+    func testWidgetFastingEventSelectsTheNextSahriOrIftar() throws {
+        let today = try fixture(day: day)
+        let tomorrow = try fixture(day: day.adding(days: 1, in: zone))
+        let snapshot = WidgetSnapshot(
+            updatedAt: .now,
+            localDayKey: today.localDay.key,
+            gregorianSummary: today.gregorianSummary,
+            hijriSummary: today.hijriSummary,
+            timeZoneIdentifier: zone.identifier,
+            sahri: today.sahri,
+            iftar: today.iftar,
+            prayers: widgetPrayers(from: today),
+            currentPrayer: nil,
+            nextPrayer: nil,
+            tomorrowFajr: widgetPrayers(from: tomorrow).first { $0.kind == .fajr },
+            nextDay: WidgetDaySchedule(
+                localDayKey: tomorrow.localDay.key,
+                gregorianSummary: tomorrow.gregorianSummary,
+                hijriSummary: tomorrow.hijriSummary,
+                sahri: tomorrow.sahri,
+                iftar: tomorrow.iftar,
+                prayers: widgetPrayers(from: tomorrow)
+            )
+        )
+
+        let beforeSahri = try XCTUnwrap(day.date(in: zone, hour: 4, minute: 30))
+        let afterSahri = try XCTUnwrap(day.date(in: zone, hour: 5))
+        let afterIftar = try XCTUnwrap(day.date(in: zone, hour: 19))
+
+        XCTAssertEqual(snapshot.nextFastingEvent(after: beforeSahri)?.time, today.sahri)
+        XCTAssertEqual(snapshot.nextFastingEvent(after: afterSahri)?.time, today.iftar)
+        XCTAssertEqual(snapshot.nextFastingEvent(after: afterIftar)?.time, tomorrow.sahri)
+        XCTAssertTrue(snapshot.fastingTransitionDates(after: afterSahri).contains(today.iftar))
+        XCTAssertTrue(snapshot.fastingTransitionDates(after: afterSahri).contains(tomorrow.sahri))
+    }
+
     func testRectangularWidgetTransitionsFromEndsToStartsAndBackToEnds() throws {
         let today = try fixture(day: day)
         let tomorrow = try fixture(day: day.adding(days: 1, in: zone))

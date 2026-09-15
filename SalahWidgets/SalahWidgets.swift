@@ -208,7 +208,7 @@ private struct InlinePrayerTime: View {
     }
 }
 
-private enum WidgetTheme {
+enum WidgetTheme {
     /// Resolved at render time from the user's theme stored in the App Group.
     static var accent: Color {
         let rgb = WidgetThemeStore.accentRGB
@@ -249,7 +249,7 @@ private extension Image {
     }
 }
 
-private enum WidgetTimeFormatter {
+enum WidgetTimeFormatter {
     static func time(_ date: Date, timezoneIdentifier: String) -> String {
         let formatter = DateFormatter()
         formatter.locale = WidgetLocalization.locale
@@ -288,24 +288,6 @@ private extension WidgetPrayer {
     var rowWeight: Font.Weight {
         if isCurrent { return .semibold }
         return .regular
-    }
-}
-
-private extension WidgetSnapshot {
-    func fastingEvent(at date: Date) -> (title: String, time: Date, symbolName: String, tone: SalahIconTone)? {
-        guard let maghrib = prayers.first(where: { $0.kind == .maghrib }) else { return nil }
-
-        if date < maghrib.time {
-            return (
-                WidgetLocalization.dynamic("Iftar"),
-                iftar ?? maghrib.time,
-                "sun.horizon.fill",
-                .sunsetCoral
-            )
-        }
-
-        guard let sahri = nextDay?.sahri else { return nil }
-        return (WidgetLocalization.dynamic("Sahri"), sahri, "moon.stars.fill", .predawnIndigo)
     }
 }
 
@@ -526,12 +508,12 @@ private struct MediumWidgetView: View {
 
                     Spacer()
 
-                    if let fastingEvent = snapshot.fastingEvent(at: date) {
+                    if let fastingEvent = snapshot.nextFastingEvent(after: date) {
                         HStack(spacing: 5) {
                             Image(systemName: fastingEvent.symbolName)
                                 .semanticWidgetTint(fastingEvent.tone)
                             Group {
-                                Text(fastingEvent.title)
+                                Text(fastingEvent.name)
                                 Text(WidgetTimeFormatter.time(
                                     fastingEvent.time,
                                     timezoneIdentifier: snapshot.timeZoneIdentifier
