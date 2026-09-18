@@ -304,3 +304,166 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(weekly.isSelected)
     }
 }
+
+extension SalahUITests {
+    func testCalendarPreviousDayEditingUndoAndPersistence() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-reset-state", "-reset-tracker", "-onboarding-complete"]
+        app.launch()
+        app.tabBars.buttons["Calendar"].tap()
+        let selectedDate = app.staticTexts["calendar.selected-date"]
+        XCTAssertTrue(selectedDate.waitForExistence(timeout: 5))
+        let today = selectedDate.label
+        app.buttons["calendar.collapse"].tap()
+        app.buttons["calendar.previous-day"].tap()
+        let changedDate = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", today), object: selectedDate)
+        XCTAssertEqual(XCTWaiter.wait(for: [changedDate], timeout: 3), .completed)
+        let previousDate = selectedDate.label
+        app.segmentedControls.buttons["Nafl"].tap()
+        let quran = app.buttons["Read Quran"]
+        XCTAssertTrue(quran.waitForExistence(timeout: 3))
+        quran.tap()
+        XCTAssertEqual(quran.value as? String, "completed")
+        app.buttons["Undo"].tap()
+        XCTAssertEqual(quran.value as? String, "not completed")
+        quran.tap()
+        app.segmentedControls.buttons["Tasbih"].tap()
+        XCTAssertEqual(selectedDate.label, previousDate)
+        app.buttons["calendar.edit-tasbih"].tap()
+        let input = app.textFields["calendar.tasbih-input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 3))
+        input.tap()
+        input.typeText(XCUIKeyboardKey.delete.rawValue + "42")
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["42"].waitForExistence(timeout: 3))
+        app.buttons["calendar.edit-tasbih"].tap()
+        input.tap()
+        input.typeText("9")
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.staticTexts["42"].exists)
+        app.buttons["calendar.today"].tap()
+        XCTAssertEqual(selectedDate.label, today)
+        XCTAssertFalse(app.buttons["calendar.next-day"].isEnabled)
+        XCTAssertTrue(app.staticTexts["0"].exists)
+        app.buttons["calendar.previous-day"].tap()
+        XCTAssertTrue(app.staticTexts["42"].exists)
+        app.terminate()
+        app.launchArguments = ["-ui-testing", "-onboarding-complete"]
+        app.launch()
+        app.tabBars.buttons["Calendar"].tap()
+        XCTAssertTrue(app.buttons["calendar.collapse"].waitForExistence(timeout: 3))
+        app.buttons["calendar.collapse"].tap()
+        app.buttons["calendar.previous-day"].tap()
+        app.segmentedControls.buttons["Tasbih"].tap()
+        XCTAssertTrue(app.staticTexts["42"].waitForExistence(timeout: 3))
+        app.segmentedControls.buttons["Nafl"].tap()
+        XCTAssertEqual(app.buttons["Read Quran"].value as? String, "completed")
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Calendar previous-day Nafl"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    func testCalendarTodaySynchronizesWithTrackerAndGivingUsesSelectedDay() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-reset-state", "-reset-tracker", "-onboarding-complete"]
+        app.launch()
+        app.tabBars.buttons["Calendar"].tap()
+        XCTAssertTrue(app.buttons["calendar.collapse"].waitForExistence(timeout: 5))
+        app.buttons["calendar.collapse"].tap()
+        app.segmentedControls.buttons["Tasbih"].tap()
+        app.buttons["calendar.edit-tasbih"].tap()
+        let input = app.textFields["calendar.tasbih-input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 3))
+        input.tap()
+        input.typeText(XCUIKeyboardKey.delete.rawValue + "7")
+        app.buttons["Save"].tap()
+        app.tabBars.buttons["Tracker"].tap()
+        app.segmentedControls.buttons["Tasbih"].tap()
+        let counter = app.buttons["tasbih.counter"]
+        XCTAssertTrue(counter.waitForExistence(timeout: 3))
+        XCTAssertTrue(counter.label.contains("Current count 7"))
+        counter.tap()
+        app.tabBars.buttons["Calendar"].tap()
+        XCTAssertTrue(app.staticTexts["8"].waitForExistence(timeout: 3))
+        app.buttons["calendar.previous-day"].tap()
+        app.segmentedControls.buttons["Charity"].tap()
+        app.buttons["calendar.add-giving"].tap()
+        XCTAssertTrue(app.navigationBars["Add Giving"].waitForExistence(timeout: 3))
+        let amount = app.textFields["0"]
+        amount.tap()
+        amount.typeText("50")
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Given this day"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.staticTexts["No giving recorded for this day."].exists)
+        app.buttons["calendar.today"].tap()
+        XCTAssertTrue(app.staticTexts["No giving recorded for this day."].waitForExistence(timeout: 3))
+        app.buttons["calendar.previous-day"].tap()
+        XCTAssertFalse(app.staticTexts["No giving recorded for this day."].exists)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Calendar daily and monthly giving"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    func testCalendarRecordsRemainEditableWithoutPrayerTimes() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-reset-state", "-reset-tracker", "-onboarding-complete", "-prayer-times-unavailable"]
+        app.launch()
+        app.tabBars.buttons["Calendar"].tap()
+        XCTAssertTrue(app.buttons["calendar.collapse"].waitForExistence(timeout: 5))
+        app.buttons["calendar.collapse"].tap()
+        app.buttons["calendar.previous-day"].tap()
+        XCTAssertTrue(app.staticTexts["Prayer times could not be loaded. Your records are still available."].waitForExistence(timeout: 5))
+        let fajr = app.buttons["Fajr"]
+        fajr.tap()
+        XCTAssertEqual(fajr.value as? String, "completed")
+        app.segmentedControls.buttons["Nafl"].tap()
+        app.buttons["Prayed Tahajjud"].tap()
+        XCTAssertEqual(app.buttons["Prayed Tahajjud"].value as? String, "completed")
+        app.segmentedControls.buttons["Tasbih"].tap()
+        XCTAssertTrue(app.buttons["calendar.edit-tasbih"].exists)
+    }
+
+    func testCalendarAccessibilityTextSizeKeepsDateAndCategoryControlsUsable() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-reset-state", "-reset-tracker", "-onboarding-complete",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        app.tabBars.buttons["Calendar"].tap()
+        XCTAssertTrue(app.buttons["calendar.collapse"].waitForExistence(timeout: 5))
+        app.buttons["calendar.collapse"].tap()
+        app.buttons["calendar.previous-day"].tap()
+        XCTAssertTrue(app.staticTexts["calendar.selected-date"].exists)
+        XCTAssertEqual(app.segmentedControls.count, 0)
+        app.buttons["calendar.categories"].tap()
+        app.buttons["Tasbih"].tap()
+        let edit = app.buttons["calendar.edit-tasbih"]
+        for _ in 0..<3 where !edit.isHittable { app.swipeUp() }
+        XCTAssertTrue(edit.isHittable)
+        edit.tap()
+        XCTAssertTrue(app.textFields["calendar.tasbih-input"].waitForExistence(timeout: 3))
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Calendar accessibility text Tasbih editor"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    func testCalendarBanglaSelectedDateAndEditor() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-reset-state", "-reset-tracker", "-onboarding-complete", "-bangla-language"]
+        app.launch()
+        app.tabBars.buttons["ক্যালেন্ডার"].tap()
+        XCTAssertTrue(app.buttons["calendar.collapse"].waitForExistence(timeout: 5))
+        app.buttons["calendar.collapse"].tap()
+        app.buttons["calendar.previous-day"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "অতীতের দিন")).firstMatch.waitForExistence(timeout: 3), app.debugDescription)
+        app.segmentedControls.buttons["তাসবিহ"].tap()
+        app.buttons["calendar.edit-tasbih"].tap()
+        XCTAssertTrue(app.navigationBars["তাসবিহ সম্পাদনা"].waitForExistence(timeout: 3))
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Calendar Bangla Tasbih editor"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+}

@@ -1030,3 +1030,266 @@ final class SalahDomainTests: XCTestCase {
         }
     }
 }
+
+@MainActor
+final class DatedTrackingTests: XCTestCase {
+    private let zone = TimeZone(identifier: "Asia/Dhaka")!
+    private let day = LocalDay(year: 2026, month: 7, day: 20)
+    private var defaults: UserDefaults!
+    private var suite: String!
+
+    override func setUp() {
+        super.setUp()
+        suite = "DatedTrackingTests.\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suite)!
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suite)
+        defaults = nil
+        super.tearDown()
+    }
+
+    func testReplacementPreservesGoalAndSynchronizesTodayCounterOnly() throws {
+        let repository = InMemoryTrackerHistoryRepository()
+        let now = day.date(in: zone)!
+        let coordinator = DatedTrackerCoordinator(repository: repository, defaults: defaults, now: { now })
+        let yesterday = day.adding(days: -1, in: zone)
+        try repository.setTasbihCount(12, goal: 33, on: day)
+        try repository.setTasbihCount(20, goal: 99, on: yesterday)
+        try coordinator.replaceTasbih(100, on: day, in: zone)
+        XCTAssertEqual(try repository.tasbihRecord(on: day)?.count, 100)
+        XCTAssertEqual(try repository.tasbihRecord(on: day)?.goal, 33)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.istighfar-count"), 100)
+        try coordinator.replaceTasbih(0, on: yesterday, in: zone)
+        XCTAssertEqual(try repository.tasbihRecord(on: yesterday)?.count, 0)
+        XCTAssertEqual(try repository.tasbihRecord(on: yesterday)?.goal, 99)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.istighfar-count"), 100)
+        // Counter reset is session-only; the next tap increments the replaced total.
+        defaults.set(0, forKey: "salah.deeds.istighfar-count")
+        XCTAssertEqual(try coordinator.incrementTasbih(goal: 33, in: zone), 1)
+        XCTAssertEqual(try repository.tasbihRecord(on: day)?.count, 101)
+        let older = yesterday.adding(days: -1, in: zone)
+        try coordinator.replaceTasbih(4, on: older, in: zone)
+        XCTAssertEqual(try repository.tasbihRecord(on: older)?.goal, 0)
+    }
+
+    func testRolloverNeverOverwritesExistingHistory() throws {
+        let repository = InMemoryTrackerHistoryRepository()
+        var now = day.date(in: zone)!
+        let coordinator = DatedTrackerCoordinator(repository: repository, defaults: defaults, now: { now })
+        let yesterday = day.adding(days: -1, in: zone)
+        defaults.set(yesterday.key, forKey: "salah.deeds.good-deeds-day")
+        defaults.set(31, forKey: "salah.deeds.good-deeds-mask")
+        defaults.set(yesterday.key, forKey: "salah.deeds.tasbih-day")
+        defaults.set(999, forKey: "salah.deeds.istighfar-count")
+        try repository.setNaflCompletedMask(1, on: yesterday)
+        try repository.setTasbihCount(5, goal: 33, on: yesterday)
+        try repository.setNaflCompletedMask(2, on: day)
+        try repository.setTasbihCount(7, goal: 99, on: day)
+        try coordinator.reconcile(in: zone)
+        XCTAssertEqual(try repository.naflRecord(on: yesterday)?.completedMask, 1)
+        XCTAssertEqual(try repository.naflRecord(on: day)?.completedMask, 2)
+        XCTAssertEqual(try repository.tasbihRecord(on: yesterday)?.count, 5)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.good-deeds-mask"), 2)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.istighfar-count"), 7)
+        let tomorrow = day.adding(days: 1, in: zone)
+        try repository.setNaflCompletedMask(16, on: tomorrow)
+        try repository.setTasbihCount(9, goal: 33, on: tomorrow)
+        now = tomorrow.date(in: zone)!
+        try coordinator.reconcile(in: zone)
+        XCTAssertEqual(try repository.naflRecord(on: day)?.completedMask, 2)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.good-deeds-mask"), 16)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.istighfar-count"), 9)
+        now = tomorrow.adding(days: 1, in: zone).date(in: zone)!
+        try coordinator.reconcile(in: zone)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.good-deeds-mask"), 0)
+        XCTAssertEqual(try repository.naflRecords().count, 3)
+    }
+
+    func testFailedMigrationRetriesWithoutTreatingReadErrorsAsMissingRecords() throws {
+        let repository = FailingHistoryRepository()
+        let now = day.date(in: zone)!
+        let coordinator = DatedTrackerCoordinator(repository: repository, defaults: defaults, now: { now })
+        defaults.set(day.key, forKey: "salah.deeds.tasbih-day")
+        defaults.set(11, forKey: "salah.deeds.istighfar-count")
+        defaults.set(day.key, forKey: "salah.deeds.good-deeds-day")
+        defaults.set(3, forKey: "salah.deeds.good-deeds-mask")
+        repository.failReads = true
+        XCTAssertThrowsError(try coordinator.reconcile(in: zone))
+        XCTAssertFalse(defaults.bool(forKey: "salah.persistence.dated-defaults.v1"))
+        XCTAssertTrue(try repository.base.tasbihRecords().isEmpty)
+        repository.failReads = false
+        repository.failWrites = true
+        XCTAssertThrowsError(try coordinator.reconcile(in: zone))
+        XCTAssertFalse(defaults.bool(forKey: "salah.persistence.dated-defaults.v1"))
+        repository.failWrites = false
+        try coordinator.reconcile(in: zone)
+        try coordinator.reconcile(in: zone)
+        XCTAssertTrue(defaults.bool(forKey: "salah.persistence.dated-defaults.v1"))
+        XCTAssertEqual(try repository.base.tasbihRecords().count, 1)
+        XCTAssertEqual(try repository.base.tasbihRecord(on: day)?.count, 11)
+        XCTAssertEqual(try repository.base.naflRecord(on: day)?.completedMask, 3)
+    }
+
+    func testFailedWritesDoNotChangeCountersOrPublishSuccessAndFutureWritesAreRejected() throws {
+        let repository = FailingHistoryRepository()
+        let now = day.date(in: zone)!
+        let coordinator = DatedTrackerCoordinator(repository: repository, defaults: defaults, now: { now })
+        try coordinator.replaceTasbih(10, on: day, in: zone)
+        let revision = coordinator.revision
+        repository.failWrites = true
+        XCTAssertThrowsError(try coordinator.replaceTasbih(50, on: day, in: zone))
+        XCTAssertThrowsError(try coordinator.incrementTasbih(goal: 33, in: zone))
+        XCTAssertThrowsError(try coordinator.setNaflMask(1, on: day, in: zone))
+        XCTAssertEqual(coordinator.revision, revision)
+        XCTAssertEqual(defaults.integer(forKey: "salah.deeds.istighfar-count"), 10)
+        XCTAssertEqual(try repository.base.tasbihRecord(on: day)?.count, 10)
+        repository.failWrites = false
+        let tomorrow = day.adding(days: 1, in: zone)
+        XCTAssertThrowsError(try coordinator.replaceTasbih(1, on: tomorrow, in: zone))
+        XCTAssertThrowsError(try coordinator.setNaflMask(1, on: tomorrow, in: zone))
+        XCTAssertThrowsError(try coordinator.addGiving(CharityEntry(amount: 5, date: tomorrow.date(in: zone)!, category: .sadaqah), in: zone))
+        XCTAssertNil(try repository.base.tasbihRecord(on: tomorrow))
+    }
+
+    func testCalendarSurvivesPrayerFailurePreservesSelectionAndUndoIsDated() async throws {
+        let repository = FailingHistoryRepository()
+        let settings = AppSettings(defaults: defaults)
+        var now = day.date(in: zone)!
+        let container = AppContainer(settings: settings, prayerTimesRepository: UnavailablePrayerTimesRepository(),
+                                     trackingRepository: InMemoryPrayerTrackingRepository(), trackerHistoryRepository: repository,
+                                     trackerDefaults: defaults, trackerNow: { now })
+        let model = CalendarViewModel(container: container)
+        let yesterday = day.adding(days: -1, in: zone)
+        model.select(yesterday)
+        await model.load()
+        XCTAssertTrue(model.prayerError)
+        XCTAssertNil(model.loadError)
+        model.toggleNafl(.quran)
+        XCTAssertEqual(try repository.naflRecord(on: yesterday)?.completedMask, 16)
+        XCTAssertTrue(model.trackerDays.contains(yesterday))
+        XCTAssertEqual(model.savedDay, yesterday)
+        repository.failWrites = true
+        model.toggleNafl(.tahajjud)
+        XCTAssertNotNil(model.saveError)
+        XCTAssertNil(model.savedDay)
+        XCTAssertEqual(model.naflMask, 16)
+        model.undo()
+        XCTAssertTrue(model.canUndo)
+        repository.failWrites = false
+        model.undo()
+        XCTAssertFalse(model.canUndo)
+        XCTAssertEqual(try repository.naflRecord(on: yesterday)?.completedMask, 0)
+        XCTAssertFalse(model.trackerDays.contains(yesterday))
+        now = day.adding(days: 1, in: zone).date(in: zone)!
+        model.syncDayToNow()
+        await model.load()
+        XCTAssertEqual(model.selectedDay, yesterday)
+        model.moveMonth(-1)
+        XCTAssertEqual(model.selectedDay, yesterday)
+        model.select(model.today, followsToday: true)
+        now = day.adding(days: 2, in: zone).date(in: zone)!
+        model.syncDayToNow()
+        XCTAssertEqual(model.selectedDay, day.adding(days: 2, in: zone))
+        XCTAssertEqual(model.monthAnchor.month, model.selectedDay.month)
+    }
+
+    func testCalendarActivityIncludesEveryCategoryAndClearsWhenRecordsAreZeroed() throws {
+        let repository = InMemoryTrackerHistoryRepository()
+        let prayers = InMemoryPrayerTrackingRepository()
+        let now = day.date(in: zone)!
+        let container = AppContainer(settings: AppSettings(defaults: defaults), prayerTimesRepository: UnavailablePrayerTimesRepository(),
+                                     trackingRepository: prayers, trackerHistoryRepository: repository,
+                                     trackerDefaults: defaults, trackerNow: { now })
+        let dates = (1...4).map { day.adding(days: -$0, in: zone) }
+        try prayers.setCompleted(true, prayer: .fajr, day: dates[0], timeZone: zone, source: "test")
+        try repository.setTasbihCount(1, goal: 0, on: dates[1])
+        try repository.setNaflCompletedMask(1, on: dates[2])
+        try repository.addCharityEntry(CharityEntry(amount: 2, date: dates[3].date(in: zone)!, category: .food))
+        let model = CalendarViewModel(container: container)
+        model.refreshRecords()
+        XCTAssertEqual(model.trackerDays, Set(dates))
+        try repository.setTasbihCount(0, goal: 0, on: dates[1])
+        model.refreshRecords()
+        XCTAssertFalse(model.trackerDays.contains(dates[1]))
+        model.select(dates[2])
+        model.toggleNafl(.quran)
+        model.select(dates[3])
+        XCTAssertFalse(model.canUndo)
+    }
+
+    func testGivingUsesLocationTimezoneExclusiveMonthEndAndSeparateCurrencies() throws {
+        let first = LocalDay(year: 2026, month: 8, day: 1).date(in: zone, hour: 0)!
+        let entries = [
+            CharityEntry(amount: 500, date: first.addingTimeInterval(-1), category: .sadaqah, currencyCode: "BDT"),
+            CharityEntry(amount: 20, date: first.addingTimeInterval(-1), category: .food, currencyCode: "USD"),
+            CharityEntry(amount: 100, date: first, category: .food, currencyCode: "BDT")
+        ]
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let july = CharityLedger.entries(entries, inMonthContaining: day.date(in: zone)!, calendar: calendar)
+        XCTAssertEqual(july.count, 2)
+        let totals = CharityLedger.totalsByCurrency(july)
+        XCTAssertEqual(totals.map(\.currency), ["BDT", "USD"])
+        XCTAssertEqual(totals.map(\.amount), [500, 20])
+        XCTAssertEqual(CharityLedger.entries(entries, on: LocalDay(first, timeZone: zone), timeZone: zone).count, 1)
+        XCTAssertEqual(CharityLedger.entries(entries, on: LocalDay(first, timeZone: .gmt), timeZone: .gmt).count, 3)
+        let newYork = TimeZone(identifier: "America/New_York")!
+        let springDay = LocalDay(year: 2026, month: 3, day: 8)
+        let next = springDay.adding(days: 1, in: newYork)
+        XCTAssertEqual(next.day, 9)
+        XCTAssertEqual(next.date(in: newYork, hour: 0)!.timeIntervalSince(springDay.date(in: newYork, hour: 0)!), 23 * 3600)
+    }
+
+    func testLargeEditedTasbihTotalsCannotOverflowInsights() {
+        let records = [
+            TasbihDailyRecord(day: day, count: Int.max, goal: 0, updatedAt: .now),
+            TasbihDailyRecord(day: day.adding(days: -1, in: zone), count: 1, goal: 0, updatedAt: .now)
+        ]
+        XCTAssertEqual(TasbihHistoryLedger.totalCount(records), Decimal(Int.max) + 1)
+    }
+
+    func testTasbihInputAcceptsLocalizedDigitsAndRejectsInvalidOrOverflowingTotals() {
+        XCTAssertEqual(TasbihTotalInput.parse("0"), 0)
+        XCTAssertEqual(TasbihTotalInput.parse(" ১০০ "), 100)
+        XCTAssertEqual(TasbihTotalInput.parse("١٢٣"), 123)
+        XCTAssertEqual(TasbihTotalInput.parse(String(Int.max)), Int.max)
+        for input in ["", "-1", "+1", "1.5", "1,000", "one", "²", String(Int.max) + "0"] {
+            XCTAssertNil(TasbihTotalInput.parse(input), input)
+        }
+    }
+}
+
+private actor UnavailablePrayerTimesRepository: PrayerTimesRepository {
+    func day(for query: PrayerTimesQuery, location: PrayerLocation, policy: CachePolicy) async throws -> LoadedPrayerDay {
+        throw PrayerDataError.transport("Test failure")
+    }
+    func month(containing day: LocalDay, location: PrayerLocation, settings: CalculationSettings, policy: CachePolicy) async throws -> [LoadedPrayerDay] {
+        throw PrayerDataError.transport("Test failure")
+    }
+    func invalidate(signature: String) async { }
+}
+
+@MainActor
+private final class FailingHistoryRepository: TrackerHistoryRepository {
+    let base = InMemoryTrackerHistoryRepository()
+    var failReads = false
+    var failWrites = false
+    private func read() throws { if failReads { throw CocoaError(.fileReadUnknown) } }
+    private func write() throws { if failWrites { throw CocoaError(.fileWriteUnknown) } }
+    func tasbihRecords() throws -> [TasbihDailyRecord] { try read(); return try base.tasbihRecords() }
+    func tasbihRecord(on day: LocalDay) throws -> TasbihDailyRecord? { try read(); return try base.tasbihRecord(on: day) }
+    func setTasbihCount(_ count: Int, goal: Int, on day: LocalDay) throws { try write(); try base.setTasbihCount(count, goal: goal, on: day) }
+    func incrementTasbih(goal: Int, on day: LocalDay) throws { try write(); try base.incrementTasbih(goal: goal, on: day) }
+    func naflRecords() throws -> [NaflDailyRecord] { try read(); return try base.naflRecords() }
+    func naflRecord(on day: LocalDay) throws -> NaflDailyRecord? { try read(); return try base.naflRecord(on: day) }
+    func setNaflCompletedMask(_ mask: Int, on day: LocalDay) throws { try write(); try base.setNaflCompletedMask(mask, on: day) }
+    func charityEntries() throws -> [CharityEntry] { try read(); return try base.charityEntries() }
+    func addCharityEntry(_ entry: CharityEntry) throws { try write(); try base.addCharityEntry(entry) }
+    func deleteCharityEntries(ids: Set<UUID>) throws { try write(); try base.deleteCharityEntries(ids: ids) }
+    func importLegacy(tasbihRecords: [TasbihDailyRecord], naflRecords: [NaflDailyRecord], charityEntries: [CharityEntry]) throws {
+        try write(); try base.importLegacy(tasbihRecords: tasbihRecords, naflRecords: naflRecords, charityEntries: charityEntries)
+    }
+    func clearAll() throws { try write(); try base.clearAll() }
+}

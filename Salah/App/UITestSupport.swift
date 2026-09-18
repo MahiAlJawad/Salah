@@ -4,14 +4,17 @@ import Foundation
 actor UITestPrayerTimesRepository: PrayerTimesRepository {
     private let offline: Bool
     private let delay: Duration
+    private let unavailable: Bool
 
-    init(offline: Bool, slowLoading: Bool) {
+    init(offline: Bool, slowLoading: Bool, unavailable: Bool = false) {
         self.offline = offline
+        self.unavailable = unavailable
         delay = slowLoading ? .seconds(5) : .milliseconds(700)
     }
 
     func day(for query: PrayerTimesQuery, location: PrayerLocation, policy: CachePolicy) async throws -> LoadedPrayerDay {
         try await Task.sleep(for: delay)
+        if unavailable { throw PrayerDataError.transport("Test prayer service unavailable") }
         let value = makeDay(query.day, location: location, settings: query.settings)
         return LoadedPrayerDay(value: value, source: offline ? .diskCache : .calculated, isStale: offline)
     }

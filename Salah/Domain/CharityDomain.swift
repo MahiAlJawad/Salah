@@ -162,7 +162,7 @@ enum CharityLedger {
         calendar: Calendar = .current
     ) -> [CharityEntry] {
         guard let interval = calendar.dateInterval(of: .month, for: date) else { return [] }
-        return entries.filter { interval.contains($0.date) }
+        return entries.filter { $0.date >= interval.start && $0.date < interval.end }
     }
 
     static func total(
@@ -171,5 +171,17 @@ enum CharityLedger {
         calendar: Calendar = .current
     ) -> Double {
         self.entries(entries, inMonthContaining: date, calendar: calendar).reduce(0) { $0 + $1.amount }
+    }
+}
+
+extension CharityLedger {
+    static func entries(_ entries: [CharityEntry], on day: LocalDay, timeZone: TimeZone) -> [CharityEntry] {
+        entries.filter { LocalDay($0.date, timeZone: timeZone) == day }
+    }
+
+    static func totalsByCurrency(_ entries: [CharityEntry]) -> [(currency: String, amount: Double)] {
+        Dictionary(grouping: entries, by: \.currencyCode)
+            .map { (currency: $0.key, amount: $0.value.reduce(0) { $0 + $1.amount }) }
+            .sorted { $0.currency < $1.currency }
     }
 }

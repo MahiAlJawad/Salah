@@ -7,6 +7,7 @@ final class TrackerViewModel {
     private let repository: any PrayerTrackingRepository
     private let prayerTimesRepository: any PrayerTimesRepository
     private let settings: AppSettings
+    private let datedTracker: DatedTrackerCoordinator
 
     var selectedDay: LocalDay
     var completed: Set<PrayerType> = []
@@ -18,6 +19,7 @@ final class TrackerViewModel {
         repository = container.trackingRepository
         prayerTimesRepository = container.prayerTimesRepository
         settings = container.settings
+        datedTracker = container.datedTracker
         selectedDay = LocalDay(.now, timeZone: settings.location.timeZone)
         refresh()
     }
@@ -35,7 +37,9 @@ final class TrackerViewModel {
     func loadPrayerDay() async {
         let location = settings.location
         let query = PrayerTimesQuery(day: selectedDay, location: location, settings: settings.calculation)
-        todayPrayerDay = (try? await prayerTimesRepository.day(for: query, location: location, policy: .cacheFirst))?.value
+        let result = (try? await prayerTimesRepository.day(for: query, location: location, policy: .cacheFirst))?.value
+        guard !Task.isCancelled, query.day == selectedDay, location == settings.location else { return }
+        todayPrayerDay = result
     }
 
     func refresh() {
@@ -48,6 +52,7 @@ final class TrackerViewModel {
     }
 
     func toggle(_ prayer: PrayerType) {
+        syncDayToNow()
         let value = !completed.contains(prayer)
         do {
             try repository.setCompleted(value, prayer: prayer, day: selectedDay, timeZone: settings.location.timeZone, source: "tracker")
@@ -57,6 +62,7 @@ final class TrackerViewModel {
                 day: selectedDay,
                 completed: value
             )
+            datedTracker.recordsChanged()
             lastChanged = prayer
             errorMessage = nil
         } catch {
@@ -74,11 +80,13 @@ final class TrackerViewModel {
         let today = LocalDay(.now, timeZone: settings.location.timeZone)
         guard selectedDay != today else { return }
         selectedDay = today
+        todayPrayerDay = nil
+        lastChanged = nil
         refresh()
     }
 }
 
-private enum TrackerSection: String, CaseIterable, Identifiable {
+enum TrackerSection: String, CaseIterable, Identifiable {
     case prayers, tasbih, deeds, charity
 
     var id: Self { self }
@@ -96,16 +104,14 @@ private enum TrackerSection: String, CaseIterable, Identifiable {
 struct TrackerView: View {
     @Bindable var container: AppContainer
     @Environment(\.salahPalette) private var palette
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var historyError: String?
     @State private var viewModel: TrackerViewModel
     @State private var selection = TrackerSection.prayers
     @AppStorage("salah.deeds.istighfar-count") private var tasbihCount = 0
     @AppStorage("salah.deeds.tasbih-goal") private var tasbihGoal = 0
-    @AppStorage("salah.deeds.tasbih-day") private var tasbihDay = ""
     @AppStorage("salah.deeds.good-deeds-mask") private var goodDeedsMask = 0
-    @AppStorage("salah.deeds.good-deeds-day") private var goodDeedsDay = ""
-    @AppStorage("salah.deeds.charity-total") private var charityTotal = 0
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
-    @AppStorage("salah.deeds.charity-month") private var charityMonth = ""
     @AppStorage(CharityCurrency.storageKey) private var charityCurrencyCode = CharityCurrency.code()
     @State private var charityEntries: [CharityEntry] = []
     @State private var showingAddCharity = false
@@ -122,6 +128,10 @@ struct TrackerView: View {
             trackerHeader
                 .padding(.horizontal)
                 .padding(.bottom, 16)
+
+            if let historyError {
+                Text(L10n.dynamic(historyError)).font(.footnote).foregroundStyle(.red).padding(.horizontal)
+            }
 
             trackerSectionPicker
                 .padding(.horizontal)
@@ -149,7 +159,19 @@ struct TrackerView: View {
         .alert("Future Salah is not trackable", isPresented: $showingFutureSalahAlert) {
             Button("OK", role: .cancel) { }
         }
+        .onChange(of: container.datedTracker.revision) { _, _ in
+            viewModel.refresh()
+            prepareLocalTrackers()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                viewModel.syncDayToNow()
+                viewModel.refresh()
+                prepareLocalTrackers()
+            }
+        }
         .onAppear {
+            viewModel.syncDayToNow()
             viewModel.refresh()
             prepareLocalTrackers()
         }
@@ -163,6 +185,7 @@ struct TrackerView: View {
         .task {
             while !Task.isCancelled {
                 viewModel.syncDayToNow()
+                prepareLocalTrackers()
                 try? await Task.sleep(for: .seconds(30))
             }
         }
@@ -189,14 +212,7 @@ struct TrackerView: View {
     }
 
     private var trackerSectionPicker: some View {
-        Picker("Tracker section", selection: $selection) {
-            ForEach(TrackerSection.allCases) { section in
-                Text(section.title).tag(section)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .accessibilityLabel("Tracker section")
+        TrackerSectionPicker(selection: $selection)
     }
 
     @ViewBuilder
@@ -228,7 +244,14 @@ struct TrackerView: View {
 
     private var tasbihTracker: some View {
         TasbihCounterPad(count: $tasbihCount, goal: $tasbihGoal) {
-            try? container.trackerHistoryRepository.incrementTasbih(goal: tasbihGoal, on: today)
+            do {
+                let count = try container.datedTracker.incrementTasbih(goal: tasbihGoal, in: container.settings.location.timeZone)
+                historyError = nil
+                return count
+            } catch {
+                historyError = "Your change could not be saved."
+                return nil
+            }
         }
     }
 
@@ -360,7 +383,7 @@ struct TrackerView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(charityEntries.prefix(3)) { entry in
-                    CharityEntryRow(entry: entry)
+                    CharityEntryRow(entry: entry, timeZone: container.settings.location.timeZone)
                 }
             }
 
@@ -369,8 +392,8 @@ struct TrackerView: View {
                 .foregroundStyle(.secondary)
         }
         .sheet(isPresented: $showingAddCharity) {
-            AddCharityEntryView(currencyCode: $charityCurrencyCode) { entry in
-                addCharityEntry(entry)
+            AddCharityEntryView(currencyCode: $charityCurrencyCode, timeZone: container.settings.location.timeZone) { entry in
+                try addCharityEntry(entry)
             }
         }
         .sheet(isPresented: $showingCharityGoal) {
@@ -393,63 +416,33 @@ struct TrackerView: View {
     }
 
     private func toggleGoodDeed(_ id: Int) {
-        if goodDeedsMask & (1 << id) != 0 {
-            goodDeedsMask &= ~(1 << id)
-        } else {
-            goodDeedsMask |= (1 << id)
+        do {
+            try container.datedTracker.reconcile(in: container.settings.location.timeZone)
+            let mask = try container.trackerHistoryRepository.naflRecord(on: today)?.completedMask ?? 0
+            try container.datedTracker.setNaflMask(mask ^ (1 << id), on: today, in: container.settings.location.timeZone)
+            historyError = nil
+        } catch {
+            historyError = "Your change could not be saved."
         }
-        try? container.trackerHistoryRepository.setNaflCompletedMask(goodDeedsMask, on: today)
     }
 
     private func prepareLocalTrackers() {
-        if tasbihDay.isEmpty {
-            tasbihDay = today.key
-            if tasbihCount > 0,
-               (try? container.trackerHistoryRepository.tasbihRecord(on: today)) == nil {
-                try? container.trackerHistoryRepository.setTasbihCount(tasbihCount, goal: tasbihGoal, on: today)
-            }
-        } else if tasbihDay != today.key {
-            if let priorDay = LocalDay(stableKey: tasbihDay),
-               tasbihCount > 0,
-               (try? container.trackerHistoryRepository.tasbihRecord(on: priorDay)) == nil {
-                try? container.trackerHistoryRepository.setTasbihCount(tasbihCount, goal: tasbihGoal, on: priorDay)
-            }
-            tasbihDay = today.key
-            tasbihCount = 0
+        do {
+            try container.datedTracker.reconcile(in: container.settings.location.timeZone)
+            charityEntries = try container.trackerHistoryRepository.charityEntries()
+        } catch {
+            historyError = "Tracker data could not be loaded."
         }
+    }
 
-        if goodDeedsDay != today.key {
-            if let priorDay = LocalDay(stableKey: goodDeedsDay), goodDeedsMask > 0 {
-                try? container.trackerHistoryRepository.setNaflCompletedMask(goodDeedsMask, on: priorDay)
-            }
-            goodDeedsDay = today.key
-            goodDeedsMask = 0
-            try? container.trackerHistoryRepository.setNaflCompletedMask(0, on: today)
-        } else if (try? container.trackerHistoryRepository.naflRecord(on: today)) == nil {
-            try? container.trackerHistoryRepository.setNaflCompletedMask(goodDeedsMask, on: today)
-        }
-        let month = String(format: "%04d-%02d", today.year, today.month)
-        refreshCharityEntries()
-        if charityEntries.isEmpty, charityMonth == month, charityTotal > 0 {
-            try? container.trackerHistoryRepository.addCharityEntry(CharityEntry(
-                amount: Double(charityTotal),
-                date: .now,
-                category: .other,
-                note: L10n.string("Imported monthly total")
-            ))
-            refreshCharityEntries()
-        }
-        charityMonth = month
-        charityTotal = Int(
-            CharityLedger.total(
-                charityEntries.filter { $0.currencyCode == charityCurrencyCode },
-                inMonthContaining: .now
-            ).rounded()
-        )
+    private var charityCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = container.settings.location.timeZone
+        return calendar
     }
 
     private var monthlyCharityEntries: [CharityEntry] {
-        CharityLedger.entries(charityEntries, inMonthContaining: .now)
+        CharityLedger.entries(charityEntries, inMonthContaining: .now, calendar: charityCalendar)
             .filter { $0.currencyCode == charityCurrencyCode }
     }
 
@@ -477,19 +470,10 @@ struct TrackerView: View {
         return "\(preference.repeatCycle.title) • \(nextDate.formatted(.dateTime.year().month(.abbreviated).day().hour().minute().locale(L10n.locale)))"
     }
 
-    private func addCharityEntry(_ entry: CharityEntry) {
-        try? container.trackerHistoryRepository.addCharityEntry(entry)
-        refreshCharityEntries()
-        charityTotal = Int(
-            CharityLedger.total(
-                charityEntries.filter { $0.currencyCode == charityCurrencyCode },
-                inMonthContaining: .now
-            ).rounded()
-        )
-    }
-
-    private func refreshCharityEntries() {
-        charityEntries = (try? container.trackerHistoryRepository.charityEntries()) ?? []
+    private func addCharityEntry(_ entry: CharityEntry) throws {
+        try container.datedTracker.addGiving(entry, in: container.settings.location.timeZone)
+        historyError = nil
+        prepareLocalTrackers()
     }
 
     private var isToday: Bool {

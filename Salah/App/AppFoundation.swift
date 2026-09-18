@@ -322,6 +322,7 @@ final class AppContainer {
     let notificationScheduler: any NotificationScheduling
     let trackingRepository: any PrayerTrackingRepository
     let trackerHistoryRepository: any TrackerHistoryRepository
+    let datedTracker: DatedTrackerCoordinator
     let syncCoordinator: any TrackerSyncCoordinating
     let modelContainer: ModelContainer?
     let districts: [District]
@@ -342,7 +343,9 @@ final class AppContainer {
         locationProvider: (any LocationProviding)? = nil,
         notificationScheduler: (any NotificationScheduling)? = nil,
         trackingRepository: (any PrayerTrackingRepository)? = nil,
-        trackerHistoryRepository: (any TrackerHistoryRepository)? = nil
+        trackerHistoryRepository: (any TrackerHistoryRepository)? = nil,
+        trackerDefaults: UserDefaults = .standard,
+        trackerNow: @escaping () -> Date = { .now }
     ) {
         let arguments = ProcessInfo.processInfo.arguments
         let isUITesting = arguments.contains("-ui-testing")
@@ -373,7 +376,8 @@ final class AppContainer {
         } else if isUITesting {
             self.prayerTimesRepository = UITestPrayerTimesRepository(
                 offline: arguments.contains("-offline"),
-                slowLoading: arguments.contains("-slow-loading")
+                slowLoading: arguments.contains("-slow-loading"),
+                unavailable: arguments.contains("-prayer-times-unavailable")
             )
         } else {
             self.prayerTimesRepository = DefaultPrayerTimesRepository(
@@ -419,6 +423,7 @@ final class AppContainer {
         } else {
             self.trackerHistoryRepository = InMemoryTrackerHistoryRepository()
         }
+        datedTracker = DatedTrackerCoordinator(repository: self.trackerHistoryRepository, defaults: trackerDefaults, now: trackerNow)
         if isUITesting, arguments.contains("-reset-tracker") {
             try? self.trackingRepository.clearAll()
             try? self.trackerHistoryRepository.clearAll()

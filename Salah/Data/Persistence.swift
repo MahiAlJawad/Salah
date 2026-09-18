@@ -147,7 +147,7 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
         widgetCompletionDefaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.groupID)
     ) {
         context = ModelContext(container)
-        context.autosaveEnabled = true
+        context.autosaveEnabled = false
         self.widgetCompletionDefaults = widgetCompletionDefaults
     }
 
@@ -166,6 +166,7 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
     }
 
     func setCompleted(_ completed: Bool, prayer: PrayerType, day: LocalDay, timeZone: TimeZone, source: String) throws {
+        defer { if context.hasChanges { context.rollback() } }
         try synchronizeWidgetCompletions()
         let now = Date()
         try upsert(
@@ -186,12 +187,14 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
     }
 
     func clearAll() throws {
+        defer { if context.hasChanges { context.rollback() } }
         try context.delete(model: PrayerRecord.self)
         try context.save()
         WidgetPrayerCompletionStore.removeAll(defaults: widgetCompletionDefaults)
     }
 
     private func synchronizeWidgetCompletions() throws {
+        defer { if context.hasChanges { context.rollback() } }
         let changes = WidgetPrayerCompletionStore.pendingChanges(defaults: widgetCompletionDefaults)
             .sorted { $0.changedAt < $1.changedAt }
         guard !changes.isEmpty else { return }
@@ -250,7 +253,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
 
     init(container: ModelContainer) {
         context = ModelContext(container)
-        context.autosaveEnabled = true
+        context.autosaveEnabled = false
     }
 
     func tasbihRecords() throws -> [TasbihDailyRecord] {
@@ -269,6 +272,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
     }
 
     func setTasbihCount(_ count: Int, goal: Int, on day: LocalDay) throws {
+        defer { if context.hasChanges { context.rollback() } }
         try upsertTasbih(TasbihDailyRecord(
             day: day,
             count: max(0, count),
@@ -299,6 +303,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
     }
 
     func setNaflCompletedMask(_ mask: Int, on day: LocalDay) throws {
+        defer { if context.hasChanges { context.rollback() } }
         try upsertNafl(NaflDailyRecord(day: day, completedMask: max(0, mask), updatedAt: .now))
         try context.save()
     }
@@ -311,6 +316,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
     }
 
     func addCharityEntry(_ entry: CharityEntry) throws {
+        defer { if context.hasChanges { context.rollback() } }
         let id = entry.id
         let descriptor = FetchDescriptor<CharityHistoryRecord>(
             predicate: #Predicate { $0.id == id }
@@ -324,6 +330,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
     }
 
     func deleteCharityEntries(ids: Set<UUID>) throws {
+        defer { if context.hasChanges { context.rollback() } }
         guard !ids.isEmpty else { return }
         for record in try context.fetch(FetchDescriptor<CharityHistoryRecord>()) where ids.contains(record.id) {
             context.delete(record)
@@ -336,6 +343,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
         naflRecords: [NaflDailyRecord],
         charityEntries: [CharityEntry]
     ) throws {
+        defer { if context.hasChanges { context.rollback() } }
         for record in tasbihRecords { try upsertTasbih(record, preferringNewest: true) }
         for record in naflRecords { try upsertNafl(record, preferringNewest: true) }
         for entry in charityEntries {
@@ -349,6 +357,7 @@ final class SwiftDataTrackerHistoryRepository: TrackerHistoryRepository {
     }
 
     func clearAll() throws {
+        defer { if context.hasChanges { context.rollback() } }
         try context.delete(model: TasbihHistoryRecord.self)
         try context.delete(model: NaflHistoryRecord.self)
         try context.delete(model: CharityHistoryRecord.self)

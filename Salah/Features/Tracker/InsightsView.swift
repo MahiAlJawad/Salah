@@ -279,7 +279,7 @@ struct InsightsView: View {
             return (percentage.formatted(.percent.precision(.fractionLength(0)).locale(L10n.locale)), L10n.string("recorded"), streak.formatted(.number.locale(L10n.locale)), L10n.string("day full streak"))
         case .tasbih:
             let records = data.tasbihRecords.filter { bounds.contains($0.day) }
-            return (records.reduce(0) { $0 + $1.count }.formatted(.number.locale(L10n.locale)), L10n.string("counts"), records.filter { $0.count > 0 }.count.formatted(.number.locale(L10n.locale)), L10n.string("active days"))
+            return (TasbihHistoryLedger.totalCount(records).formatted(.number.locale(L10n.locale)), L10n.string("counts"), records.filter { $0.count > 0 }.count.formatted(.number.locale(L10n.locale)), L10n.string("active days"))
         case .nafl:
             let records = data.naflRecords.filter { bounds.contains($0.day) }
             return (records.reduce(0) { $0 + $1.completedCount }.formatted(.number.locale(L10n.locale)), L10n.string("practices recorded"), records.filter { $0.completedCount > 0 }.count.formatted(.number.locale(L10n.locale)), L10n.string("active days"))
@@ -649,9 +649,11 @@ private struct InsightDetailView: View {
             ]
         case .tasbih:
             let records = data.tasbihRecords.filter { bounds.contains($0.day) }
-            let total = records.reduce(0) { $0 + $1.count }
+            let total = TasbihHistoryLedger.totalCount(records)
             let active = records.filter { $0.count > 0 }
-            let average = active.isEmpty ? 0 : total / active.count
+            var quotient = active.isEmpty ? Decimal.zero : total / Decimal(active.count)
+            var average = Decimal.zero
+            NSDecimalRound(&average, &quotient, 0, .down)
             let goals = records.filter { $0.goal > 0 && $0.count >= $0.goal }.count
             return [
                 (total.formatted(.number.locale(L10n.locale)), L10n.string("total counts")),
