@@ -77,6 +77,7 @@ struct PrayerScheduleRow: View {
     var showsDisclosure = true
     private let trailingContent: (() -> AnyView)?
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
 
     init(
         window: PrayerWindow,
@@ -143,11 +144,15 @@ struct PrayerScheduleRow: View {
         }
         .padding(.horizontal)
         .frame(minHeight: 64)
-        .background(isActive ? palette.accentSoft : .clear)
+        .background(isActive ? activeBackground : .clear)
         .contentShape(Rectangle())
         .accessibilityElement(children: trailingContent == nil ? .combine : .contain)
         .accessibilityLabel("\(window.prayer.title), starts \(PrayerDateFormatting.time(window.start, preference: preference, timeZone: day.timeZone)), ends \(PrayerDateFormatting.time(window.displayEnd, preference: preference, timeZone: day.timeZone))\(isActive ? ", current prayer" : "")\(isCompleted ? ", completed" : "")")
         .accessibilityHint(L10n.dynamic(showsDisclosure ? "Opens prayer details" : (isCompleted ? "Marks this prayer as not completed" : "Marks this prayer as completed")))
+    }
+
+    private var activeBackground: Color {
+        colorScheme == .dark ? palette.accent.opacity(0.18) : palette.accentSoft
     }
 
     @ViewBuilder
