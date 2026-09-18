@@ -3,19 +3,20 @@ import SwiftUI
 struct CharityHistoryView: View {
     @Bindable var container: AppContainer
     @Environment(\.salahPalette) private var palette
-    @AppStorage("salah.deeds.charity-total") private var legacyTotal = 0
     @AppStorage("salah.deeds.charity-goal") private var charityGoal = 100
     @AppStorage(CharityCurrency.storageKey) private var currencyCode = CharityCurrency.code()
+    @State private var errorMessage: String?
     @State private var entries: [CharityEntry] = []
     @State private var showingAddEntry = false
     @State private var showingGoalEditor = false
 
     private var monthlyTotal: Double {
-        CharityLedger.total(entries.filter { $0.currencyCode == currencyCode }, inMonthContaining: .now)
+        CharityLedger.total(entries.filter { $0.currencyCode == currencyCode }, inMonthContaining: .now, calendar: charityCalendar)
     }
 
     var body: some View {
         List {
+            if let errorMessage { Text(L10n.dynamic(errorMessage)).foregroundStyle(.red) }
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Given this month")
@@ -47,7 +48,7 @@ struct CharityHistoryView: View {
                     }
                 } else {
                     ForEach(entries) { entry in
-                        CharityEntryRow(entry: entry)
+                        CharityEntryRow(entry: entry, timeZone: container.settings.location.timeZone)
                     }
                     .onDelete(perform: deleteEntries)
                 }
@@ -66,7 +67,7 @@ struct CharityHistoryView: View {
             }
         }
         .sheet(isPresented: $showingAddEntry) {
-            AddCharityEntryView(currencyCode: $currencyCode, onSave: addEntry)
+            AddCharityEntryView(currencyCode: $currencyCode, timeZone: container.settings.location.timeZone, onSave: addEntry)
         }
         .sheet(isPresented: $showingGoalEditor) {
             CharityGoalEditor(goal: charityGoal, currencyCode: currencyCode) {
@@ -75,37 +76,45 @@ struct CharityHistoryView: View {
         }
         .task { refresh() }
         .onAppear { refresh() }
+        .onChange(of: container.datedTracker.revision) { _, _ in refresh() }
     }
 
-    private func addEntry(_ entry: CharityEntry) {
-        try? container.trackerHistoryRepository.addCharityEntry(entry)
+    private var charityCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = container.settings.location.timeZone
+        return calendar
+    }
+
+    private func addEntry(_ entry: CharityEntry) throws {
+        try container.datedTracker.addGiving(entry, in: container.settings.location.timeZone)
         refresh()
-        updateLegacyTotal()
     }
 
     private func deleteEntries(at offsets: IndexSet) {
         let ids = Set(offsets.compactMap { entries.indices.contains($0) ? entries[$0].id : nil })
-        try? container.trackerHistoryRepository.deleteCharityEntries(ids: ids)
-        refresh()
-        updateLegacyTotal()
+        do {
+            try container.trackerHistoryRepository.deleteCharityEntries(ids: ids)
+            container.datedTracker.recordsChanged()
+            errorMessage = nil
+            refresh()
+        } catch {
+            errorMessage = "Your change could not be saved."
+        }
     }
 
     private func refresh() {
-        entries = (try? container.trackerHistoryRepository.charityEntries()) ?? []
+        do {
+            entries = try container.trackerHistoryRepository.charityEntries()
+        } catch {
+            errorMessage = "Tracker data could not be loaded."
+        }
     }
 
-    private func updateLegacyTotal() {
-        legacyTotal = Int(
-            CharityLedger.total(
-                entries.filter { $0.currencyCode == currencyCode },
-                inMonthContaining: .now
-            ).rounded()
-        )
-    }
 }
 
 struct CharityEntryRow: View {
     let entry: CharityEntry
+    var timeZone: TimeZone = .current
 
     var body: some View {
         HStack(spacing: 12) {
@@ -117,7 +126,7 @@ struct CharityEntryRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.recipient.isEmpty ? entry.category.title : entry.recipient)
                     .font(.subheadline.weight(.semibold))
-                Text(entry.date, format: .dateTime.day().month(.abbreviated).year())
+                Text(PrayerDateFormatting.fullDate(LocalDay(entry.date, timeZone: timeZone), timeZone: timeZone))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if !entry.note.isEmpty {
@@ -137,18 +146,27 @@ struct CharityEntryRow: View {
 
 struct AddCharityEntryView: View {
     @Binding var currencyCode: String
-    let onSave: (CharityEntry) -> Void
+    let timeZone: TimeZone
+    let onSave: (CharityEntry) throws -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var amountText = ""
-    @State private var date = Date.now
+    @State private var date: Date
+    @State private var errorMessage: String?
     @State private var category = CharityCategory.sadaqah
     @State private var recipient = ""
     @State private var note = ""
 
+    init(currencyCode: Binding<String>, initialDate: Date = .now, timeZone: TimeZone, onSave: @escaping (CharityEntry) throws -> Void) {
+        _currencyCode = currencyCode
+        _date = State(initialValue: initialDate)
+        self.timeZone = timeZone
+        self.onSave = onSave
+    }
+
     private var amount: Double? {
         let separator = L10n.locale.decimalSeparator ?? "."
         let normalized = amountText.replacingOccurrences(of: separator, with: ".")
-        guard let value = Double(normalized), value > 0 else { return nil }
+        guard let value = Double(normalized), value.isFinite, value > 0 else { return nil }
         return value
     }
 
@@ -159,6 +177,7 @@ struct AddCharityEntryView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let errorMessage { Text(L10n.dynamic(errorMessage)).foregroundStyle(.red) }
                 Section("Amount") {
                     NavigationLink {
                         CharityCurrencyPicker(selection: $currencyCode)
@@ -207,20 +226,26 @@ struct AddCharityEntryView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         guard let amount else { return }
-                        onSave(CharityEntry(
-                            amount: amount,
-                            date: date,
-                            category: category,
-                            currencyCode: currencyCode,
-                            recipient: recipient.trimmingCharacters(in: .whitespacesAndNewlines),
-                            note: note.trimmingCharacters(in: .whitespacesAndNewlines)
-                        ))
-                        dismiss()
+                        do {
+                            guard LocalDay(date, timeZone: timeZone) <= LocalDay(.now, timeZone: timeZone) else { throw DatedTrackingError.futureDay }
+                            try onSave(CharityEntry(
+                                amount: amount,
+                                date: date,
+                                category: category,
+                                currencyCode: currencyCode,
+                                recipient: recipient.trimmingCharacters(in: .whitespacesAndNewlines),
+                                note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                            ))
+                            dismiss()
+                        } catch {
+                            errorMessage = "Your change could not be saved."
+                        }
                     }
                     .disabled(amount == nil)
                 }
             }
         }
+        .environment(\.timeZone, timeZone)
     }
 }
 

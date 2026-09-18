@@ -49,6 +49,10 @@ struct TasbihDailyRecord: Codable, Equatable, Identifiable, Sendable {
 }
 
 enum TasbihHistoryLedger {
+    static func totalCount(_ records: [TasbihDailyRecord]) -> Decimal {
+        records.reduce(Decimal.zero) { $0 + Decimal($1.count) }
+    }
+
     static let storageKey = "salah.deeds.tasbih-history.v1"
 
     static func decode(_ data: Data) -> [TasbihDailyRecord] {
@@ -114,5 +118,20 @@ enum NaflHistoryLedger {
             records.append(NaflDailyRecord(day: day, completedMask: max(0, mask), updatedAt: .now))
         }
         return encode(records)
+    }
+}
+
+/// Accepts localized decimal digits, but never signs, fractions, or overflowing totals.
+enum TasbihTotalInput {
+    static func parse(_ text: String) -> Int? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        var digits = ""
+        for character in text {
+            guard character.unicodeScalars.allSatisfy({ CharacterSet.decimalDigits.contains($0) }),
+                  let value = character.wholeNumberValue, value < 10 else { return nil }
+            digits.append(String(value))
+        }
+        return Int(digits)
     }
 }

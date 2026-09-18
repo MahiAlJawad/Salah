@@ -108,6 +108,7 @@ struct GoodDeedRow: View {
             }
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -139,5 +140,25 @@ private struct TrackerStatusRowContent<Leading: View>: View {
                 .foregroundStyle(completed ? accent : .secondary)
                 .accessibilityHidden(true)
         }
+    }
+}
+
+struct TrackerSectionPicker: View {
+    @Binding var selection: TrackerSection
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            picker.pickerStyle(.menu).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        } else {
+            picker.pickerStyle(.segmented).labelsHidden()
+        }
+    }
+
+    private var picker: some View {
+        Picker("Tracker section", selection: $selection) {
+            ForEach(TrackerSection.allCases) { section in Text(section.title).tag(section) }
+        }
+        .accessibilityLabel("Tracker section")
     }
 }

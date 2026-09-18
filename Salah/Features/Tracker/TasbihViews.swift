@@ -5,7 +5,7 @@ import UIKit
 struct TasbihCounterPad: View {
     @Binding var count: Int
     @Binding var goal: Int
-    let onIncrement: () -> Void
+    let onIncrement: () -> Int?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.salahPalette) private var palette
@@ -273,9 +273,8 @@ struct TasbihCounterPad: View {
     }
 
     private func increment() {
-        let nextCount = count + 1
+        guard let nextCount = onIncrement() else { return }
         count = nextCount
-        onIncrement()
 
         if goal > 0, nextCount == goal {
             completedGoal = goal
@@ -524,5 +523,61 @@ final class TasbihCompletionFeedback {
         guard time >= start, time <= end else { return 0 }
         let progress = (time - start) / (end - start)
         return sin(Double.pi * progress)
+    }
+}
+
+struct TasbihTotalEditor: View {
+    let day: LocalDay
+    let timeZone: TimeZone
+    let onSave: (Int) throws -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var countText: String
+    @State private var errorMessage: String?
+
+    init(day: LocalDay, timeZone: TimeZone, count: Int, onSave: @escaping (Int) throws -> Void) {
+        self.day = day
+        self.timeZone = timeZone
+        self.onSave = onSave
+        _countText = State(initialValue: count.formatted(.number.grouping(.never).locale(L10n.locale)))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label(PrayerDateFormatting.fullDate(day, timeZone: timeZone), systemImage: "calendar")
+                }
+                Section {
+                    TextField("Total for this day", text: $countText)
+                        .keyboardType(.numberPad)
+                        .font(.title2.monospacedDigit())
+                        .accessibilityIdentifier("calendar.tasbih-input")
+                } header: {
+                    Text("Total for this day")
+                } footer: {
+                    Text("This replaces the saved total for this day.")
+                }
+                if TasbihTotalInput.parse(countText) == nil {
+                    Text("Enter a valid nonnegative whole number.").foregroundStyle(.secondary)
+                }
+                if let errorMessage { Text(L10n.dynamic(errorMessage)).foregroundStyle(.red) }
+            }
+            .navigationTitle("Edit Tasbih")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard let count = TasbihTotalInput.parse(countText) else { return }
+                        do {
+                            try onSave(count)
+                            dismiss()
+                        } catch {
+                            errorMessage = "Your change could not be saved."
+                        }
+                    }.disabled(TasbihTotalInput.parse(countText) == nil)
+                }
+            }
+        }
     }
 }
