@@ -23,7 +23,7 @@ enum CharityCategory: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var symbol: String {
         switch self {
-        case .sadaqah: "heart.fill"
+        case .sadaqah: "gift"
         case .zakat: "moon.stars.fill"
         case .food: "takeoutbag.and.cup.and.straw.fill"
         case .education: "book.closed.fill"

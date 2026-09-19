@@ -42,7 +42,7 @@ struct CharityHistoryView: View {
             Section {
                 if entries.isEmpty {
                     ContentUnavailableView {
-                        Label("No giving recorded", systemImage: "heart")
+                        Label("No giving recorded", systemImage: "gift")
                     } description: {
                         Text("Add a private entry after you give.")
                     }

@@ -12,7 +12,7 @@ struct MoreView: View {
             LazyVStack(alignment: .leading, spacing: 22) {
                 titleView
 
-                MoreSectionHeader("Prayer & Reminders", symbol: "bell")
+                MoreSectionHeader("Prayer & Reminders")
                 MoreSectionCard {
                     NavigationLink { RemindersView(container: container) } label: {
                         MoreSettingsRow(
@@ -24,7 +24,7 @@ struct MoreView: View {
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Location & Calculation", symbol: "location")
+                MoreSectionHeader("Location & Calculation")
                 MoreSectionCard {
                     NavigationLink { LocationView(container: container) } label: {
                         MoreSettingsRow(
@@ -41,7 +41,7 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Calculation Method",
                             subtitle: container.settings.calculation.method.title,
-                            symbol: "function"
+                            symbol: "slider.horizontal.3"
                         )
                     }
                     .buttonStyle(.plain)
@@ -52,13 +52,13 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Adjustments",
                             subtitle: "Manual time adjustments",
-                            symbol: "calendar.badge.clock"
+                            symbol: "clock.arrow.circlepath"
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Appearance", symbol: "paintpalette")
+                MoreSectionHeader("Appearance")
                 MoreSectionCard {
                     NavigationLink { AppearanceView(container: container) } label: {
                         MoreSettingsRow(
@@ -75,31 +75,33 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Language",
                             subtitle: container.settings.language.selectorTitle,
-                            symbol: "character.textbox"
+                            symbol: "globe"
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Giving & Charity", symbol: "heart")
+                MoreSectionHeader("Giving & Charity")
                 MoreSectionCard {
                     NavigationLink { CharityHistoryView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Sadaqah",
                             subtitle: "A private giving intention",
-                            symbol: "heart"
+                            symbol: "gift",
+                            iconTint: .pink,
+                            iconBackground: .pink.opacity(0.16)
                         )
                     }
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Privacy & Support", symbol: "shield")
+                MoreSectionHeader("Privacy & Support")
                 MoreSectionCard {
                     NavigationLink { PrivacyView(container: container) } label: {
                         MoreSettingsRow(
                             title: "Privacy & Data",
                             subtitle: "Local-first and transparent",
-                            symbol: "lock.shield"
+                            symbol: "hand.raised.fill"
                         )
                     }
                     .buttonStyle(.plain)
@@ -159,29 +161,18 @@ struct MoreView: View {
 }
 
 private struct MoreSectionHeader: View {
-    @Environment(\.salahPalette) private var palette
     let title: String
-    let symbol: String
 
-    init(_ title: String, symbol: String) {
+    init(_ title: String) {
         self.title = title
-        self.symbol = symbol
     }
 
     var body: some View {
-        Label {
-            Text(LocalizedStringKey(title))
-                .font(.caption.weight(.bold))
-                .textCase(.uppercase)
-                .foregroundStyle(.secondary)
-        } icon: {
-            Image(systemName: symbol)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(palette.accent)
-                .frame(width: 28)
-        }
+        Text(LocalizedStringKey(title))
+            .font(.caption.weight(.bold))
+            .textCase(.uppercase)
+            .foregroundStyle(.secondary)
         .padding(.horizontal, 6)
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -210,14 +201,30 @@ private struct MoreSettingsRow: View {
     let title: String
     let subtitle: String
     let symbol: String
+    let iconTint: Color?
+    let iconBackground: Color?
+
+    init(
+        title: String,
+        subtitle: String,
+        symbol: String,
+        iconTint: Color? = nil,
+        iconBackground: Color? = nil
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.symbol = symbol
+        self.iconTint = iconTint
+        self.iconBackground = iconBackground
+    }
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.headline)
-                .foregroundStyle(palette.accentForeground)
+                .foregroundStyle(iconTint ?? palette.accentForeground)
                 .frame(width: 40, height: 40)
-                .background(palette.accentSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(iconBackground ?? palette.accentSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {

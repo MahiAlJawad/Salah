@@ -314,7 +314,7 @@ struct TrackerView: View {
                 .accessibilityValue("\(monthlyCharityTotal.formatted(.currency(code: charityCurrencyCode).locale(L10n.locale))) of \(charityGoal.formatted(.currency(code: charityCurrencyCode).locale(L10n.locale)))")
 
             HStack {
-                Label("\(monthlyCharityEntries.count) gifts", systemImage: "heart.circle.fill")
+                Label("\(monthlyCharityEntries.count) gifts", systemImage: "gift")
                 Spacer()
                 Text(charityProgress, format: .percent.precision(.fractionLength(0)))
             }
