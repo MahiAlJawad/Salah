@@ -23,7 +23,7 @@ private enum InsightCategory: String, CaseIterable, Identifiable {
         case .salah: "checkmark.circle.fill"
         case .tasbih: "circle.hexagongrid.fill"
         case .nafl: "sparkles"
-        case .charity: "heart.fill"
+        case .charity: "gift"
         }
     }
 }
