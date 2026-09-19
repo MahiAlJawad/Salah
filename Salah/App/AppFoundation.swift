@@ -396,7 +396,9 @@ final class AppContainer {
         }
         #endif
 
-        let localConfiguration = ModelConfiguration(cloudKitDatabase: .none)
+        let localConfiguration = ModelConfiguration(
+            cloudKitDatabase: .private("iCloud.com.prayer.salah")
+        )
         let persistentContainer = try? ModelContainer(
             for: PrayerRecord.self,
             TasbihHistoryRecord.self,
