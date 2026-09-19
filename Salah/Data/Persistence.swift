@@ -3,7 +3,13 @@ import SwiftData
 
 @Model
 final class PrayerRecord {
-    @Attribute(.unique) var uniquenessKey: String
+    // CloudKit can't enforce unique constraints during concurrent sync; the repository reconciles records by this key.
+    /* Example
+    Phone A offline: creates 2026-09-19|fajr
+    Phone B offline: creates 2026-09-19|fajr
+    Both later sync to CloudKit
+    */
+    var uniquenessKey: String
     var id: UUID
     var prayerRawValue: String
     var localDateKey: String
