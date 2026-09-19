@@ -18,7 +18,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Prayer Reminders",
                             subtitle: "Timings, alerts & notifications",
-                            symbol: "bell"
+                            symbol: "bell",
+                            iconTint: .blue.opacity(0.76),
+                            iconBackground: .blue.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -30,7 +32,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Location",
                             subtitle: container.localizedLocationName,
-                            symbol: "location"
+                            symbol: "location",
+                            iconTint: .blue.opacity(0.76),
+                            iconBackground: .blue.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -41,7 +45,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Calculation Method",
                             subtitle: container.settings.calculation.method.title,
-                            symbol: "slider.horizontal.3"
+                            symbol: "slider.horizontal.3",
+                            iconTint: .indigo.opacity(0.76),
+                            iconBackground: .indigo.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -52,7 +58,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Adjustments",
                             subtitle: "Manual time adjustments",
-                            symbol: "clock.arrow.circlepath"
+                            symbol: "clock.arrow.circlepath",
+                            iconTint: .teal.opacity(0.76),
+                            iconBackground: .teal.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -64,7 +72,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Display & Theme",
                             subtitle: "Mode, colors & fonts",
-                            symbol: "paintpalette"
+                            symbol: "paintpalette",
+                            iconTint: .indigo.opacity(0.68),
+                            iconBackground: .indigo.opacity(0.07)
                         )
                     }
                     .buttonStyle(.plain)
@@ -75,7 +85,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Language",
                             subtitle: container.settings.language.selectorTitle,
-                            symbol: "globe"
+                            symbol: "globe",
+                            iconTint: .blue.opacity(0.76),
+                            iconBackground: .blue.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -88,8 +100,8 @@ struct MoreView: View {
                             title: "Sadaqah",
                             subtitle: "A private giving intention",
                             symbol: "gift",
-                            iconTint: .pink,
-                            iconBackground: .pink.opacity(0.16)
+                            iconTint: .pink.opacity(0.76),
+                            iconBackground: .pink.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -101,7 +113,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "Privacy & Data",
                             subtitle: "Local-first and transparent",
-                            symbol: "hand.raised.fill"
+                            symbol: "lock",
+                            iconTint: .teal.opacity(0.76),
+                            iconBackground: .teal.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -112,7 +126,9 @@ struct MoreView: View {
                         MoreSettingsRow(
                             title: "About Salah",
                             subtitle: "Charitable and open source",
-                            symbol: "info.circle"
+                            symbol: "info.circle",
+                            iconTint: .indigo.opacity(0.76),
+                            iconBackground: .indigo.opacity(0.09)
                         )
                     }
                     .buttonStyle(.plain)
@@ -124,7 +140,9 @@ struct MoreView: View {
                             MoreSettingsRow(
                                 title: "Support & Contact",
                                 subtitle: "Contact the project maintainer",
-                                symbol: "headphones"
+                                symbol: "headphones",
+                                iconTint: .orange.opacity(0.76),
+                                iconBackground: .orange.opacity(0.09)
                             )
                         }
                         .buttonStyle(.plain)
