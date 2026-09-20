@@ -38,6 +38,20 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(MosqueResultRanker.rank(candidates, from: origin).count, 2)
     }
 
+    func testMosqueRankerExcludesPlacesWithoutMosqueOrMasjidInTheirName() {
+        let origin = CLLocationCoordinate2D(latitude: 23.7100, longitude: 90.4100)
+        let candidates = [
+            MosqueSearchCandidate(name: "Nearby Temple", address: "A", latitude: 23.7101, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Community Prayer Hall", address: "B", latitude: 23.7102, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Central MOSQUE", address: "C", latitude: 23.7110, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Masjid-e-Noor", address: "D", latitude: 23.7120, longitude: 90.4100)
+        ]
+
+        let names = MosqueResultRanker.rank(candidates, from: origin).map(\.candidate.name)
+
+        XCTAssertEqual(names, ["Central MOSQUE", "Masjid-e-Noor"])
+    }
+
     @MainActor
     func testMosqueFinderWaitsForContextualPermissionAction() async {
         let locationProvider = MosqueTestLocationProvider(authorization: .notDetermined)

@@ -463,7 +463,8 @@ private struct MosqueResultsPanel<Content: View>: View {
     @Binding var isExpanded: Bool
     let requiresMoreHeight: Bool
     @ViewBuilder let content: Content
-    @GestureState private var dragTranslation: CGFloat = 0
+    @Environment(\.salahPalette) private var palette
+    @State private var dragTranslation: CGFloat = 0
 
     var body: some View {
         let collapsedHeight = requiresMoreHeight
@@ -472,6 +473,7 @@ private struct MosqueResultsPanel<Content: View>: View {
         let expandedHeight = max(collapsedHeight, availableHeight * 0.62)
         let baseHeight = isExpanded ? expandedHeight : collapsedHeight
         let currentHeight = min(max(baseHeight - dragTranslation, collapsedHeight), expandedHeight)
+        let verticalOffset = expandedHeight - currentHeight
 
         VStack(spacing: 0) {
             Capsule()
@@ -480,13 +482,24 @@ private struct MosqueResultsPanel<Content: View>: View {
                 .padding(.vertical, 9)
                 .contentShape(Rectangle().inset(by: -12))
                 .gesture(
-                    DragGesture(minimumDistance: 6)
-                        .updating($dragTranslation) { value, state, _ in
-                            state = value.translation.height
+                    DragGesture(minimumDistance: 6, coordinateSpace: .global)
+                        .onChanged { value in
+                            dragTranslation = value.translation.height
                         }
                         .onEnded { value in
-                            if value.translation.height < -35 { isExpanded = true }
-                            if value.translation.height > 35 { isExpanded = false }
+                            let shouldExpand: Bool
+                            if value.translation.height < -35 {
+                                shouldExpand = true
+                            } else if value.translation.height > 35 {
+                                shouldExpand = false
+                            } else {
+                                shouldExpand = isExpanded
+                            }
+
+                            withAnimation(.snappy) {
+                                isExpanded = shouldExpand
+                                dragTranslation = 0
+                            }
                         }
                 )
                 .accessibilityLabel(isExpanded ? "Collapse mosque results" : "Expand mosque results")
@@ -496,10 +509,14 @@ private struct MosqueResultsPanel<Content: View>: View {
             content
         }
         .frame(maxWidth: .infinity)
-        .frame(height: currentHeight, alignment: .top)
-        .background(.regularMaterial)
+        .frame(height: expandedHeight, alignment: .top)
+        .background(palette.screenBackground)
         .clipShape(UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22))
         .shadow(color: .black.opacity(0.12), radius: 12, y: -3)
+        .offset(y: verticalOffset)
+        .frame(maxWidth: .infinity)
+        .frame(height: expandedHeight, alignment: .bottom)
+        .clipped()
         .accessibilityIdentifier("mosque.results.panel")
     }
 }

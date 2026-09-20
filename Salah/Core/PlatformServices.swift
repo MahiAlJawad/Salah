@@ -280,7 +280,8 @@ enum MosqueResultRanker {
         guard limit > 0 else { return [] }
         var unique: [MosqueSearchCandidate] = []
 
-        for candidate in candidates where CLLocationCoordinate2DIsValid(candidate.coordinate) {
+        for candidate in candidates
+        where CLLocationCoordinate2DIsValid(candidate.coordinate) && isMosqueName(candidate.name) {
             guard !unique.contains(where: { isDuplicate(candidate, $0) }) else { continue }
             unique.append(candidate)
         }
@@ -312,6 +313,12 @@ enum MosqueResultRanker {
         )
         if separation < 40 { return true }
         return canonicalName(lhs.name) == canonicalName(rhs.name) && separation < 150
+    }
+
+    private static func isMosqueName(_ name: String) -> Bool {
+        let words = name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: L10n.locale)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+        return words.contains("mosque") || words.contains("masjid")
     }
 
     private static func canonicalName(_ name: String) -> String {
@@ -364,26 +371,30 @@ final class AppleMosqueSearchProvider: MosqueSearchProviding {
             try Task.checkCancellation()
 
             let mapItems = first.mapItems + second.mapItems
-            let sources = mapItems.map { item in
-                MosqueSearchCandidate(
-                    name: item.name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
-                        ?? L10n.string("Unnamed Mosque"),
-                    address: Self.address(for: item),
-                    latitude: item.placemark.coordinate.latitude,
-                    longitude: item.placemark.coordinate.longitude
+            let sources = mapItems.compactMap { item -> (candidate: MosqueSearchCandidate, mapItem: MKMapItem)? in
+                guard let name = item.name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty else {
+                    return nil
+                }
+                return (
+                    MosqueSearchCandidate(
+                        name: name,
+                        address: Self.address(for: item),
+                        latitude: item.placemark.coordinate.latitude,
+                        longitude: item.placemark.coordinate.longitude
+                    ),
+                    item
                 )
             }
-            let ranked = MosqueResultRanker.rank(sources, from: center)
+            let ranked = MosqueResultRanker.rank(sources.map(\.candidate), from: center)
             return ranked.compactMap { result in
-                guard let index = sources.firstIndex(of: result.candidate) else { return nil }
-                let mapItem = mapItems[index]
+                guard let source = sources.first(where: { $0.candidate == result.candidate }) else { return nil }
                 return MosquePlace(
                     id: Self.identifier(for: result.candidate),
                     name: result.candidate.name,
                     address: result.candidate.address,
                     coordinate: result.candidate.coordinate,
                     distance: result.distance,
-                    mapItem: mapItem
+                    mapItem: source.mapItem
                 )
             }
         } catch is CancellationError {

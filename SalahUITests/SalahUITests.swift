@@ -75,6 +75,23 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Baitul Aman Mosque'" )).firstMatch.waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["mosque.directions.1"].exists)
 
+        let panelHandle = app.buttons["Expand mosque results"]
+        XCTAssertTrue(panelHandle.exists)
+        let collapsedHandleCenter = panelHandle.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        collapsedHandleCenter.press(
+            forDuration: 0.05,
+            thenDragTo: collapsedHandleCenter.withOffset(CGVector(dx: 0, dy: -120))
+        )
+
+        let expandedHandle = app.buttons["Collapse mosque results"]
+        XCTAssertTrue(expandedHandle.waitForExistence(timeout: 2))
+        let expandedHandleCenter = expandedHandle.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        expandedHandleCenter.press(
+            forDuration: 0.05,
+            thenDragTo: expandedHandleCenter.withOffset(CGVector(dx: 0, dy: 120))
+        )
+        XCTAssertTrue(app.buttons["Expand mosque results"].waitForExistence(timeout: 2))
+
         app.segmentedControls.buttons["Qibla"].tap()
         XCTAssertTrue(app.staticTexts["Heading"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["To Makkah"].exists)

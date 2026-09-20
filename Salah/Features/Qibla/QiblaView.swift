@@ -68,6 +68,20 @@ enum QiblaGeometry {
     }
 }
 
+private struct KaabaMarker: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(.black.opacity(0.82))
+            RoundedRectangle(cornerRadius: 0.5, style: .continuous)
+                .fill(.white.opacity(0.8))
+                .frame(height: 2)
+                .padding(.horizontal, 3)
+                .offset(y: -2)
+        }
+    }
+}
+
 struct QiblaView: View {
     @Bindable var container: AppContainer
     @Environment(\.salahPalette) private var palette
@@ -157,10 +171,9 @@ struct QiblaView: View {
             .animation(.smooth(duration: 0.45), value: headingProvider.heading)
 
             VStack(spacing: 5) {
-                Image(systemName: "building.columns.fill")
-                    .font(.title2)
-                    .foregroundStyle(.white)
-                    .padding(10)
+                KaabaMarker()
+                    .frame(width: 24, height: 20)
+                    .padding(9)
                     .background(palette.accent, in: RoundedRectangle(cornerRadius: 10))
                 Image(systemName: "arrowtriangle.up.fill")
                     .foregroundStyle(palette.accent)
