@@ -105,6 +105,33 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(calculated.methodName, CalculationMethod.karachi.fullTitle)
     }
 
+    func testAutomaticMethodUsesRegionalDefaults() throws {
+        let cases: [(String, String, CalculationMethod)] = [
+            ("AE", "Asia/Dubai", .dubai),
+            ("QA", "Asia/Qatar", .qatar),
+            ("KW", "Asia/Kuwait", .kuwait),
+            ("MY", "Asia/Kuala_Lumpur", .singapore),
+            ("TR", "Europe/Istanbul", .turkey),
+            ("IR", "Asia/Tehran", .tehran),
+            ("US", "America/New_York", .moonsightingCommittee),
+            ("FR", "Europe/Paris", .muslimWorldLeague)
+        ]
+        let calculator = AdhanPrayerTimesCalculator()
+        for (countryCode, timeZone, expected) in cases {
+            let location = PrayerLocation(
+                name: countryCode,
+                latitude: 25,
+                longitude: 45,
+                timeZoneIdentifier: timeZone,
+                countryCode: countryCode,
+                source: .manual
+            )
+            let query = PrayerTimesQuery(day: day, location: location, settings: CalculationSettings())
+            let calculated = try calculator.calculateDay(query: query, location: location)
+            XCTAssertEqual(calculated.methodName, expected.fullTitle, countryCode)
+        }
+    }
+
     func testHijriAdjustmentMovesDateLocally() throws {
         let calculator = AdhanPrayerTimesCalculator()
         var baseSettings = CalculationSettings()
@@ -548,16 +575,66 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertTrue(opened)
     }
 
-    func testNearestDistrictUsesCoordinateDistance() throws {
-        let districts = [
-            District(id: "dhaka", name: "Dhaka", banglaName: "ঢাকা", latitude: 23.7115, longitude: 90.4111),
-            District(id: "chattogram", name: "Chattogram", banglaName: "চট্টগ্রাম", latitude: 22.3569, longitude: 91.7832)
-        ]
-        let nearest = DistrictLoader.nearest(
-            to: .init(latitude: 22.34, longitude: 91.82),
-            districts: districts
+    @MainActor
+    func testGlobalLocationDisplayNameAvoidsDuplicateComponents() {
+        XCTAssertEqual(
+            MapLocationSearchProvider.displayName(
+                locality: "Singapore",
+                subAdministrativeArea: nil,
+                administrativeArea: "Singapore",
+                country: "Singapore",
+                fallback: "Singapore"
+            ),
+            "Singapore"
         )
-        XCTAssertEqual(try XCTUnwrap(nearest).name, "Chattogram")
+        XCTAssertEqual(
+            MapLocationSearchProvider.displayName(
+                locality: "Springfield",
+                subAdministrativeArea: nil,
+                administrativeArea: "Illinois",
+                country: "United States",
+                fallback: "Springfield"
+            ),
+            "Springfield, Illinois, United States"
+        )
+    }
+
+    func testLegacyDistrictLocationStillDecodes() throws {
+        let data = Data(#"{"name":"Dhaka, Bangladesh","latitude":23.71,"longitude":90.41,"timeZoneIdentifier":"Asia/Dhaka","countryCode":"BD","source":"district"}"#.utf8)
+        let location = try JSONDecoder().decode(PrayerLocation.self, from: data)
+        XCTAssertEqual(location.source, .district)
+        XCTAssertEqual(location.name, "Dhaka, Bangladesh")
+    }
+
+    @MainActor
+    func testRecentLocationsAreDeduplicatedCappedAndPersisted() throws {
+        let suiteName = "SalahDomainTests.locations.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let settings = AppSettings(defaults: defaults)
+
+        for index in 0..<6 {
+            settings.rememberLocation(PrayerLocation(
+                name: "Location \(index)",
+                latitude: Double(index),
+                longitude: Double(index),
+                timeZoneIdentifier: "UTC",
+                countryCode: nil,
+                source: .manual
+            ))
+        }
+        settings.rememberLocation(PrayerLocation(
+            name: "Renamed location",
+            latitude: 5,
+            longitude: 5,
+            timeZoneIdentifier: "UTC",
+            countryCode: nil,
+            source: .manual
+        ))
+
+        XCTAssertEqual(settings.recentLocations.count, 5)
+        XCTAssertEqual(settings.recentLocations.first?.name, "Renamed location")
+        XCTAssertEqual(AppSettings(defaults: defaults).recentLocations, settings.recentLocations)
     }
 
     @MainActor
@@ -994,18 +1071,9 @@ final class SalahDomainTests: XCTestCase {
         let settings = AppSettings(defaults: defaults)
         settings.language = .bangla
 
-        let district = District(
-            id: "47",
-            name: "Dhaka",
-            banglaName: "ঢাকা",
-            latitude: 23.7115253,
-            longitude: 90.4111451
-        )
-        XCTAssertEqual(district.localizedName, "ঢাকা")
         XCTAssertEqual(AppSettings(defaults: defaults).language, .bangla)
 
         settings.language = .english
-        XCTAssertEqual(district.localizedName, "Dhaka")
         XCTAssertEqual(CharityCategory.sadaqah.title, "Sadaqah")
         XCTAssertEqual(CharityCategory.zakat.title, "Zakat")
     }

@@ -14,7 +14,7 @@ Salah is a free, privacy-first, open-source iPhone application for prayer timing
 2. Select the shared `Salah` scheme and an iPhone destination.
 3. Run with Command-R.
 
-The app does not require an account. Choose a bundled Bangladesh district or allow one-shot When In Use location access. Prayer times and Hijri dates are calculated on-device, so schedules, reminders, and the local SwiftData tracker remain available offline.
+The app does not require an account. Search for a city or place worldwide with native Apple Maps, or allow one-shot When In Use location access. Once a location is selected, prayer times and Hijri dates are calculated on-device, so schedules, reminders, and the local SwiftData tracker remain available offline.
 
 Run deterministic tests without a live network connection:
 
@@ -29,8 +29,8 @@ xcodebuild -project Salah.xcodeproj -scheme Salah \
 - `Core`: Core Location, local notification scheduling, shared presentation
 - `Domain`: prayer, date, cache-key, tracker, and insight rules (`PrayerDomain`, `CharityDomain`, `TasbihDomain`, `TrackerInsights`)
 - `Data`: Adhan Swift calculation adapter, memory/disk cache, SwiftData persistence
-- `Features`: one folder per tab — `Today`, `Calendar`, `Tracker` (tasbih, insights, charity), `Qibla`, `More` (reminders, appearance, privacy, about) — plus `Common` for screens and components shared across tabs (theme, cards, location/district pickers) and onboarding
-- `Resources`: bundled district data, the privacy manifest, and the localization catalog
+- `Features`: one folder per tab — `Today`, `Calendar`, `Tracker` (tasbih, insights, charity), `Qibla`, `More` (reminders, appearance, privacy, about) — plus `Common` for screens and components shared across tabs (theme, cards, global location picker) and onboarding
+- `Resources`: the privacy manifest and localization catalog
 
 Prayer timings vary by method, madhab, adjustments, conditions, and local authority. Confirm timings with an appropriate local authority when necessary.
 

@@ -114,8 +114,7 @@ struct TodayView: View {
     @Environment(\.salahPalette) private var palette
     @Environment(\.colorScheme) private var colorScheme
     @State private var viewModel: TodayViewModel
-    @State private var showingDistricts = false
-    @State private var showingCurrentLocation = false
+    @State private var showingLocationPicker = false
     @State private var showingFutureSalahAlert = false
     #if DEBUG
     @AppStorage("salah.debug.current-prayer-preview") private var currentPrayerPreview = ""
@@ -160,11 +159,8 @@ struct TodayView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
-                    Button("Use Current Location", systemImage: "location.fill") {
-                        showingCurrentLocation = true
-                    }
-                    Button("Choose District Manually", systemImage: "map.fill") {
-                        showingDistricts = true
+                    Button("Change Location", systemImage: "map.fill") {
+                        showingLocationPicker = true
                     }
                 } label: {
                     HStack(spacing: 5) {
@@ -190,20 +186,11 @@ struct TodayView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingDistricts) {
-            NavigationStack {
-                DistrictPickerView(districts: container.districts) { district in
-                    showingDistricts = false
-                    updateLocation(district.prayerLocation)
-                }
-            }
-        }
-        .sheet(isPresented: $showingCurrentLocation) {
-            CurrentLocationSettingsSheet(container: container) { location in
-                showingCurrentLocation = false
+        .sheet(isPresented: $showingLocationPicker) {
+            GlobalLocationPickerView(container: container) { location in
+                showingLocationPicker = false
                 updateLocation(location)
             }
-            .presentationDetents([.medium, .large])
         }
         .alert("Future Salah is not trackable", isPresented: $showingFutureSalahAlert) {
             Button("OK", role: .cancel) { }

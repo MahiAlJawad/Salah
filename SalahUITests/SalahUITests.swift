@@ -5,12 +5,15 @@ final class SalahUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testOnboardingCanBeSkippedAndRootTabsAppear() {
+    func testOnboardingRequiresLocationAndRootTabsAppearAfterSelection() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-reset-state"]
         app.launch()
-        let skip = app.buttons["Skip"]
-        if skip.waitForExistence(timeout: 3) { skip.tap() }
+        XCTAssertFalse(app.buttons["Skip"].exists)
+        app.buttons["Continue"].tap()
+        app.buttons["Continue"].tap()
+        app.buttons["Choose Prayer Location"].tap()
+        app.buttons["Use Current Location"].tap()
         XCTAssertTrue(app.tabBars.buttons["Today"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
         XCTAssertTrue(app.tabBars.buttons["Tracker"].exists)
@@ -19,7 +22,7 @@ final class SalahUITests: XCTestCase {
         let locationMenu = app.buttons["today.location.menu"]
         XCTAssertTrue(locationMenu.exists)
         locationMenu.tap()
-        XCTAssertTrue(app.buttons["Choose District Manually"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Change Location"].waitForExistence(timeout: 2))
     }
 
     func testBanglaOverrideLocalizesTabsPrayerAndSolarLabels() {
@@ -37,7 +40,7 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'ফজর'" )).firstMatch.exists)
     }
 
-    func testManualDistrictSelectionAndLocationDeniedRecovery() {
+    func testGlobalSearchAndLocationDeniedRecovery() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-reset-state", "-location-denied"]
         app.launch()
@@ -46,8 +49,12 @@ final class SalahUITests: XCTestCase {
         app.buttons["Choose Prayer Location"].tap()
         app.buttons["Use Current Location"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Location access is denied'")).firstMatch.waitForExistence(timeout: 3))
-        app.buttons["Choose District Manually"].tap()
-        let dhaka = app.buttons["Dhaka, ঢাকা"]
+        app.buttons["Search for a City or Place"].tap()
+        let searchField = app.searchFields["City, town, or address"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("Dhaka")
+        let dhaka = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Dhaka'" )).firstMatch
         XCTAssertTrue(dhaka.waitForExistence(timeout: 3))
         dhaka.tap()
         XCTAssertTrue(app.tabBars.buttons["Today"].waitForExistence(timeout: 3))

@@ -26,15 +26,6 @@ struct OnboardingFlow: View {
             LocationEducationView(container: container)
         } else {
             VStack(spacing: 24) {
-                HStack {
-                    Spacer()
-                    Button("Skip") {
-                        container.settings.location = .dhaka
-                        container.settings.onboardingComplete = true
-                    }
-                    .frame(minHeight: 44)
-                }
-
                 TabView(selection: $page) {
                     ForEach(pages) { page in
                         VStack(spacing: 26) {

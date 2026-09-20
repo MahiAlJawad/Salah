@@ -73,9 +73,14 @@ struct AdhanPrayerTimesCalculator: PrayerTimesCalculating {
         case "BD", "PK", "IN", "AF": return .karachi
         case "EG": return .egyptian
         case "SA": return .ummAlQura
-        case "US", "CA": return .isna
-        default:
-            return location.timeZoneIdentifier == "Asia/Dhaka" ? .karachi : .muslimWorldLeague
+        case "AE": return .dubai
+        case "QA": return .qatar
+        case "KW": return .kuwait
+        case "SG", "MY", "ID", "BN": return .singapore
+        case "TR": return .turkey
+        case "IR": return .tehran
+        case "US", "CA", "GB": return .moonsightingCommittee
+        default: return .muslimWorldLeague
         }
     }
 
@@ -86,6 +91,13 @@ struct AdhanPrayerTimesCalculator: PrayerTimesCalculating {
         case .ummAlQura: .ummAlQura
         case .egyptian: .egyptian
         case .isna: .northAmerica
+        case .dubai: .dubai
+        case .qatar: .qatar
+        case .kuwait: .kuwait
+        case .singapore: .singapore
+        case .turkey: .turkey
+        case .tehran: .tehran
+        case .moonsightingCommittee: .moonsightingCommittee
         }
     }
 

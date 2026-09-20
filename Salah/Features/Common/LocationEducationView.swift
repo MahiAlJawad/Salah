@@ -5,7 +5,7 @@ struct LocationEducationView: View {
     @Environment(\.salahPalette) private var palette
     @State private var isRequesting = false
     @State private var errorMessage: String?
-    @State private var showingDistricts = false
+    @State private var showingLocationSearch = false
 
     var body: some View {
         VStack(spacing: 22) {
@@ -16,14 +16,14 @@ struct LocationEducationView: View {
                 .accessibilityHidden(true)
             Text("Use your location?")
                 .font(.largeTitle.bold())
-            Text("Salah uses a one-time location request to calculate prayer times on this device. It does not transmit or track your location in the background. You can choose a district instead.")
+            Text("Salah uses a one-time location request to calculate prayer times on this device. It does not track your location in the background. You can search for any city or place instead.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             VStack(alignment: .leading, spacing: 14) {
                 Label("When In Use access only", systemImage: "checkmark.circle.fill")
                 Label("Approximate location is sufficient", systemImage: "checkmark.circle.fill")
-                Label("Manual district selection always works", systemImage: "checkmark.circle.fill")
+                Label("Search for locations worldwide", systemImage: "checkmark.circle.fill")
             }
             .foregroundStyle(.secondary)
 
@@ -51,23 +51,16 @@ struct LocationEducationView: View {
             .controlSize(.large)
             .disabled(isRequesting)
 
-            Button("Choose District Manually") { showingDistricts = true }
+            Button("Search for a City or Place") { showingLocationSearch = true }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
                 .frame(maxWidth: .infinity)
-
-            Button("Use Dhaka as Default") {
-                complete(with: .dhaka)
-            }
-            .frame(minHeight: 44)
         }
         .padding()
-        .sheet(isPresented: $showingDistricts) {
-            NavigationStack {
-                DistrictPickerView(districts: container.districts) { district in
-                    showingDistricts = false
-                    complete(with: district.prayerLocation)
-                }
+        .sheet(isPresented: $showingLocationSearch) {
+            GlobalLocationPickerView(container: container, showsCurrentLocation: false) { location in
+                showingLocationSearch = false
+                complete(with: location)
             }
         }
     }

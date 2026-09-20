@@ -1,4 +1,5 @@
 @preconcurrency import CoreLocation
+@preconcurrency import MapKit
 import Foundation
 import Observation
 import UserNotifications
@@ -21,8 +22,8 @@ enum LocationServiceError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .denied: L10n.string("Location access is denied. Choose a district manually or enable access in Settings.")
-        case .restricted: L10n.string("Location access is restricted on this device. Choose a district manually.")
+        case .denied: L10n.string("Location access is denied. Search for a city or enable access in Settings.")
+        case .restricted: L10n.string("Location access is restricted on this device. Search for a city instead.")
         case .unavailable: L10n.string("Your current location is unavailable.")
         case .failed: L10n.string("The location request failed.")
         }
@@ -116,10 +117,6 @@ final class CoreLocationProvider: NSObject, LocationProviding, @preconcurrency C
             return cityOrDistrict
         }
 
-        if let nearestDistrict = DistrictLoader.nearest(to: location.coordinate) {
-            return "\(nearestDistrict.name), Bangladesh"
-        }
-
         if let administrativeArea = placemark?.administrativeArea, !administrativeArea.isEmpty {
             return administrativeArea
         }
@@ -143,84 +140,118 @@ final class CoreLocationProvider: NSObject, LocationProviding, @preconcurrency C
     }
 }
 
-struct District: Codable, Identifiable, Hashable, Sendable {
+struct LocationSearchSuggestion: Identifiable, Equatable, Sendable {
     let id: String
-    let name: String
-    let banglaName: String
-    let latitude: Double
-    let longitude: Double
+    let title: String
+    let subtitle: String
+}
 
-    enum CodingKeys: String, CodingKey {
-        case id, name
-        case banglaName = "bn_name"
-        case latitude = "lat"
-        case longitude = "lon"
-    }
+enum LocationSearchError: LocalizedError {
+    case unavailable
+    case noResults
 
-    init(id: String, name: String, banglaName: String, latitude: Double, longitude: Double) {
-        self.id = id
-        self.name = name
-        self.banglaName = banglaName
-        self.latitude = latitude
-        self.longitude = longitude
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        banglaName = try container.decode(String.self, forKey: .banglaName)
-        let latitudeString = try container.decode(String.self, forKey: .latitude)
-        let longitudeString = try container.decode(String.self, forKey: .longitude)
-        guard let latitude = Double(latitudeString), let longitude = Double(longitudeString) else {
-            throw PrayerDataError.invalidData("Invalid district coordinate")
+    var errorDescription: String? {
+        switch self {
+        case .unavailable: L10n.string("That location is no longer available. Search again.")
+        case .noResults: L10n.string("No matching location was found.")
         }
-        self.latitude = latitude
-        self.longitude = longitude
+    }
+}
+
+@MainActor
+protocol LocationSearchProviding: AnyObject {
+    func search(_ query: String, completion: @escaping ([LocationSearchSuggestion], String?) -> Void)
+    func resolve(_ suggestion: LocationSearchSuggestion) async throws -> PrayerLocation
+}
+
+@MainActor
+final class MapLocationSearchProvider: NSObject, LocationSearchProviding, @preconcurrency MKLocalSearchCompleterDelegate {
+    private let completer = MKLocalSearchCompleter()
+    private var completionHandler: (([LocationSearchSuggestion], String?) -> Void)?
+    private var completions: [String: MKLocalSearchCompletion] = [:]
+
+    override init() {
+        super.init()
+        completer.delegate = self
+        completer.resultTypes = .address
     }
 
-    var prayerLocation: PrayerLocation {
-        PrayerLocation(
-            name: "\(localizedName), \(L10n.string("Bangladesh"))",
-            latitude: latitude,
-            longitude: longitude,
-            timeZoneIdentifier: "Asia/Dhaka",
-            countryCode: "BD",
-            source: .district
+    func search(_ query: String, completion: @escaping ([LocationSearchSuggestion], String?) -> Void) {
+        completer.cancel()
+        completionHandler = completion
+        completions.removeAll()
+        completer.queryFragment = query
+    }
+
+    func resolve(_ suggestion: LocationSearchSuggestion) async throws -> PrayerLocation {
+        guard let completion = completions[suggestion.id] else { throw LocationSearchError.unavailable }
+        let request = MKLocalSearch.Request(completion: completion)
+        request.resultTypes = .address
+        let response = try await MKLocalSearch(request: request).start()
+        guard let item = response.mapItems.first else { throw LocationSearchError.noResults }
+        return try Self.prayerLocation(from: item, fallbackName: suggestion.title)
+    }
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        let suggestions = completer.results.map { completion in
+            let id = UUID().uuidString
+            completions[id] = completion
+            return LocationSearchSuggestion(
+                id: id,
+                title: completion.title,
+                subtitle: completion.subtitle
+            )
+        }
+        completionHandler?(suggestions, nil)
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        completionHandler?([], error.localizedDescription)
+    }
+
+    static func prayerLocation(from item: MKMapItem, fallbackName: String) throws -> PrayerLocation {
+        let placemark = item.placemark
+        let coordinate = placemark.coordinate
+        guard CLLocationCoordinate2DIsValid(coordinate),
+              let timeZone = item.timeZone ?? placemark.timeZone else {
+            throw LocationSearchError.noResults
+        }
+
+        let name = displayName(
+            locality: placemark.locality,
+            subAdministrativeArea: placemark.subAdministrativeArea,
+            administrativeArea: placemark.administrativeArea,
+            country: placemark.country,
+            fallback: item.name ?? fallbackName
+        )
+        return PrayerLocation(
+            name: name,
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude,
+            timeZoneIdentifier: timeZone.identifier,
+            countryCode: placemark.isoCountryCode,
+            source: .manual
         )
     }
 
-    var localizedName: String {
-        L10n.usesBangla ? banglaName : name
-    }
-}
-
-private struct DistrictEnvelope: Codable {
-    let districts: [District]
-}
-
-enum DistrictLoader {
-    static func load(bundle: Bundle = .main) -> [District] {
-        guard let url = bundle.url(forResource: "districts", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let envelope = try? JSONDecoder().decode(DistrictEnvelope.self, from: data) else {
-            return [District(id: "fallback-dhaka", name: "Dhaka", banglaName: "ঢাকা", latitude: 23.7115253, longitude: 90.4111451)]
+    static func displayName(
+        locality: String?,
+        subAdministrativeArea: String?,
+        administrativeArea: String?,
+        country: String?,
+        fallback: String
+    ) -> String {
+        let primary = [locality, subAdministrativeArea, administrativeArea, fallback]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty } ?? fallback
+        var parts = [primary]
+        for value in [administrativeArea, country] {
+            guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty,
+                  !parts.contains(where: { $0.localizedCaseInsensitiveCompare(value) == .orderedSame }) else { continue }
+            parts.append(value)
         }
-        return envelope.districts.sorted {
-            if $0.name == "Dhaka" { return true }
-            if $1.name == "Dhaka" { return false }
-            return $0.name.localizedStandardCompare($1.name) == .orderedAscending
-        }
-    }
-
-    static func nearest(to coordinate: CLLocationCoordinate2D, districts: [District]? = nil) -> District? {
-        let candidates = districts ?? load()
-        let origin = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        return candidates.min { lhs, rhs in
-            let lhsDistance = origin.distance(from: CLLocation(latitude: lhs.latitude, longitude: lhs.longitude))
-            let rhsDistance = origin.distance(from: CLLocation(latitude: rhs.latitude, longitude: rhs.longitude))
-            return lhsDistance < rhsDistance
-        }
+        return parts.joined(separator: ", ")
     }
 }
 

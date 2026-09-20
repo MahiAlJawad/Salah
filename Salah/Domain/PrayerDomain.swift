@@ -76,6 +76,7 @@ enum PrayerEvent: String, CaseIterable, Codable, Identifiable, Sendable {
 
 enum CalculationMethod: String, CaseIterable, Codable, Identifiable, Sendable {
     case automatic, karachi, muslimWorldLeague, ummAlQura, egyptian, isna
+    case dubai, qatar, kuwait, singapore, turkey, tehran, moonsightingCommittee
 
     var id: String { rawValue }
 
@@ -87,6 +88,13 @@ enum CalculationMethod: String, CaseIterable, Codable, Identifiable, Sendable {
         case .ummAlQura: L10n.string("Umm al-Qura")
         case .egyptian: L10n.string("Egyptian Authority")
         case .isna: L10n.string("ISNA")
+        case .dubai: L10n.string("Dubai")
+        case .qatar: L10n.string("Qatar")
+        case .kuwait: L10n.string("Kuwait")
+        case .singapore: L10n.string("Singapore")
+        case .turkey: L10n.string("Diyanet Turkey")
+        case .tehran: L10n.string("University of Tehran")
+        case .moonsightingCommittee: L10n.string("Moonsighting Committee")
         }
     }
 
@@ -98,6 +106,13 @@ enum CalculationMethod: String, CaseIterable, Codable, Identifiable, Sendable {
         case .ummAlQura: L10n.string("Umm al-Qura University, Makkah")
         case .egyptian: L10n.string("Egyptian General Authority of Survey")
         case .isna: L10n.string("Islamic Society of North America (ISNA)")
+        case .dubai: L10n.string("Dubai method")
+        case .qatar: L10n.string("Qatar method")
+        case .kuwait: L10n.string("Kuwait method")
+        case .singapore: L10n.string("Singapore method")
+        case .turkey: L10n.string("Diyanet, Turkey")
+        case .tehran: L10n.string("Institute of Geophysics, University of Tehran")
+        case .moonsightingCommittee: L10n.string("Moonsighting Committee Worldwide")
         }
     }
 }
@@ -191,18 +206,18 @@ enum CustomThemeColor: String, CaseIterable, Codable, Identifiable, Sendable {
 }
 
 enum LocationSource: String, Codable, Sendable {
-    case automatic, district, fallback
+    case automatic, manual, district, fallback
 
     var title: String {
         switch self {
         case .automatic: L10n.string("Automatic")
-        case .district: L10n.string("District")
+        case .manual, .district: L10n.string("Manual")
         case .fallback: L10n.string("Default")
         }
     }
 }
 
-struct PrayerLocation: Codable, Equatable, Sendable {
+struct PrayerLocation: Codable, Hashable, Sendable {
     var name: String
     var latitude: Double
     var longitude: Double
@@ -224,7 +239,7 @@ struct PrayerLocation: Codable, Equatable, Sendable {
 }
 
 struct CalculationSettings: Codable, Equatable, Sendable {
-    var method: CalculationMethod = .karachi
+    var method: CalculationMethod = .automatic
     var madhab: Madhab = .hanafi
     var hijriAdjustment: Int = -1
     var cautionMinutes: Int = 3
@@ -621,4 +636,3 @@ struct PrayerRecordSnapshot: Identifiable, Equatable, Sendable {
     var source: String?
     var notes: String?
 }
-

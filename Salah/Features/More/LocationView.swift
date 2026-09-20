@@ -2,8 +2,7 @@ import SwiftUI
 
 struct LocationView: View {
     @Bindable var container: AppContainer
-    @State private var showingDistricts = false
-    @State private var showingLocationEducation = false
+    @State private var showingLocationPicker = false
 
     var body: some View {
         Form {
@@ -11,31 +10,21 @@ struct LocationView: View {
                 LabeledContent("Current", value: container.localizedLocationName)
                 LabeledContent("Source", value: container.settings.location.source.title)
                 LabeledContent("Permission", value: container.locationProvider.authorization.title)
-                Button("Use Current Location") { showingLocationEducation = true }
-                Button("Choose District Manually") { showingDistricts = true }
+                Button("Change Location") { showingLocationPicker = true }
             } header: {
                 Text("Prayer Location")
             } footer: {
-                Text("Location is used only to calculate prayer times on this device. Approximate When In Use access is sufficient.")
+                Text("Use one-time approximate location access or search worldwide with Apple Maps. The selected location is stored on this device.")
             }
         }
         .navigationTitle("Location")
         .navigationBarTitleDisplayMode(.inline)
         .phoneOnlyHideTabBar()
-        .sheet(isPresented: $showingDistricts) {
-            NavigationStack {
-                DistrictPickerView(districts: container.districts) { district in
-                    showingDistricts = false
-                    updateLocation(district.prayerLocation)
-                }
-            }
-        }
-        .sheet(isPresented: $showingLocationEducation) {
-            CurrentLocationSettingsSheet(container: container) { location in
-                showingLocationEducation = false
+        .sheet(isPresented: $showingLocationPicker) {
+            GlobalLocationPickerView(container: container) { location in
+                showingLocationPicker = false
                 updateLocation(location)
             }
-            .presentationDetents([.medium, .large])
         }
     }
 

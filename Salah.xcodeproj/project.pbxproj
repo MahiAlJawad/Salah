@@ -12,7 +12,6 @@
 		0C7044C23017C6BA00277BD4 /* SalahWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C7044AB3017C6B800277BD4 /* SalahWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0CB08E2F30572003009C42B8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000000C /* PrivacyInfo.xcprivacy */; };
 		0CEE636C301BCC49000F3FF9 /* DebugDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEE636B301BCC41000F3FF9 /* DebugDrawerView.swift */; };
-		5A8F54892B87696500ED1BFC /* Location/districts.json in Resources */ = {isa = PBXBuildFile; fileRef = 5A8F54882B87696500ED1BFC /* Location/districts.json */; };
 		5AA6AB572B81E90900E2A7DB /* SalahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AA6AB562B81E90900E2A7DB /* SalahApp.swift */; };
 		5AA6AB5B2B81E90A00E2A7DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */; };
 		D20000000000000000000001 /* AppFoundation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* AppFoundation.swift */; };
@@ -43,8 +42,7 @@
 		FB0000000000000000000001 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* OnboardingFlow.swift */; };
 		FB0000000000000000000002 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000002 /* SharedComponents.swift */; };
 		FB0000000000000000000003 /* LocationEducationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000003 /* LocationEducationView.swift */; };
-		FB0000000000000000000004 /* DistrictPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000004 /* DistrictPickerView.swift */; };
-		FB0000000000000000000005 /* CurrentLocationSettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000005 /* CurrentLocationSettingsSheet.swift */; };
+		FB0000000000000000000004 /* GlobalLocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000004 /* GlobalLocationPickerView.swift */; };
 		FB0000000000000000000006 /* TodayComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000006 /* TodayComponents.swift */; };
 		FB0000000000000000000007 /* PrayerCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000007 /* PrayerCalendarView.swift */; };
 		FB0000000000000000000008 /* TrackerRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000008 /* TrackerRows.swift */; };
@@ -107,7 +105,6 @@
 		0C7044C73017C8F900277BD4 /* Salah.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Salah.entitlements; sourceTree = "<group>"; };
 		0C7044C83017C92200277BD4 /* SalahWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SalahWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		0CEE636B301BCC41000F3FF9 /* DebugDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDrawerView.swift; sourceTree = "<group>"; };
-		5A8F54882B87696500ED1BFC /* Location/districts.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Location/districts.json; sourceTree = "<group>"; };
 		5AA6AB532B81E90900E2A7DB /* Salah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Salah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AA6AB562B81E90900E2A7DB /* SalahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahApp.swift; sourceTree = "<group>"; };
 		5AA6AB5A2B81E90A00E2A7DB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -139,8 +136,7 @@
 		FA0000000000000000000001 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
 		FA0000000000000000000002 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		FA0000000000000000000003 /* LocationEducationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationEducationView.swift; sourceTree = "<group>"; };
-		FA0000000000000000000004 /* DistrictPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistrictPickerView.swift; sourceTree = "<group>"; };
-		FA0000000000000000000005 /* CurrentLocationSettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentLocationSettingsSheet.swift; sourceTree = "<group>"; };
+		FA0000000000000000000004 /* GlobalLocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalLocationPickerView.swift; sourceTree = "<group>"; };
 		FA0000000000000000000006 /* TodayComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayComponents.swift; sourceTree = "<group>"; };
 		FA0000000000000000000007 /* PrayerCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerCalendarView.swift; sourceTree = "<group>"; };
 		FA0000000000000000000008 /* TrackerRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerRows.swift; sourceTree = "<group>"; };
@@ -325,7 +321,6 @@
 			children = (
 				D1000000000000000000000B /* Localizable.xcstrings */,
 				D1000000000000000000000C /* PrivacyInfo.xcprivacy */,
-				5A8F54882B87696500ED1BFC /* Location/districts.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -336,8 +331,7 @@
 				D10000000000000000000006 /* SalahTheme.swift */,
 				FA0000000000000000000002 /* SharedComponents.swift */,
 				FA0000000000000000000003 /* LocationEducationView.swift */,
-				FA0000000000000000000004 /* DistrictPickerView.swift */,
-				FA0000000000000000000005 /* CurrentLocationSettingsSheet.swift */,
+				FA0000000000000000000004 /* GlobalLocationPickerView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -564,7 +558,6 @@
 				D2000000000000000000000B /* Localizable.xcstrings in Resources */,
 				D2000000000000000000000C /* PrivacyInfo.xcprivacy in Resources */,
 				5AA6AB5B2B81E90A00E2A7DB /* Assets.xcassets in Resources */,
-				5A8F54892B87696500ED1BFC /* Location/districts.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -631,8 +624,7 @@
 				D20000000000000000000017 /* SalahIconTone.swift in Sources */,
 				FB0000000000000000000002 /* SharedComponents.swift in Sources */,
 				FB0000000000000000000003 /* LocationEducationView.swift in Sources */,
-				FB0000000000000000000004 /* DistrictPickerView.swift in Sources */,
-				FB0000000000000000000005 /* CurrentLocationSettingsSheet.swift in Sources */,
+				FB0000000000000000000004 /* GlobalLocationPickerView.swift in Sources */,
 				D20000000000000000000007 /* AppShell.swift in Sources */,
 				FB0000000000000000000001 /* OnboardingFlow.swift in Sources */,
 				0CEE636C301BCC49000F3FF9 /* DebugDrawerView.swift in Sources */,

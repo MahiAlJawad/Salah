@@ -1,4 +1,3 @@
-import CoreLocation
 import Foundation
 import Observation
 import SwiftData
@@ -161,6 +160,7 @@ private struct StoredSettings: Codable {
     var onboardingComplete = false
     var locationEducationSeen = false
     var location = PrayerLocation.dhaka
+    var recentLocations: [PrayerLocation]?
     var calculation = CalculationSettings()
     var language: AppLanguage?
     var appearance = AppearancePreference.system
@@ -179,6 +179,7 @@ final class AppSettings {
     var onboardingComplete: Bool { didSet { save() } }
     var locationEducationSeen: Bool { didSet { save() } }
     var location: PrayerLocation { didSet { save() } }
+    private(set) var recentLocations: [PrayerLocation] { didSet { save() } }
     var calculation: CalculationSettings { didSet { save() } }
     var language: AppLanguage {
         didSet {
@@ -204,15 +205,6 @@ final class AppSettings {
         } else {
             stored = StoredSettings()
         }
-        var initialLocation = stored.location
-        if initialLocation.source == .automatic,
-           initialLocation.name.localizedCaseInsensitiveContains("current location"),
-           let nearestDistrict = DistrictLoader.nearest(
-               to: CLLocationCoordinate2D(latitude: initialLocation.latitude, longitude: initialLocation.longitude)
-           ) {
-            initialLocation.name = "\(nearestDistrict.name), Bangladesh"
-        }
-
         let initialLanguage: AppLanguage = if arguments.contains("-ui-testing"), arguments.contains("-bangla-language") {
             .bangla
         } else {
@@ -221,7 +213,8 @@ final class AppSettings {
         LanguagePreferences.current = initialLanguage
         onboardingComplete = arguments.contains("-ui-testing") && arguments.contains("-onboarding-complete") ? true : stored.onboardingComplete
         locationEducationSeen = stored.locationEducationSeen
-        location = initialLocation
+        location = stored.location
+        recentLocations = stored.recentLocations ?? []
         calculation = stored.calculation
         language = initialLanguage
         appearance = stored.appearance
@@ -229,7 +222,6 @@ final class AppSettings {
         customThemeColor = stored.customThemeColor ?? .oceanBlue
         storedReminders = stored.reminders
         charityReminder = stored.charityReminder ?? CharityReminderPreference()
-        if initialLocation != stored.location { save() }
         // Ensure the widget App Group reflects the loaded theme on every launch.
         ThemePreferences.save(theme: theme, customColor: customThemeColor)
     }
@@ -250,11 +242,24 @@ final class AppSettings {
         storedReminders[event.rawValue] = preference
     }
 
+    func rememberLocation(_ location: PrayerLocation) {
+        let duplicateThreshold = 0.0001
+        recentLocations.removeAll {
+            abs($0.latitude - location.latitude) < duplicateThreshold
+                && abs($0.longitude - location.longitude) < duplicateThreshold
+        }
+        recentLocations.insert(location, at: 0)
+        if recentLocations.count > 5 {
+            recentLocations.removeLast(recentLocations.count - 5)
+        }
+    }
+
     private func save() {
         let value = StoredSettings(
             onboardingComplete: onboardingComplete,
             locationEducationSeen: locationEducationSeen,
             location: location,
+            recentLocations: recentLocations,
             calculation: calculation,
             language: language,
             appearance: appearance,
@@ -319,28 +324,20 @@ final class AppContainer {
     let router: AppRouter
     let prayerTimesRepository: any PrayerTimesRepository
     let locationProvider: any LocationProviding
+    let locationSearchProvider: any LocationSearchProviding
     let notificationScheduler: any NotificationScheduling
     let trackingRepository: any PrayerTrackingRepository
     let trackerHistoryRepository: any TrackerHistoryRepository
     let datedTracker: DatedTrackerCoordinator
     let syncCoordinator: any TrackerSyncCoordinating
     let modelContainer: ModelContainer?
-    let districts: [District]
-
-    var localizedLocationName: String {
-        let location = settings.location
-        guard location.countryCode?.uppercased() == "BD",
-              let district = DistrictLoader.nearest(
-                  to: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
-                  districts: districts
-              ) else { return location.name }
-        return "\(district.localizedName), \(L10n.string("Bangladesh"))"
-    }
+    var localizedLocationName: String { settings.location.name }
 
     init(
         settings: AppSettings? = nil,
         prayerTimesRepository: (any PrayerTimesRepository)? = nil,
         locationProvider: (any LocationProviding)? = nil,
+        locationSearchProvider: (any LocationSearchProviding)? = nil,
         notificationScheduler: (any NotificationScheduling)? = nil,
         trackingRepository: (any PrayerTrackingRepository)? = nil,
         trackerHistoryRepository: (any TrackerHistoryRepository)? = nil,
@@ -356,6 +353,9 @@ final class AppContainer {
         self.locationProvider = locationProvider ?? (isUITesting
             ? UITestLocationProvider(denied: arguments.contains("-location-denied"))
             : CoreLocationProvider())
+        self.locationSearchProvider = locationSearchProvider ?? (isUITesting
+            ? UITestLocationSearchProvider()
+            : MapLocationSearchProvider())
         self.notificationScheduler = notificationScheduler ?? (isUITesting
             ? UITestNotificationScheduler(status: arguments.contains("-notification-denied")
                 ? .denied
@@ -365,11 +365,10 @@ final class AppContainer {
             : LocalNotificationScheduler())
         #else
         self.locationProvider = locationProvider ?? CoreLocationProvider()
+        self.locationSearchProvider = locationSearchProvider ?? MapLocationSearchProvider()
         self.notificationScheduler = notificationScheduler ?? LocalNotificationScheduler()
         #endif
         syncCoordinator = LocalOnlySyncCoordinator()
-        districts = DistrictLoader.load()
-
         #if DEBUG
         if let prayerTimesRepository {
             self.prayerTimesRepository = prayerTimesRepository
