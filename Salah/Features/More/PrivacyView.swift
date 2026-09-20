@@ -9,14 +9,19 @@ struct PrivacyView: View {
     var body: some View {
         List {
             Section {
-                Label("Privacy by design", systemImage: "hand.raised.fill").font(.title3.bold())
+                Label {
+                    Text("Privacy by design")
+                } icon: {
+                    privacyIcon("lock", tint: .teal, background: .teal)
+                }
+                .font(.title3.bold())
                 Text("Salah collects the minimum information required for prayer timings and remains useful when optional permissions are declined.")
             }
             Section("How Data Is Used") {
-                privacyRow("Location", detail: "Prayer times are calculated on this device. Current-location access is one-time and never runs in the background. Manual location searches are processed by Apple Maps; Salah does not operate a location or prayer-time server.", symbol: "location.fill")
-                privacyRow("Prayer tracking", detail: "Completion records and notes stay in local SwiftData on this device.", symbol: "checkmark.circle.fill")
-                privacyRow("Notifications", detail: "Optional reminders are scheduled locally. No marketing notification service is used.", symbol: "bell.fill")
-                privacyRow("Advertising and analytics", detail: "The app contains no advertising identifier, tracking SDK, or unnecessary analytics.", symbol: "eye.slash.fill")
+                privacyRow("Location", detail: "Prayer times are calculated on this device. Current-location access is one-time and never runs in the background. Manual location searches are processed by Apple Maps; Salah does not operate a location or prayer-time server.", symbol: "location.fill", tint: .blue, background: .blue)
+                privacyRow("Prayer tracking", detail: "Completion records and notes stay in local SwiftData on this device.", symbol: "checkmark.circle.fill", tint: .teal, background: .teal)
+                privacyRow("Notifications", detail: "Optional reminders are scheduled locally. No marketing notification service is used.", symbol: "bell.fill", tint: .blue, background: .blue)
+                privacyRow("Advertising and analytics", detail: "The app contains no advertising identifier, tracking SDK, or unnecessary analytics.", symbol: "eye.slash.fill", tint: .indigo, background: .indigo)
             }
             if let privacyPolicyURL = ExternalLinks.privacyPolicy {
                 Section {
@@ -56,16 +61,25 @@ struct PrivacyView: View {
         }
     }
 
-    private func privacyRow(_ title: String, detail: String, symbol: String) -> some View {
+    private func privacyRow(_ title: String, detail: String, symbol: String, tint: Color, background: Color) -> some View {
         Label {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.dynamic(title)).font(.headline)
                 Text(L10n.dynamic(detail)).font(.subheadline).foregroundStyle(.secondary)
             }
         } icon: {
-            Image(systemName: symbol).foregroundStyle(palette.accent)
+            privacyIcon(symbol, tint: tint, background: background)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+
+    private func privacyIcon(_ symbol: String, tint: Color, background: Color) -> some View {
+        Image(systemName: symbol)
+            .font(.headline)
+            .foregroundStyle(tint.opacity(0.76))
+            .frame(width: 40, height: 40)
+            .background(background.opacity(0.09), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .accessibilityHidden(true)
     }
 }
