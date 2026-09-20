@@ -270,7 +270,10 @@ struct TodayView: View {
                         if window.prayer != .isha { Divider().padding(.leading, 62) }
                     }
                 }
-                .background(palette.groupedSurface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(
+                    colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : palette.groupedSurface,
+                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                )
 
                 HStack(spacing: 12) {
                     eventCard(title: "Sunrise", date: day.sunrise, symbol: "sunrise.fill", tone: .sunriseAmber, day: day)

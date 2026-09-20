@@ -181,6 +181,7 @@ private struct MoreSectionHeader: View {
 
 private struct MoreSectionCard<Content: View>: View {
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -189,7 +190,7 @@ private struct MoreSectionCard<Content: View>: View {
         }
         .padding(.vertical, 10)
         .background(
-            palette.groupedSurface,
+            colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : palette.groupedSurface,
             in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
         .overlay {

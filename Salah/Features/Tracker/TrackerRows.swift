@@ -36,6 +36,7 @@ struct TrackerPrayerRow: View {
     let viewModel: TrackerViewModel
     let action: () -> Void
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 12) {
@@ -44,7 +45,10 @@ struct TrackerPrayerRow: View {
         }
         .padding()
         .frame(minHeight: 64)
-        .background(palette.groupedSurface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(
+            colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : palette.groupedSurface,
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+        )
     }
 }
 

@@ -202,6 +202,7 @@ final class CalendarViewModel {
 struct PrayerCalendarView: View {
     @Bindable var container: AppContainer
     @Environment(\.salahPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel: CalendarViewModel
     @State private var appliedTargetID: UUID?
@@ -412,7 +413,10 @@ struct PrayerCalendarView: View {
                     if prayer != .isha { Divider().padding(.leading, 62) }
                 }
             }
-            .background(palette.groupedSurface, in: RoundedRectangle(cornerRadius: 18))
+            .background(
+                colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : palette.groupedSurface,
+                in: RoundedRectangle(cornerRadius: 18)
+            )
             Text("\(viewModel.completed.count) of 5 prayers recorded.").font(.footnote).foregroundStyle(.secondary)
         }
     }
