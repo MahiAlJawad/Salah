@@ -1,3 +1,4 @@
+@preconcurrency import MapKit
 import SwiftData
 import XCTest
 @testable import Salah
@@ -5,6 +6,156 @@ import XCTest
 final class SalahDomainTests: XCTestCase {
     private let zone = TimeZone(identifier: "Asia/Dhaka") ?? .gmt
     private let day = LocalDay(year: 2026, month: 7, day: 20)
+
+    func testMosqueResultsAreDeduplicatedRankedAndLimitedToFive() {
+        let origin = CLLocationCoordinate2D(latitude: 23.7100, longitude: 90.4100)
+        let candidates = [
+            MosqueSearchCandidate(name: "Far Mosque", address: "F", latitude: 23.7600, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Nearest Mosque", address: "A", latitude: 23.7110, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Nearest Masjid", address: "Duplicate", latitude: 23.7112, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Second Mosque", address: "B", latitude: 23.7150, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Third Mosque", address: "C", latitude: 23.7200, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Fourth Mosque", address: "D", latitude: 23.7300, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Fifth Mosque", address: "E", latitude: 23.7400, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Sixth Mosque", address: "G", latitude: 23.7500, longitude: 90.4100)
+        ]
+
+        let ranked = MosqueResultRanker.rank(candidates, from: origin)
+
+        XCTAssertEqual(ranked.count, 5)
+        XCTAssertEqual(ranked.first?.candidate.name, "Nearest Mosque")
+        XCTAssertFalse(ranked.contains { $0.candidate.address == "Duplicate" })
+        XCTAssertEqual(ranked.map(\.distance), ranked.map(\.distance).sorted())
+    }
+
+    func testMosqueRankerReturnsEveryResultWhenFewerThanFiveExist() {
+        let origin = CLLocationCoordinate2D(latitude: 23.7100, longitude: 90.4100)
+        let candidates = [
+            MosqueSearchCandidate(name: "First Mosque", address: "A", latitude: 23.7110, longitude: 90.4100),
+            MosqueSearchCandidate(name: "Second Mosque", address: "B", latitude: 23.7150, longitude: 90.4100)
+        ]
+
+        XCTAssertEqual(MosqueResultRanker.rank(candidates, from: origin).count, 2)
+    }
+
+    @MainActor
+    func testMosqueFinderWaitsForContextualPermissionAction() async {
+        let locationProvider = MosqueTestLocationProvider(authorization: .notDetermined)
+        let searchProvider = MosqueTestSearchProvider()
+        let model = MosqueFinderViewModel(
+            locationProvider: locationProvider,
+            searchProvider: searchProvider,
+            savedLocation: { .dhaka }
+        )
+
+        await model.start()
+
+        XCTAssertTrue(model.permissionPromptVisible)
+        XCTAssertTrue(searchProvider.searchedCenters.isEmpty)
+    }
+
+    @MainActor
+    func testMosqueFinderUsesLiveLocationAndTemporaryArea() async {
+        let liveLocation = PrayerLocation(
+            name: "Live location",
+            latitude: 23.8,
+            longitude: 90.5,
+            timeZoneIdentifier: "Asia/Dhaka",
+            countryCode: "BD",
+            source: .automatic
+        )
+        let temporaryLocation = PrayerLocation(
+            name: "Temporary area",
+            latitude: 24.0,
+            longitude: 91.0,
+            timeZoneIdentifier: "Asia/Dhaka",
+            countryCode: "BD",
+            source: .manual
+        )
+        let locationProvider = MosqueTestLocationProvider(authorization: .authorized, location: liveLocation)
+        let searchProvider = MosqueTestSearchProvider()
+        let model = MosqueFinderViewModel(
+            locationProvider: locationProvider,
+            searchProvider: searchProvider,
+            savedLocation: { .dhaka }
+        )
+
+        await model.start()
+        await model.chooseArea(temporaryLocation)
+
+        XCTAssertEqual(searchProvider.searchedCenters.count, 2)
+        XCTAssertEqual(searchProvider.searchedCenters[0].latitude, liveLocation.latitude, accuracy: 0.000_1)
+        XCTAssertEqual(searchProvider.searchedCenters[1].latitude, temporaryLocation.latitude, accuracy: 0.000_1)
+        XCTAssertEqual(model.origin?.summary, String(format: L10n.string("Near %@"), temporaryLocation.name))
+        XCTAssertNil(model.fallbackMessage)
+    }
+
+    @MainActor
+    func testMosqueFinderRetryRecoversFromSearchFailure() async {
+        let searchProvider = FailingOnceMosqueSearchProvider()
+        let model = MosqueFinderViewModel(
+            locationProvider: MosqueTestLocationProvider(authorization: .denied),
+            searchProvider: searchProvider,
+            savedLocation: { .dhaka }
+        )
+
+        await model.start()
+        XCTAssertNotNil(model.errorMessage)
+
+        await model.retry()
+
+        XCTAssertNil(model.errorMessage)
+        XCTAssertEqual(model.places.first?.name, "Recovered Mosque")
+        XCTAssertEqual(searchProvider.searchCount, 2)
+    }
+
+    @MainActor
+    func testMosqueFinderIgnoresAStaleSearchResponse() async {
+        let searchProvider = DelayedFirstMosqueSearchProvider()
+        let model = MosqueFinderViewModel(
+            locationProvider: MosqueTestLocationProvider(authorization: .notDetermined),
+            searchProvider: searchProvider,
+            savedLocation: { .dhaka }
+        )
+        let firstRegion = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 23.7, longitude: 90.4),
+            latitudinalMeters: 10_000,
+            longitudinalMeters: 10_000
+        )
+        let secondRegion = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 24.0, longitude: 91.0),
+            latitudinalMeters: 10_000,
+            longitudinalMeters: 10_000
+        )
+
+        let firstSearch = Task { await model.searchVisibleArea(firstRegion) }
+        while searchProvider.searchCount == 0 { await Task.yield() }
+        await model.searchVisibleArea(secondRegion)
+        searchProvider.finishFirstSearch()
+        await firstSearch.value
+
+        XCTAssertEqual(model.places.first?.name, "Newest Mosque")
+        XCTAssertEqual(model.origin?.summary, L10n.string("This map area"))
+    }
+
+    @MainActor
+    func testMosqueFinderUsesSavedPrayerLocationWhenPermissionIsDenied() async {
+        let locationProvider = MosqueTestLocationProvider(authorization: .denied)
+        let searchProvider = MosqueTestSearchProvider()
+        let model = MosqueFinderViewModel(
+            locationProvider: locationProvider,
+            searchProvider: searchProvider,
+            savedLocation: { .dhaka }
+        )
+
+        await model.start()
+
+        XCTAssertEqual(searchProvider.searchedCenters.count, 1)
+        XCTAssertEqual(searchProvider.searchedCenters.first?.latitude ?? 0, PrayerLocation.dhaka.latitude, accuracy: 0.000_1)
+        XCTAssertEqual(model.places.count, 1)
+        XCTAssertNotNil(model.fallbackMessage)
+        XCTAssertTrue(model.canOpenSettings)
+    }
 
     func testPrayerAndFastingEventsUseSemanticIconTones() {
         XCTAssertEqual(PrayerType.fajr.iconTone, .predawnIndigo)
@@ -72,15 +223,42 @@ final class SalahDomainTests: XCTestCase {
         XCTAssertEqual(window.end, try XCTUnwrap(day.adding(days: 1, in: zone).date(in: zone, hour: 4, minute: 57)))
     }
 
-    func testLocalCalculatorPreservesSahriAndIftarSafetyRules() throws {
+    func testLocalCalculatorAppliesSafetyAdjustmentToSahriMaghribAndIftarOnly() throws {
         let calculator = AdhanPrayerTimesCalculator()
-        let query = PrayerTimesQuery(day: day, location: .dhaka, settings: CalculationSettings())
-        let calculated = try calculator.calculateDay(query: query, location: .dhaka)
-        let fajr = try XCTUnwrap(calculated.window(for: .fajr)?.start)
-        XCTAssertEqual(calculated.sahri, fajr.addingTimeInterval(-13 * 60))
-        XCTAssertEqual(calculated.iftar, calculated.sunset.addingTimeInterval(3 * 60))
-        XCTAssertEqual(calculated.window(for: .maghrib)?.start, calculated.iftar)
-        XCTAssertEqual(calculated.methodName, CalculationMethod.karachi.fullTitle)
+        let base = try calculator.calculateDay(
+            query: PrayerTimesQuery(day: day, location: .dhaka, settings: CalculationSettings()),
+            location: .dhaka
+        )
+        var settings = CalculationSettings()
+        settings.cautionMinutes = 3
+        let adjusted = try calculator.calculateDay(
+            query: PrayerTimesQuery(day: day, location: .dhaka, settings: settings),
+            location: .dhaka
+        )
+
+        XCTAssertEqual(CalculationSettings().cautionMinutes, 0)
+        XCTAssertEqual(base.iftar, base.sunset)
+        XCTAssertEqual(base.window(for: .asr)?.end, base.window(for: .maghrib)?.start)
+        XCTAssertEqual(adjusted.window(for: .fajr)?.start, base.window(for: .fajr)?.start)
+        XCTAssertEqual(adjusted.window(for: .asr)?.start, base.window(for: .asr)?.start)
+        XCTAssertEqual(adjusted.window(for: .asr)?.end, base.window(for: .asr)?.end)
+        XCTAssertEqual(adjusted.sahri, base.sahri.addingTimeInterval(-3 * 60))
+        XCTAssertEqual(adjusted.iftar, base.iftar.addingTimeInterval(3 * 60))
+        XCTAssertEqual(adjusted.window(for: .maghrib)?.start, base.window(for: .maghrib)?.start.addingTimeInterval(3 * 60))
+    }
+
+    func testAutomaticMadhabUsesHanafiOnlyInBangladeshIndiaAndPakistan() {
+        XCTAssertEqual(CalculationSettings().madhab, .automatic)
+        XCTAssertEqual(Madhab.automatic.resolved(for: .dhaka), .hanafi)
+        for countryCode in ["IN", "PK"] {
+            var location = PrayerLocation.dhaka
+            location.countryCode = countryCode
+            XCTAssertEqual(Madhab.automatic.resolved(for: location), .hanafi)
+        }
+        var location = PrayerLocation.dhaka
+        location.countryCode = "US"
+        XCTAssertEqual(Madhab.automatic.resolved(for: location), .standard)
+        XCTAssertEqual(Madhab.hanafi.resolved(for: location), .hanafi)
     }
 
     func testLocalCalculatorSupportsEveryDisplayedMethod() throws {
@@ -1366,6 +1544,92 @@ final class DatedTrackingTests: XCTestCase {
             XCTAssertNil(TasbihTotalInput.parse(input), input)
         }
     }
+}
+
+@MainActor
+private final class MosqueTestLocationProvider: LocationProviding {
+    let authorization: LocationAuthorization
+    private let location: PrayerLocation
+
+    init(authorization: LocationAuthorization, location: PrayerLocation = .dhaka) {
+        self.authorization = authorization
+        self.location = location
+    }
+
+    func requestCurrentLocation() async throws -> PrayerLocation {
+        if authorization == .denied { throw LocationServiceError.denied }
+        return location
+    }
+}
+
+@MainActor
+private final class MosqueTestSearchProvider: MosqueSearchProviding {
+    private(set) var searchedCenters: [CLLocationCoordinate2D] = []
+
+    func search(near center: CLLocationCoordinate2D, region: MKCoordinateRegion) async throws -> [MosquePlace] {
+        searchedCenters.append(center)
+        let coordinate = CLLocationCoordinate2D(latitude: center.latitude + 0.001, longitude: center.longitude)
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        item.name = "Test Mosque"
+        return [MosquePlace(
+            id: "test-mosque",
+            name: "Test Mosque",
+            address: "Test Address",
+            coordinate: coordinate,
+            distance: 100,
+            mapItem: item
+        )]
+    }
+
+    func cancel() { }
+}
+
+@MainActor
+private final class FailingOnceMosqueSearchProvider: MosqueSearchProviding {
+    private(set) var searchCount = 0
+
+    func search(near center: CLLocationCoordinate2D, region: MKCoordinateRegion) async throws -> [MosquePlace] {
+        searchCount += 1
+        if searchCount == 1 { throw MosqueSearchError.unavailable }
+        return [makeMosquePlace(name: "Recovered Mosque", center: center)]
+    }
+
+    func cancel() { }
+}
+
+@MainActor
+private final class DelayedFirstMosqueSearchProvider: MosqueSearchProviding {
+    private(set) var searchCount = 0
+    private var firstContinuation: CheckedContinuation<[MosquePlace], Never>?
+
+    func search(near center: CLLocationCoordinate2D, region: MKCoordinateRegion) async throws -> [MosquePlace] {
+        searchCount += 1
+        if searchCount == 1 {
+            return await withCheckedContinuation { firstContinuation = $0 }
+        }
+        return [makeMosquePlace(name: "Newest Mosque", center: center)]
+    }
+
+    func finishFirstSearch() {
+        firstContinuation?.resume(returning: [makeMosquePlace(name: "Stale Mosque", center: .init(latitude: 23.7, longitude: 90.4))])
+        firstContinuation = nil
+    }
+
+    func cancel() { }
+}
+
+@MainActor
+private func makeMosquePlace(name: String, center: CLLocationCoordinate2D) -> MosquePlace {
+    let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: center))
+    mapItem.name = name
+    return MosquePlace(
+        id: name,
+        name: name,
+        address: "Test Address",
+        coordinate: center,
+        distance: 0,
+        mapItem: mapItem
+    )
 }
 
 private actor UnavailablePrayerTimesRepository: PrayerTimesRepository {

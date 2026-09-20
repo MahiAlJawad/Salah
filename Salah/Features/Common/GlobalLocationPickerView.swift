@@ -3,6 +3,7 @@ import SwiftUI
 struct GlobalLocationPickerView: View {
     @Bindable var container: AppContainer
     let showsCurrentLocation: Bool
+    let footerText: String
     let onSelect: (PrayerLocation) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -16,10 +17,12 @@ struct GlobalLocationPickerView: View {
     init(
         container: AppContainer,
         showsCurrentLocation: Bool = true,
+        footerText: String = "Search is provided by Apple Maps. Your selected location is stored on this device.",
         onSelect: @escaping (PrayerLocation) -> Void
     ) {
         self.container = container
         self.showsCurrentLocation = showsCurrentLocation
+        self.footerText = footerText
         self.onSelect = onSelect
     }
 
@@ -110,7 +113,7 @@ struct GlobalLocationPickerView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                Text("Search is provided by Apple Maps. Your selected location is stored on this device.")
+                Text(L10n.dynamic(footerText))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

@@ -50,7 +50,7 @@ final class CoreLocationProvider: NSObject, LocationProviding, @preconcurrency C
         authorization = Self.map(manager.authorizationStatus)
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyKilometer
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
     func requestCurrentLocation() async throws -> PrayerLocation {
@@ -253,6 +253,177 @@ final class MapLocationSearchProvider: NSObject, LocationSearchProviding, @preco
         }
         return parts.joined(separator: ", ")
     }
+}
+
+struct MosqueSearchCandidate: Equatable, Sendable {
+    let name: String
+    let address: String
+    let latitude: Double
+    let longitude: Double
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+}
+
+struct RankedMosqueCandidate: Equatable, Sendable {
+    let candidate: MosqueSearchCandidate
+    let distance: CLLocationDistance
+}
+
+enum MosqueResultRanker {
+    static func rank(
+        _ candidates: [MosqueSearchCandidate],
+        from origin: CLLocationCoordinate2D,
+        limit: Int = 5
+    ) -> [RankedMosqueCandidate] {
+        guard limit > 0 else { return [] }
+        var unique: [MosqueSearchCandidate] = []
+
+        for candidate in candidates where CLLocationCoordinate2DIsValid(candidate.coordinate) {
+            guard !unique.contains(where: { isDuplicate(candidate, $0) }) else { continue }
+            unique.append(candidate)
+        }
+
+        let originLocation = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
+        return unique
+            .map { candidate in
+                RankedMosqueCandidate(
+                    candidate: candidate,
+                    distance: originLocation.distance(from: CLLocation(
+                        latitude: candidate.latitude,
+                        longitude: candidate.longitude
+                    ))
+                )
+            }
+            .sorted {
+                if $0.distance == $1.distance {
+                    return $0.candidate.name.localizedCaseInsensitiveCompare($1.candidate.name) == .orderedAscending
+                }
+                return $0.distance < $1.distance
+            }
+            .prefix(limit)
+            .map { $0 }
+    }
+
+    private static func isDuplicate(_ lhs: MosqueSearchCandidate, _ rhs: MosqueSearchCandidate) -> Bool {
+        let separation = CLLocation(latitude: lhs.latitude, longitude: lhs.longitude).distance(
+            from: CLLocation(latitude: rhs.latitude, longitude: rhs.longitude)
+        )
+        if separation < 40 { return true }
+        return canonicalName(lhs.name) == canonicalName(rhs.name) && separation < 150
+    }
+
+    private static func canonicalName(_ name: String) -> String {
+        let folded = name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: L10n.locale)
+        let words = folded.components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty && $0 != "mosque" && $0 != "masjid" }
+        return words.isEmpty ? folded : words.joined(separator: " ")
+    }
+}
+
+@MainActor
+struct MosquePlace: Identifiable {
+    let id: String
+    let name: String
+    let address: String
+    let coordinate: CLLocationCoordinate2D
+    let distance: CLLocationDistance
+    let mapItem: MKMapItem
+}
+
+enum MosqueSearchError: LocalizedError {
+    case unavailable
+
+    var errorDescription: String? {
+        L10n.string("Nearby mosques could not be loaded. Check your connection and try again.")
+    }
+}
+
+@MainActor
+protocol MosqueSearchProviding: AnyObject {
+    func search(near center: CLLocationCoordinate2D, region: MKCoordinateRegion) async throws -> [MosquePlace]
+    func cancel()
+}
+
+@MainActor
+final class AppleMosqueSearchProvider: MosqueSearchProviding {
+    private var activeSearches: [MKLocalSearch] = []
+
+    func search(near center: CLLocationCoordinate2D, region: MKCoordinateRegion) async throws -> [MosquePlace] {
+        cancel()
+        let mosqueSearch = makeSearch(query: "mosque", region: region)
+        let masjidSearch = makeSearch(query: "masjid", region: region)
+        activeSearches = [mosqueSearch, masjidSearch]
+        defer { activeSearches.removeAll() }
+
+        do {
+            async let mosqueResponse = mosqueSearch.start()
+            async let masjidResponse = masjidSearch.start()
+            let (first, second) = try await (mosqueResponse, masjidResponse)
+            try Task.checkCancellation()
+
+            let mapItems = first.mapItems + second.mapItems
+            let sources = mapItems.map { item in
+                MosqueSearchCandidate(
+                    name: item.name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+                        ?? L10n.string("Unnamed Mosque"),
+                    address: Self.address(for: item),
+                    latitude: item.placemark.coordinate.latitude,
+                    longitude: item.placemark.coordinate.longitude
+                )
+            }
+            let ranked = MosqueResultRanker.rank(sources, from: center)
+            return ranked.compactMap { result in
+                guard let index = sources.firstIndex(of: result.candidate) else { return nil }
+                let mapItem = mapItems[index]
+                return MosquePlace(
+                    id: Self.identifier(for: result.candidate),
+                    name: result.candidate.name,
+                    address: result.candidate.address,
+                    coordinate: result.candidate.coordinate,
+                    distance: result.distance,
+                    mapItem: mapItem
+                )
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw MosqueSearchError.unavailable
+        }
+    }
+
+    func cancel() {
+        activeSearches.forEach { $0.cancel() }
+        activeSearches.removeAll()
+    }
+
+    private func makeSearch(query: String, region: MKCoordinateRegion) -> MKLocalSearch {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.region = region
+        request.resultTypes = .pointOfInterest
+        return MKLocalSearch(request: request)
+    }
+
+    private static func address(for item: MKMapItem) -> String {
+        let title = item.placemark.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let name = item.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !name.isEmpty, title.hasPrefix(name) {
+            return String(title.dropFirst(name.count)).trimmingCharacters(in: CharacterSet(charactersIn: ", "))
+        }
+        return title.isEmpty ? L10n.string("Address unavailable") : title
+    }
+
+    private static func identifier(for candidate: MosqueSearchCandidate) -> String {
+        let latitude = Int((candidate.latitude * 100_000).rounded())
+        let longitude = Int((candidate.longitude * 100_000).rounded())
+        return "\(candidate.name.lowercased())|\(latitude)|\(longitude)"
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
 enum NotificationAuthorization: String, Sendable {

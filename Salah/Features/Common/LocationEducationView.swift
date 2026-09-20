@@ -16,7 +16,7 @@ struct LocationEducationView: View {
                 .accessibilityHidden(true)
             Text("Use your location?")
                 .font(.largeTitle.bold())
-            Text("Salah uses a one-time location request to calculate prayer times on this device. It does not track your location in the background. You can search for any city or place instead.")
+            Text("Salah uses one-time location requests to calculate prayer times and find nearby mosques. It does not track your location in the background. You can search for any city or place instead.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 

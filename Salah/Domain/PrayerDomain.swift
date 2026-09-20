@@ -118,13 +118,23 @@ enum CalculationMethod: String, CaseIterable, Codable, Identifiable, Sendable {
 }
 
 enum Madhab: String, CaseIterable, Codable, Identifiable, Sendable {
-    case hanafi, standard
+    case automatic, hanafi, standard
 
     var id: String { rawValue }
     var title: String {
-        self == .hanafi
-            ? L10n.string("Hanafi")
-            : L10n.string("Standard (Shafi, Maliki, Hanbali)")
+        switch self {
+        case .automatic: L10n.string("Automatic")
+        case .hanafi: L10n.string("Hanafi")
+        case .standard: L10n.string("Standard (Shafi, Maliki, Hanbali)")
+        }
+    }
+
+    func resolved(for location: PrayerLocation) -> Madhab {
+        guard self == .automatic else { return self }
+        switch location.countryCode?.uppercased() {
+        case "BD", "IN", "PK": return .hanafi
+        default: return .standard
+        }
     }
 }
 
@@ -240,9 +250,9 @@ struct PrayerLocation: Codable, Hashable, Sendable {
 
 struct CalculationSettings: Codable, Equatable, Sendable {
     var method: CalculationMethod = .automatic
-    var madhab: Madhab = .hanafi
+    var madhab: Madhab = .automatic
     var hijriAdjustment: Int = -1
-    var cautionMinutes: Int = 3
+    var cautionMinutes: Int = 0
     var timeFormat: TimeFormatPreference = .system
 }
 
@@ -291,7 +301,7 @@ struct LocalDay: Hashable, Codable, Comparable, Identifiable, Sendable {
 }
 
 struct PrayerTimesQuery: Hashable, Codable, Sendable {
-    static let schemaVersion = 4
+    static let schemaVersion = 5
 
     var day: LocalDay
     var latitude: Double

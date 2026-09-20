@@ -147,7 +147,7 @@ struct PrayerScheduleRow: View {
         .background(isActive ? activeBackground : .clear)
         .contentShape(Rectangle())
         .accessibilityElement(children: trailingContent == nil ? .combine : .contain)
-        .accessibilityLabel("\(window.prayer.title), starts \(PrayerDateFormatting.time(window.start, preference: preference, timeZone: day.timeZone)), ends \(PrayerDateFormatting.time(window.displayEnd, preference: preference, timeZone: day.timeZone))\(isActive ? ", current prayer" : "")\(isCompleted ? ", completed" : "")")
+        .accessibilityLabel("\(L10n.dynamic(window.prayer.title)), starts \(PrayerDateFormatting.time(window.start, preference: preference, timeZone: day.timeZone)), ends \(PrayerDateFormatting.time(window.displayEnd, preference: preference, timeZone: day.timeZone))\(isActive ? ", current prayer" : "")\(isCompleted ? ", completed" : "")")
         .accessibilityHint(L10n.dynamic(showsDisclosure ? "Opens prayer details" : (isCompleted ? "Marks this prayer as not completed" : "Marks this prayer as completed")))
     }
 
@@ -254,7 +254,7 @@ struct PrayerDetailSheet: View {
                     SalahCard {
                         Label("Calculation", systemImage: "function")
                             .font(.headline)
-                        Text("\(day.methodName) · \(container.settings.calculation.madhab.title)")
+                        Text("\(day.methodName) · \(container.settings.calculation.madhab.resolved(for: container.settings.location).title)")
                         Text("Prayer windows may differ from local authorities. Review your calculation settings and confirm locally when needed.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }

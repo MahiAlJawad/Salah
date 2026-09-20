@@ -287,7 +287,7 @@ struct TodayView: View {
                     eventCard(title: "Iftar begins", date: day.iftar, symbol: "sun.horizon.fill", tone: .sunsetCoral, day: day)
                 }
 
-                Text("Times use \(day.methodName), \(container.settings.calculation.madhab.title). Confirm locally when necessary.")
+                Text("Times use \(day.methodName), \(container.settings.calculation.madhab.resolved(for: container.settings.location).title). Confirm locally when necessary.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)

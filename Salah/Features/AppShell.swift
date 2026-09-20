@@ -65,8 +65,8 @@ private struct SystemTabRootView: View {
                 Tab(AppTab.tracker.title, systemImage: AppTab.tracker.systemImage, value: AppTab.tracker) {
                     NavigationStack { TrackerView(container: container) }
                 }
-                Tab(AppTab.qibla.title, systemImage: AppTab.qibla.systemImage, value: AppTab.qibla) {
-                    NavigationStack { QiblaView(container: container) }
+                Tab(AppTab.discover.title, systemImage: AppTab.discover.systemImage, value: AppTab.discover) {
+                    NavigationStack { DiscoverView(container: container) }
                 }
                 Tab(AppTab.more.title, systemImage: AppTab.more.systemImage, value: AppTab.more) {
                     NavigationStack { MoreView(container: container) }
@@ -87,9 +87,9 @@ private struct SystemTabRootView: View {
                     .tabItem { Label(AppTab.tracker.title, systemImage: AppTab.tracker.systemImage) }
                     .tag(AppTab.tracker)
 
-                NavigationStack { QiblaView(container: container) }
-                    .tabItem { Label(AppTab.qibla.title, systemImage: AppTab.qibla.systemImage) }
-                    .tag(AppTab.qibla)
+                NavigationStack { DiscoverView(container: container) }
+                    .tabItem { Label(AppTab.discover.title, systemImage: AppTab.discover.systemImage) }
+                    .tag(AppTab.discover)
 
                 NavigationStack { MoreView(container: container) }
                     .tabItem { Label(AppTab.more.title, systemImage: AppTab.more.systemImage) }
@@ -203,8 +203,8 @@ private struct AppTabContent: View {
             PrayerCalendarView(container: container)
         case .tracker:
             TrackerView(container: container)
-        case .qibla:
-            QiblaView(container: container)
+        case .discover:
+            DiscoverView(container: container)
         case .more:
             MoreView(container: container)
         }

@@ -97,7 +97,7 @@ enum L10n {
 }
 
 enum AppTab: Hashable, CaseIterable, Identifiable {
-    case today, calendar, tracker, qibla, more
+    case today, calendar, tracker, discover, more
 
     var id: Self { self }
 
@@ -106,7 +106,7 @@ enum AppTab: Hashable, CaseIterable, Identifiable {
         case .today: L10n.string("Today")
         case .calendar: L10n.string("Calendar")
         case .tracker: L10n.string("Tracker")
-        case .qibla: L10n.string("Qibla")
+        case .discover: L10n.string("Discover")
         case .more: L10n.string("More")
         }
     }
@@ -116,7 +116,7 @@ enum AppTab: Hashable, CaseIterable, Identifiable {
         case .today: "house.fill"
         case .calendar: "calendar"
         case .tracker: "checklist"
-        case .qibla: "location.north.circle.fill"
+        case .discover: "moon.stars.fill"
         case .more: "ellipsis.circle"
         }
     }
@@ -325,6 +325,7 @@ final class AppContainer {
     let prayerTimesRepository: any PrayerTimesRepository
     let locationProvider: any LocationProviding
     let locationSearchProvider: any LocationSearchProviding
+    let mosqueSearchProvider: any MosqueSearchProviding
     let notificationScheduler: any NotificationScheduling
     let trackingRepository: any PrayerTrackingRepository
     let trackerHistoryRepository: any TrackerHistoryRepository
@@ -338,6 +339,7 @@ final class AppContainer {
         prayerTimesRepository: (any PrayerTimesRepository)? = nil,
         locationProvider: (any LocationProviding)? = nil,
         locationSearchProvider: (any LocationSearchProviding)? = nil,
+        mosqueSearchProvider: (any MosqueSearchProviding)? = nil,
         notificationScheduler: (any NotificationScheduling)? = nil,
         trackingRepository: (any PrayerTrackingRepository)? = nil,
         trackerHistoryRepository: (any TrackerHistoryRepository)? = nil,
@@ -356,6 +358,9 @@ final class AppContainer {
         self.locationSearchProvider = locationSearchProvider ?? (isUITesting
             ? UITestLocationSearchProvider()
             : MapLocationSearchProvider())
+        self.mosqueSearchProvider = mosqueSearchProvider ?? (isUITesting
+            ? UITestMosqueSearchProvider()
+            : AppleMosqueSearchProvider())
         self.notificationScheduler = notificationScheduler ?? (isUITesting
             ? UITestNotificationScheduler(status: arguments.contains("-notification-denied")
                 ? .denied
@@ -366,6 +371,7 @@ final class AppContainer {
         #else
         self.locationProvider = locationProvider ?? CoreLocationProvider()
         self.locationSearchProvider = locationSearchProvider ?? MapLocationSearchProvider()
+        self.mosqueSearchProvider = mosqueSearchProvider ?? AppleMosqueSearchProvider()
         self.notificationScheduler = notificationScheduler ?? LocalNotificationScheduler()
         #endif
         syncCoordinator = LocalOnlySyncCoordinator()

@@ -21,7 +21,7 @@ struct AdhanPrayerTimesCalculator: PrayerTimesCalculating {
         let tomorrow = query.day.adding(days: 1, in: location.timeZone)
         let tomorrowDate = dateComponents(for: tomorrow)
         var parameters = adhanMethod(for: method).params
-        parameters.madhab = query.madhab == .hanafi ? Adhan.Madhab.hanafi : Adhan.Madhab.shafi
+        parameters.madhab = query.madhab.resolved(for: location) == .hanafi ? Adhan.Madhab.hanafi : Adhan.Madhab.shafi
         parameters.rounding = .nearest
 
         guard let times = Adhan.PrayerTimes(

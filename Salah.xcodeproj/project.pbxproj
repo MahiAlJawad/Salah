@@ -36,6 +36,7 @@
 		D20000000000000000000014 /* CharityHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* CharityHistoryView.swift */; };
 		D20000000000000000000016 /* TasbihViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* TasbihViews.swift */; };
 		D20000000000000000000017 /* SalahIconTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000017 /* SalahIconTone.swift */; };
+		D20000000000000000000018 /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000018 /* DiscoverView.swift */; };
 		D50000000000000000000001 /* SalahDomainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000001 /* SalahDomainTests.swift */; };
 		D50000000000000000000002 /* SalahUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000002 /* SalahUITests.swift */; };
 		E10000000000000000000001 /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = E30000000000000000000001 /* Adhan */; };
@@ -129,6 +130,7 @@
 		D10000000000000000000014 /* CharityHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityHistoryView.swift; sourceTree = "<group>"; };
 		D10000000000000000000016 /* TasbihViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihViews.swift; sourceTree = "<group>"; };
 		D10000000000000000000017 /* SalahIconTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SalahIconTone.swift; path = SalahWidgets/SalahIconTone.swift; sourceTree = "<group>"; };
+		D10000000000000000000018 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		D40000000000000000000001 /* SalahDomainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahDomainTests.swift; sourceTree = "<group>"; };
 		D40000000000000000000002 /* SalahUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalahUITests.swift; sourceTree = "<group>"; };
 		D40000000000000000000003 /* SalahTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SalahTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -368,6 +370,7 @@
 		D3000000000000000000000B /* Qibla */ = {
 			isa = PBXGroup;
 			children = (
+				D10000000000000000000018 /* DiscoverView.swift */,
 				D10000000000000000000013 /* QiblaView.swift */,
 			);
 			path = Qibla;
@@ -635,6 +638,7 @@
 				FB0000000000000000000008 /* TrackerRows.swift in Sources */,
 				D20000000000000000000012 /* InsightsView.swift in Sources */,
 				D20000000000000000000013 /* QiblaView.swift in Sources */,
+				D20000000000000000000018 /* DiscoverView.swift in Sources */,
 				D20000000000000000000016 /* TasbihViews.swift in Sources */,
 				D20000000000000000000014 /* CharityHistoryView.swift in Sources */,
 				D2000000000000000000000A /* MoreView.swift in Sources */,
@@ -884,7 +888,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Salah uses your approximate location while the app is open to calculate prayer times on this device.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Salah uses your location while the app is open to calculate prayer times and find nearby mosques. It never tracks your location in the background.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -918,7 +922,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Salah uses your approximate location while the app is open to calculate prayer times on this device.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Salah uses your location while the app is open to calculate prayer times and find nearby mosques. It never tracks your location in the background.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -1,3 +1,4 @@
+@preconcurrency import MapKit
 import Foundation
 
 #if DEBUG
@@ -35,6 +36,7 @@ actor UITestPrayerTimesRepository: PrayerTimesRepository {
         let zone = location.timeZone
         func date(_ hour: Int, _ minute: Int) -> Date { day.date(in: zone, hour: hour, minute: minute) ?? .now }
         let tomorrow = day.adding(days: 1, in: zone)
+        let maghrib = date(18, 30).addingTimeInterval(TimeInterval(settings.cautionMinutes * 60))
         return PrayerDay(
             localDay: day,
             gregorianSummary: PrayerDateFormatting.fullDate(day, timeZone: zone),
@@ -43,12 +45,12 @@ actor UITestPrayerTimesRepository: PrayerTimesRepository {
             sunrise: date(5, 30),
             sunset: date(18, 30),
             sahri: date(4, 27),
-            iftar: date(18, 33),
+            iftar: maghrib,
             windows: [
                 PrayerWindow(prayer: .fajr, start: date(4, 30), end: date(5, 30)),
                 PrayerWindow(prayer: .dhuhr, start: date(12, 5), end: date(15, 30)),
                 PrayerWindow(prayer: .asr, start: date(15, 30), end: date(18, 30)),
-                PrayerWindow(prayer: .maghrib, start: date(18, 33), end: date(20, 0)),
+                PrayerWindow(prayer: .maghrib, start: maghrib, end: date(20, 0)),
                 PrayerWindow(prayer: .isha, start: date(20, 0), end: tomorrow.date(in: zone, hour: 4, minute: 27) ?? date(23, 59))
             ],
             methodName: settings.method.title,
@@ -93,6 +95,37 @@ final class UITestLocationSearchProvider: LocationSearchProviding {
         guard let location = matches[suggestion.id] else { throw LocationSearchError.unavailable }
         return location
     }
+}
+
+@MainActor
+final class UITestMosqueSearchProvider: MosqueSearchProviding {
+    private let fixtures = [
+        ("Baitul Aman Mosque", "Dhanmondi, Dhaka", 23.7115, 90.4075),
+        ("Masjid Al Noor", "Kalabagan, Dhaka", 23.7141, 90.4038),
+        ("Central Jame Mosque", "Panthapath, Dhaka", 23.7182, 90.4104),
+        ("Taqwa Mosque", "Green Road, Dhaka", 23.7213, 90.4088),
+        ("Rahmaniya Jame Masjid", "Elephant Road, Dhaka", 23.7250, 90.4016)
+    ]
+
+    func search(near center: CLLocationCoordinate2D, region: MKCoordinateRegion) async throws -> [MosquePlace] {
+        let origin = CLLocation(latitude: center.latitude, longitude: center.longitude)
+        return fixtures.enumerated().map { index, fixture in
+            let coordinate = CLLocationCoordinate2D(latitude: fixture.2, longitude: fixture.3)
+            let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+            mapItem.name = fixture.0
+            return MosquePlace(
+                id: "ui-test-mosque-\(index)",
+                name: fixture.0,
+                address: fixture.1,
+                coordinate: coordinate,
+                distance: origin.distance(from: CLLocation(latitude: fixture.2, longitude: fixture.3)),
+                mapItem: mapItem
+            )
+        }
+        .sorted { $0.distance < $1.distance }
+    }
+
+    func cancel() { }
 }
 
 @MainActor

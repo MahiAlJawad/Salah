@@ -14,7 +14,7 @@ struct LocationView: View {
             } header: {
                 Text("Prayer Location")
             } footer: {
-                Text("Use one-time approximate location access or search worldwide with Apple Maps. The selected location is stored on this device.")
+                Text("Use one-time location requests for prayer times and nearby mosques, or search worldwide with Apple Maps. The selected prayer location is stored on this device.")
             }
         }
         .navigationTitle("Location")
