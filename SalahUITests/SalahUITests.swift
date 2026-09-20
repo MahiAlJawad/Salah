@@ -241,6 +241,29 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Reminders"].waitForExistence(timeout: 3))
     }
 
+    func testContactUsRequiresAMessageBeforeContinuingToEmail() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-onboarding-complete"]
+        app.launch()
+
+        app.tabBars.buttons["More"].tap()
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Support & Contact'")).firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Contact Us"].waitForExistence(timeout: 3))
+
+        let message = app.textViews["contact.message"]
+        let continueToEmail = app.buttons["contact.continueToEmail"]
+        XCTAssertTrue(message.waitForExistence(timeout: 3))
+        XCTAssertTrue(continueToEmail.exists)
+        XCTAssertFalse(continueToEmail.isEnabled)
+
+        message.tap()
+        message.typeText("   ")
+        XCTAssertFalse(continueToEmail.isEnabled)
+
+        message.typeText("I need help with prayer reminders.")
+        XCTAssertTrue(continueToEmail.isEnabled)
+    }
+
     func testChangingCalculationMethodAndEnablingReminder() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-reset-state", "-onboarding-complete", "-notification-authorized"]
