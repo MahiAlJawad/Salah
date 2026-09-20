@@ -133,20 +133,18 @@ struct MoreView: View {
                     }
                     .buttonStyle(.plain)
 
-                    if let supportURL = ExternalLinks.support {
-                        MoreRowDivider()
+                    MoreRowDivider()
 
-                        Link(destination: supportURL) {
-                            MoreSettingsRow(
-                                title: "Support & Contact",
-                                subtitle: "Contact the project maintainer",
-                                symbol: "headphones",
-                                iconTint: .orange.opacity(0.76),
-                                iconBackground: .orange.opacity(0.09)
-                            )
-                        }
-                        .buttonStyle(.plain)
+                    NavigationLink { ContactUsView() } label: {
+                        MoreSettingsRow(
+                            title: "Support & Contact",
+                            subtitle: "Contact the project maintainer",
+                            symbol: "headphones",
+                            iconTint: .orange.opacity(0.76),
+                            iconBackground: .orange.opacity(0.09)
+                        )
                     }
+                        .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 16)
