@@ -68,17 +68,54 @@ enum QiblaGeometry {
     }
 }
 
-private struct KaabaMarker: View {
+private struct QiblaBeam: Shape {
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let radius = min(rect.width, rect.height) * 0.43
+        let halfWidth = 7.0 * Double.pi / 180
+
+        var path = Path()
+        path.move(to: center)
+        path.addLine(to: CGPoint(
+            x: center.x + cos(-Double.pi / 2 - halfWidth) * radius,
+            y: center.y + sin(-Double.pi / 2 - halfWidth) * radius
+        ))
+        path.addArc(
+            center: center,
+            radius: radius,
+            startAngle: .radians(-Double.pi / 2 - halfWidth),
+            endAngle: .radians(-Double.pi / 2 + halfWidth),
+            clockwise: false
+        )
+        path.closeSubpath()
+        return path
+    }
+}
+
+private struct CompassDial: View {
+    let heading: Double
+
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(.black.opacity(0.82))
-            RoundedRectangle(cornerRadius: 0.5, style: .continuous)
-                .fill(.white.opacity(0.8))
-                .frame(height: 2)
-                .padding(.horizontal, 3)
-                .offset(y: -2)
+            ForEach(0..<72, id: \.self) { index in
+                let isMajor = index.isMultiple(of: 18)
+                let isMedium = index.isMultiple(of: 9)
+                Capsule()
+                    .fill(Color.secondary.opacity(isMajor ? 0.9 : isMedium ? 0.7 : 0.42))
+                    .frame(width: isMajor ? 3 : 1.5, height: isMajor ? 15 : isMedium ? 11 : 7)
+                    .offset(y: -116)
+                    .rotationEffect(.degrees(Double(index) * 5))
+            }
+
+            Text("N").offset(y: -88)
+            Text("S").offset(y: 88)
+            Text("W").offset(x: -88)
+            Text("E").offset(x: 88)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .font(.headline)
+        .foregroundStyle(.secondary)
+        .rotationEffect(.degrees(-heading))
     }
 }
 
@@ -99,22 +136,34 @@ struct QiblaView: View {
         headingProvider.heading != nil && abs(relativeBearing) < 6
     }
 
+    private var turnDegrees: Int {
+        Int(abs(relativeBearing).rounded())
+    }
+
+    private var alignmentTitle: String {
+        guard headingProvider.heading != nil else { return L10n.string("Waiting for heading") }
+        if isAligned { return L10n.string("Facing Qibla") }
+        let key: String.LocalizationValue = relativeBearing < 0 ? "Turn %lld° left" : "Turn %lld° right"
+        return String(format: L10n.string(key), Int64(turnDegrees))
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 22) {
-                Label(container.localizedLocationName, systemImage: "location.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
                 if headingProvider.isAvailable {
                     compass
-                    Label(
-                        isAligned ? "Aligned — facing the Ka'bah" : "Turn until the marker points up",
-                        systemImage: isAligned ? "checkmark.circle.fill" : "location.north.line.fill"
-                    )
-                    .font(.headline)
-                    .foregroundStyle(isAligned ? palette.accent : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                    VStack(spacing: 4) {
+                        Text(alignmentTitle)
+                            .font(.title3.bold())
+                            .foregroundStyle(isAligned ? palette.accent : Color.primary)
+                            .contentTransition(.numericText())
+                        if !isAligned {
+                            Text("Align the blue arc with the top gate")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .multilineTextAlignment(.center)
                 } else {
                     ContentUnavailableView {
                         Label("Compass Unavailable", systemImage: "location.slash")
@@ -158,47 +207,62 @@ struct QiblaView: View {
             Circle()
                 .stroke(Color(uiColor: .separator), lineWidth: 1)
             Circle()
-                .stroke(Color(uiColor: .separator), style: StrokeStyle(lineWidth: 1, dash: [2, 8]))
-                .padding(24)
+                .stroke(Color(uiColor: .separator).opacity(0.25), lineWidth: 18)
+                .padding(9)
 
-            ZStack {
-                Text("N").font(.headline).frame(maxHeight: .infinity, alignment: .top).padding(.top, 18)
-                Text("S").font(.headline).frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 18)
-                Text("W").font(.headline).frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 18)
-                Text("E").font(.headline).frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 18)
-            }
-            .rotationEffect(.degrees(-(headingProvider.heading ?? 0)))
-            .animation(.smooth(duration: 0.45), value: headingProvider.heading)
+            CompassDial(heading: headingProvider.heading ?? 0)
+                .animation(.smooth(duration: 0.45), value: headingProvider.heading)
 
-            VStack(spacing: 5) {
-                KaabaMarker()
-                    .frame(width: 24, height: 20)
-                    .padding(9)
-                    .background(palette.accent, in: RoundedRectangle(cornerRadius: 10))
-                Image(systemName: "arrowtriangle.up.fill")
-                    .foregroundStyle(palette.accent)
-                Rectangle()
-                    .fill(LinearGradient(colors: [palette.accent, .clear], startPoint: .top, endPoint: .bottom))
-                    .frame(width: 2, height: 72)
-                Spacer(minLength: 0)
-            }
-            .padding(.top, 8)
-            .rotationEffect(.degrees(relativeBearing))
-            .animation(.smooth(duration: 0.45), value: relativeBearing)
+            QiblaBeam()
+                .fill(
+                    RadialGradient(
+                        colors: [palette.accent.opacity(0.04), palette.accent.opacity(0.16)],
+                        center: .center,
+                        startRadius: 16,
+                        endRadius: 118
+                    )
+                )
+                .rotationEffect(.degrees(relativeBearing))
+                .animation(.smooth(duration: 0.45), value: relativeBearing)
 
             Circle()
-                .fill(Color.primary)
-                .frame(width: 16, height: 16)
+                .trim(from: 0, to: 0.07)
+                .stroke(palette.accent, style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                .padding(10)
+                .rotationEffect(.degrees(relativeBearing - 102.6))
+                .animation(.smooth(duration: 0.45), value: relativeBearing)
+
+            VStack {
+                Capsule()
+                    .fill(palette.accent)
+                    .frame(width: 7, height: 24)
+                    .shadow(color: palette.accent.opacity(isAligned ? 0.5 : 0), radius: 7)
+                Spacer()
+            }
+            .padding(.top, 2)
+
+            Circle()
+                .fill(Color(uiColor: .tertiarySystemFill))
+                .frame(width: 32, height: 32)
                 .overlay {
-                    if isAligned {
-                        Circle().stroke(palette.accent, lineWidth: 3).frame(width: 52, height: 52)
-                    }
+                    Circle()
+                        .fill(Color.secondary.opacity(0.55))
+                        .frame(width: 18, height: 18)
                 }
+
+            if isAligned {
+                Circle()
+                    .stroke(palette.accent.opacity(0.18), lineWidth: 10)
+                    .padding(4)
+                    .transition(.opacity)
+            }
         }
         .frame(width: 270, height: 270)
+        .animation(.easeInOut(duration: 0.2), value: isAligned)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Qibla compass")
-        .accessibilityValue(headingProvider.heading == nil ? "Waiting for heading" : "Qibla is \(Int(abs(relativeBearing).rounded())) degrees \(relativeBearing < 0 ? "left" : "right")")
+        .accessibilityValue(alignmentTitle)
+        .accessibilityHint(isAligned ? "" : "Align the blue arc with the top gate")
     }
 
     private func qiblaMetric(_ title: String, value: String) -> some View {
