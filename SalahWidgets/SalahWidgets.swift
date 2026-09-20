@@ -565,14 +565,13 @@ private struct MediumWidgetView: View {
                         }
                         .font(.caption2)
                         .fontWeight(prayer.rowWeight)
+                        .padding(.horizontal, 5)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 19)
-
-                        if prayer.id != displayedPrayers.last?.id {
-                            Rectangle()
-                                .fill(WidgetTheme.divider)
-                                .frame(height: 1)
-                        }
+                        .frame(height: 20)
+                        .background(
+                            prayer.isCurrent ? WidgetTheme.panel : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        )
                     }
                 }
                 .frame(maxWidth: .infinity)
