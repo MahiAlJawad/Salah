@@ -19,7 +19,7 @@ struct PrivacyView: View {
             }
             Section("How Data Is Used") {
                 privacyRow("Location", detail: "Prayer times are calculated on this device. Current-location requests and nearby mosque searches run only while you use the app and are processed by Apple Maps. Salah does not track location in the background or operate a location server.", symbol: "location.fill", tint: .blue, background: .blue)
-                privacyRow("Prayer tracking", detail: "Completion records and notes stay entirely on your device and are never sent elsewhere.", symbol: "checkmark.circle.fill", tint: .teal, background: .teal)
+                privacyRow("Prayer tracking", detail: "Completion records and notes sync through your private iCloud database so they are available on your devices. Salah does not operate a tracker-data server.", symbol: "checkmark.circle.fill", tint: .teal, background: .teal)
                 privacyRow("Notifications", detail: "Optional reminders are scheduled locally. No marketing notification service is used.", symbol: "bell.fill", tint: .blue, background: .blue)
                 privacyRow("Advertising and analytics", detail: "The app contains no advertising identifier, tracking SDK, or unnecessary analytics.", symbol: "eye.slash.fill", tint: .indigo, background: .indigo)
             }
