@@ -1,4 +1,6 @@
+import CoreData
 import Foundation
+import OSLog
 import SwiftData
 
 @Model
@@ -9,17 +11,17 @@ final class PrayerRecord {
     Phone B offline: creates 2026-09-19|fajr
     Both later sync to CloudKit
     */
-    var uniquenessKey: String
-    var id: UUID
-    var prayerRawValue: String
-    var localDateKey: String
-    var timeZoneIdentifier: String
-    var isCompleted: Bool
+    var uniquenessKey: String = ""
+    var id: UUID = UUID()
+    var prayerRawValue: String = ""
+    var localDateKey: String = ""
+    var timeZoneIdentifier: String = ""
+    var isCompleted: Bool = false
     var completedAt: Date?
     var completionSource: String?
     var notes: String?
-    var createdAt: Date
-    var updatedAt: Date
+    var createdAt: Date = Date.now
+    var updatedAt: Date = Date.now
 
     init(
         id: UUID = UUID(),
@@ -57,6 +59,102 @@ final class PrayerRecord {
             notes: notes
         )
     }
+}
+
+enum PersistenceFactory {
+    static let cloudKitContainerIdentifier = "iCloud.com.prayer.salah"
+    static let modelTypes: [any PersistentModel.Type] = [
+        PrayerRecord.self,
+        TasbihHistoryRecord.self,
+        NaflHistoryRecord.self,
+        CharityHistoryRecord.self
+    ]
+
+    private static let logger = Logger(subsystem: "com.prayer.salah", category: "Persistence")
+
+    static func makeCloudKitContainer(
+        configuration: ModelConfiguration? = nil,
+        initializeDevelopmentSchema: Bool = false
+    ) throws -> ModelContainer {
+        let schema = Schema(modelTypes)
+        let configuration = configuration ?? ModelConfiguration(
+            schema: schema,
+            cloudKitDatabase: .private(cloudKitContainerIdentifier)
+        )
+
+        #if DEBUG
+        if initializeDevelopmentSchema {
+            try initializeCloudKitDevelopmentSchema(configuration: configuration, schema: schema)
+        }
+        #endif
+
+        do {
+            let container = try ModelContainer(for: schema, configurations: [configuration])
+            logger.info("Loaded SwiftData store with CloudKit container \(cloudKitContainerIdentifier, privacy: .public)")
+            return container
+        } catch {
+            logger.fault("Failed to load SwiftData CloudKit store: \(error.localizedDescription, privacy: .public)")
+            throw error
+        }
+    }
+
+    static func observeCloudKitEvents() -> NSObjectProtocol {
+        NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                    as? NSPersistentCloudKitContainer.Event else { return }
+            let operation: String
+            switch event.type {
+            case .setup: operation = "setup"
+            case .import: operation = "import"
+            case .export: operation = "export"
+            @unknown default: operation = "unknown"
+            }
+            if let error = event.error {
+                logger.error("CloudKit \(operation, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            } else if event.endDate != nil {
+                logger.info("CloudKit \(operation, privacy: .public) completed")
+            } else {
+                logger.debug("CloudKit \(operation, privacy: .public) started")
+            }
+        }
+    }
+
+    #if DEBUG
+    private static func initializeCloudKitDevelopmentSchema(
+        configuration: ModelConfiguration,
+        schema: Schema
+    ) throws {
+        try autoreleasepool {
+            guard let managedObjectModel = NSManagedObjectModel.makeManagedObjectModel(for: modelTypes) else {
+                throw CocoaError(.persistentStoreInvalidType)
+            }
+            let description = NSPersistentStoreDescription(url: configuration.url)
+            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: cloudKitContainerIdentifier
+            )
+            description.shouldAddStoreAsynchronously = false
+
+            let container = NSPersistentCloudKitContainer(
+                name: "Salah",
+                managedObjectModel: managedObjectModel
+            )
+            container.persistentStoreDescriptions = [description]
+            var loadError: Error?
+            container.loadPersistentStores { _, error in loadError = error }
+            if let loadError { throw loadError }
+
+            try container.initializeCloudKitSchema()
+            for store in container.persistentStoreCoordinator.persistentStores {
+                try container.persistentStoreCoordinator.remove(store)
+            }
+            logger.info("Initialized the CloudKit development schema")
+        }
+    }
+    #endif
 }
 
 @Model
@@ -160,6 +258,7 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
     func records(on day: LocalDay) throws -> [PrayerRecordSnapshot] {
         try synchronizeWidgetCompletions()
         let key = day.key
+        try reconcileDuplicates(matching: key, byLocalDate: true)
         let descriptor = FetchDescriptor<PrayerRecord>(
             predicate: #Predicate { $0.localDateKey == key },
             sortBy: [SortDescriptor(\.prayerRawValue)]
@@ -188,6 +287,7 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
 
     func allRecords() throws -> [PrayerRecordSnapshot] {
         try synchronizeWidgetCompletions()
+        try reconcileAllDuplicates()
         let descriptor = FetchDescriptor<PrayerRecord>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
         return try context.fetch(descriptor).compactMap(\.snapshot)
     }
@@ -256,6 +356,7 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
         changedAt: Date
     ) throws {
         let uniqueKey = "\(day.key)|\(prayer.rawValue)"
+        try reconcileDuplicates(matching: uniqueKey)
         let descriptor = FetchDescriptor<PrayerRecord>(predicate: #Predicate { $0.uniquenessKey == uniqueKey })
         if let existing = try context.fetch(descriptor).first {
             existing.isCompleted = completed
@@ -274,6 +375,36 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
             record.updatedAt = changedAt
             context.insert(record)
         }
+    }
+
+    private func reconcileAllDuplicates() throws {
+        let records = try context.fetch(FetchDescriptor<PrayerRecord>())
+        for group in Dictionary(grouping: records, by: \.uniquenessKey).values where group.count > 1 {
+            removeOlderDuplicates(in: group)
+        }
+        if context.hasChanges { try context.save() }
+    }
+
+    private func reconcileDuplicates(matching value: String, byLocalDate: Bool = false) throws {
+        let records: [PrayerRecord]
+        if byLocalDate {
+            let descriptor = FetchDescriptor<PrayerRecord>(predicate: #Predicate { $0.localDateKey == value })
+            records = try context.fetch(descriptor)
+        } else {
+            let descriptor = FetchDescriptor<PrayerRecord>(predicate: #Predicate { $0.uniquenessKey == value })
+            records = try context.fetch(descriptor)
+        }
+        for group in Dictionary(grouping: records, by: \.uniquenessKey).values where group.count > 1 {
+            removeOlderDuplicates(in: group)
+        }
+        if context.hasChanges { try context.save() }
+    }
+
+    private func removeOlderDuplicates(in records: [PrayerRecord]) {
+        guard let winner = records.max(by: { lhs, rhs in
+            lhs.updatedAt == rhs.updatedAt ? lhs.id.uuidString < rhs.id.uuidString : lhs.updatedAt < rhs.updatedAt
+        }) else { return }
+        for record in records where record !== winner { context.delete(record) }
     }
 
     private func upsertNafl(_ record: NaflDailyRecord) throws {

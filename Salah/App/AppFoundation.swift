@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 import SwiftData
 
 enum AppLanguage: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -320,6 +321,7 @@ struct LocalOnlySyncCoordinator: TrackerSyncCoordinating {
 @MainActor
 @Observable
 final class AppContainer {
+    private static let persistenceLogger = Logger(subsystem: "com.prayer.salah", category: "Persistence")
     let settings: AppSettings
     let router: AppRouter
     let prayerTimesRepository: any PrayerTimesRepository
@@ -332,6 +334,7 @@ final class AppContainer {
     let datedTracker: DatedTrackerCoordinator
     let syncCoordinator: any TrackerSyncCoordinating
     let modelContainer: ModelContainer?
+    private let cloudKitEventObserver: NSObjectProtocol?
     var localizedLocationName: String { settings.location.name }
 
     init(
@@ -401,16 +404,21 @@ final class AppContainer {
         }
         #endif
 
-        let localConfiguration = ModelConfiguration(
-            cloudKitDatabase: .private("iCloud.com.prayer.salah")
-        )
-        let persistentContainer = try? ModelContainer(
-            for: PrayerRecord.self,
-            TasbihHistoryRecord.self,
-            NaflHistoryRecord.self,
-            CharityHistoryRecord.self,
-            configurations: localConfiguration
-        )
+        let persistentContainer: ModelContainer?
+        if trackingRepository != nil, trackerHistoryRepository != nil {
+            persistentContainer = nil
+            cloudKitEventObserver = nil
+        } else {
+            do {
+                persistentContainer = try PersistenceFactory.makeCloudKitContainer(
+                    initializeDevelopmentSchema: arguments.contains("-initialize-cloudkit-schema") && !isUITesting
+                )
+                cloudKitEventObserver = PersistenceFactory.observeCloudKitEvents()
+            } catch {
+                Self.persistenceLogger.fault("SwiftData initialization failed: \(error.localizedDescription, privacy: .public)")
+                fatalError("Unable to initialize persistent storage: \(error.localizedDescription)")
+            }
+        }
         modelContainer = persistentContainer
 
         if let trackingRepository {

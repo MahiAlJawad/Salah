@@ -402,6 +402,80 @@ final class SalahDomainTests: XCTestCase {
     }
 
     @MainActor
+    func testSwiftDataRepositoryReconcilesCloudKitDuplicatesUsingNewestUpdate() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let container = try ModelContainer(for: PrayerRecord.self, configurations: configuration)
+        let context = ModelContext(container)
+        let older = PrayerRecord(
+            prayer: .fajr,
+            localDay: day,
+            timeZoneIdentifier: zone.identifier,
+            isCompleted: false,
+            completedAt: nil,
+            completionSource: "device-a"
+        )
+        older.updatedAt = Date(timeIntervalSince1970: 1)
+        let newer = PrayerRecord(
+            prayer: .fajr,
+            localDay: day,
+            timeZoneIdentifier: zone.identifier,
+            isCompleted: true,
+            completedAt: Date(timeIntervalSince1970: 2),
+            completionSource: "device-b"
+        )
+        newer.updatedAt = Date(timeIntervalSince1970: 2)
+        context.insert(older)
+        context.insert(newer)
+        try context.save()
+
+        let repository = SwiftDataPrayerTrackingRepository(container: container, widgetCompletionDefaults: nil)
+        let records = try repository.records(on: day)
+
+        XCTAssertEqual(records.count, 1)
+        XCTAssertEqual(records.first?.completed, true)
+        XCTAssertEqual(records.first?.source, "device-b")
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<PrayerRecord>()), 1)
+    }
+
+    func testCompleteSchemaAcceptsCloudKitConfiguration() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let schema = Schema(PersistenceFactory.modelTypes)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            url: directory.appending(path: "cloud.store"),
+            cloudKitDatabase: .private(PersistenceFactory.cloudKitContainerIdentifier)
+        )
+
+        XCTAssertNoThrow(try PersistenceFactory.makeCloudKitContainer(configuration: configuration))
+    }
+
+    func testPersistenceFactoryPropagatesStoreCreationFailure() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let schema = Schema(PersistenceFactory.modelTypes)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            url: directory,
+            cloudKitDatabase: .private(PersistenceFactory.cloudKitContainerIdentifier)
+        )
+
+        XCTAssertThrowsError(try PersistenceFactory.makeCloudKitContainer(configuration: configuration))
+    }
+
+    @MainActor
+    func testInjectedRepositoriesDoNotCreatePersistentContainer() {
+        let container = AppContainer(
+            trackingRepository: InMemoryPrayerTrackingRepository(),
+            trackerHistoryRepository: InMemoryTrackerHistoryRepository()
+        )
+
+        XCTAssertNil(container.modelContainer)
+    }
+
+    @MainActor
     func testSwiftDataRepositoryConsumesWidgetCompletionWithoutOpeningApp() throws {
         let suiteName = "WidgetPrayerCompletionTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
