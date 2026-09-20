@@ -146,6 +146,7 @@ struct WidgetDaySchedule: Codable, Sendable {
     let hijriSummary: String
     let sahri: Date?
     let iftar: Date?
+    let sunset: Date?
     let prayers: [WidgetPrayer]
 
     init(
@@ -154,6 +155,7 @@ struct WidgetDaySchedule: Codable, Sendable {
         hijriSummary: String,
         sahri: Date? = nil,
         iftar: Date? = nil,
+        sunset: Date? = nil,
         prayers: [WidgetPrayer]
     ) {
         self.localDayKey = localDayKey
@@ -161,6 +163,7 @@ struct WidgetDaySchedule: Codable, Sendable {
         self.hijriSummary = hijriSummary
         self.sahri = sahri
         self.iftar = iftar
+        self.sunset = sunset
         self.prayers = prayers
     }
 }
@@ -173,6 +176,7 @@ struct WidgetSnapshot: Codable, Sendable {
     let timeZoneIdentifier: String
     let sahri: Date?
     let iftar: Date?
+    let sunset: Date?
     let prayers: [WidgetPrayer]
     let currentPrayer: WidgetPrayer?
     let nextPrayer: WidgetPrayer?
@@ -191,6 +195,7 @@ struct WidgetSnapshot: Codable, Sendable {
         timeZoneIdentifier: String,
         sahri: Date? = nil,
         iftar: Date? = nil,
+        sunset: Date? = nil,
         prayers: [WidgetPrayer],
         currentPrayer: WidgetPrayer?,
         nextPrayer: WidgetPrayer?,
@@ -205,6 +210,7 @@ struct WidgetSnapshot: Codable, Sendable {
         self.timeZoneIdentifier = timeZoneIdentifier
         self.sahri = sahri
         self.iftar = iftar
+        self.sunset = sunset
         self.prayers = prayers
         self.currentPrayer = currentPrayer
         self.nextPrayer = nextPrayer
@@ -339,6 +345,7 @@ extension WidgetSnapshot {
             timeZoneIdentifier: timeZoneIdentifier,
             sahri: activeSchedule.sahri,
             iftar: activeSchedule.iftar,
+            sunset: activeSchedule.sunset,
             prayers: updatedPrayers,
             currentPrayer: current,
             nextPrayer: next,
@@ -465,6 +472,7 @@ extension WidgetSnapshot {
             hijriSummary: hijriSummary,
             sahri: sahri,
             iftar: iftar,
+            sunset: sunset,
             prayers: prayers
         )
         let candidates = [currentDay] + [nextDay].compactMap { $0 } + (futureDays ?? [])
@@ -554,6 +562,7 @@ extension WidgetSnapshot {
                 hijriSummary: schedule.hijriSummary,
                 sahri: schedule.sahri,
                 iftar: schedule.iftar,
+                sunset: schedule.sunset,
                 prayers: schedule.prayers.map(updating)
             )
         }
@@ -567,6 +576,7 @@ extension WidgetSnapshot {
             timeZoneIdentifier: timeZoneIdentifier,
             sahri: sahri,
             iftar: iftar,
+            sunset: sunset,
             prayers: updatesCurrentDay ? prayers.map(updating) : prayers,
             currentPrayer: updatesCurrentDay ? currentPrayer.map(updating) : currentPrayer,
             nextPrayer: updatesCurrentDay ? nextPrayer.map(updating) : nextPrayer,

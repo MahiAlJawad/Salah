@@ -72,6 +72,8 @@ struct SalahWidgetsEntryView : View {
                 RectangularWidgetView(snapshot: entry.snapshot)
             case .systemMedium:
                 MediumWidgetView(date: entry.date, snapshot: entry.snapshot)
+            case .systemLarge:
+                LargeWidgetView(snapshot: entry.snapshot)
             default:
                 SmallWidgetView(snapshot: entry.snapshot)
             }
@@ -585,6 +587,239 @@ private struct MediumWidgetView: View {
     }
 }
 
+private struct LargeWidgetView: View {
+    let snapshot: WidgetSnapshot?
+
+    var body: some View {
+        if let snapshot, let featured = snapshot.currentPrayer ?? snapshot.nextPrayer {
+            let isCurrent = snapshot.currentPrayer != nil
+            let prayers = snapshot.prayers
+                .filter { $0.kind.isObligatory }
+                .sorted { $0.time < $1.time }
+            let maghrib = prayers.first { $0.kind == .maghrib }
+
+            VStack(spacing: 10) {
+                header(snapshot)
+                currentPrayer(featured, isCurrent: isCurrent, snapshot: snapshot)
+                prayerSchedule(prayers, snapshot: snapshot)
+                HStack(spacing: 8) {
+                    LargeWidgetEventCard(
+                        first: .init(
+                            name: WidgetLocalization.dynamic("Sahri"),
+                            time: snapshot.sahri,
+                            symbolName: "moon.stars.fill",
+                            tone: .predawnIndigo
+                        ),
+                        second: .init(
+                            name: WidgetLocalization.dynamic("Iftar"),
+                            time: snapshot.iftar ?? maghrib?.time,
+                            symbolName: "sun.horizon.fill",
+                            tone: .sunsetCoral
+                        ),
+                        timeZoneIdentifier: snapshot.timeZoneIdentifier
+                    )
+                    LargeWidgetEventCard(
+                        first: .init(
+                            name: WidgetLocalization.dynamic("Sunrise"),
+                            time: snapshot.prayers.first { $0.kind == .sunrise }?.time,
+                            symbolName: "sunrise.fill",
+                            tone: .sunriseAmber
+                        ),
+                        second: .init(
+                            name: WidgetLocalization.dynamic("Sunset"),
+                            time: snapshot.sunset ?? maghrib?.time,
+                            symbolName: "sunset.fill",
+                            tone: .sunsetCoral
+                        ),
+                        timeZoneIdentifier: snapshot.timeZoneIdentifier
+                    )
+                }
+                .frame(height: 52)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 19)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            Text("Open Salah to load prayer times")
+                .font(.caption)
+                .foregroundStyle(WidgetTheme.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(10)
+        }
+    }
+
+    private func header(_ snapshot: WidgetSnapshot) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: "calendar")
+                .font(.caption)
+                .foregroundStyle(WidgetTheme.accent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(WidgetDateFormatter.shortGregorianDate(
+                    snapshot.localDayKey,
+                    timezoneIdentifier: snapshot.timeZoneIdentifier
+                ))
+                .font(.caption.weight(.semibold))
+                Text(snapshot.hijriSummary)
+                    .font(.caption2)
+            }
+            .foregroundStyle(WidgetTheme.secondary)
+            .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            Label(
+                "Updated \(WidgetTimeFormatter.time(snapshot.updatedAt, timezoneIdentifier: snapshot.timeZoneIdentifier))",
+                systemImage: "arrow.clockwise"
+            )
+            .font(.caption2)
+            .foregroundStyle(WidgetTheme.muted)
+            .lineLimit(1)
+        }
+        .frame(height: 24)
+    }
+
+    private func currentPrayer(
+        _ prayer: WidgetPrayer,
+        isCurrent: Bool,
+        snapshot: WidgetSnapshot
+    ) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: prayer.symbolName)
+                .semanticWidgetTint(prayer.kind.iconTone)
+                .font(.system(size: 27, weight: .medium))
+                .frame(width: 30)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(WidgetLocalization.dynamic(isCurrent ? "Current prayer" : "Next prayer"))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(WidgetTheme.secondary)
+                HStack(spacing: 6) {
+                    Text(prayer.name)
+                        .font(.system(size: 23, weight: .medium, design: .serif))
+                        .foregroundStyle(WidgetTheme.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    if isCurrent, prayer.kind.supportsCompletion {
+                        PrayerCompletionToggle(
+                            prayer: prayer,
+                            localDayKey: snapshot.localDayKey,
+                            timeZoneIdentifier: snapshot.timeZoneIdentifier,
+                            size: 20
+                        )
+                    }
+                }
+                HStack(spacing: 6) {
+                    Text(timeRange(for: prayer, snapshot: snapshot))
+                        .font(.caption.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(WidgetTheme.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Spacer(minLength: 0)
+                    CountdownText(isCurrent: isCurrent, date: isCurrent ? prayer.end : prayer.time)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(height: 84)
+        .background(WidgetTheme.panel, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func prayerSchedule(_ prayers: [WidgetPrayer], snapshot: WidgetSnapshot) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Text(WidgetLocalization.dynamic("Prayer Schedule"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(WidgetLocalization.dynamic("Start"))
+                    .frame(width: 72, alignment: .trailing)
+                Text(WidgetLocalization.dynamic("End"))
+                    .frame(width: 72, alignment: .trailing)
+            }
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(WidgetTheme.muted)
+            .frame(height: 18)
+
+            ForEach(prayers) { prayer in
+                HStack(spacing: 6) {
+                    Label {
+                        Text(prayer.name)
+                    } icon: {
+                        Image(systemName: prayer.symbolName)
+                            .semanticWidgetTint(prayer.kind.iconTone)
+                    }
+                    .font(.caption.weight(prayer.isCurrent ? .semibold : .regular))
+                    .foregroundStyle(prayer.isCurrent ? WidgetTheme.accent : WidgetTheme.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
+
+                    Text(WidgetTimeFormatter.time(prayer.time, timezoneIdentifier: snapshot.timeZoneIdentifier))
+                        .frame(width: 72, alignment: .trailing)
+                    Text(WidgetTimeFormatter.time(prayer.displayEnd, timezoneIdentifier: snapshot.timeZoneIdentifier))
+                        .frame(width: 72, alignment: .trailing)
+                }
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(prayer.isCurrent ? WidgetTheme.accent : WidgetTheme.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .padding(.horizontal, 6)
+                .frame(height: 27)
+                .background(
+                    prayer.isCurrent ? WidgetTheme.panel : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+                )
+            }
+        }
+    }
+
+    private func timeRange(for prayer: WidgetPrayer, snapshot: WidgetSnapshot) -> String {
+        "\(WidgetTimeFormatter.time(prayer.time, timezoneIdentifier: snapshot.timeZoneIdentifier)) – \(WidgetTimeFormatter.time(prayer.displayEnd, timezoneIdentifier: snapshot.timeZoneIdentifier))"
+    }
+}
+
+private struct LargeWidgetEventCard: View {
+    struct Event {
+        let name: String
+        let time: Date?
+        let symbolName: String
+        let tone: SalahIconTone
+    }
+
+    let first: Event
+    let second: Event
+    let timeZoneIdentifier: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            row(first)
+            row(second)
+        }
+        .padding(.horizontal, 7)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WidgetTheme.panel, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func row(_ event: Event) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: event.symbolName)
+                .semanticWidgetTint(event.tone)
+                .font(.system(size: 11))
+                .frame(width: 13)
+            Text(event.name)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            Spacer(minLength: 2)
+            Text(event.time.map { WidgetTimeFormatter.time($0, timezoneIdentifier: timeZoneIdentifier) } ?? "—")
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .font(.caption2)
+        .foregroundStyle(WidgetTheme.secondary)
+    }
+}
+
 struct SalahWidgets: Widget {
     let kind: String = "SalahWidgets"
 
@@ -597,6 +832,7 @@ struct SalahWidgets: Widget {
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
+            .systemLarge,
             .accessoryInline,
             .accessoryRectangular
         ])
@@ -628,6 +864,9 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
         gregorianSummary: "Saturday, 9 August",
         hijriSummary: "15 Safar 1448",
         timeZoneIdentifier: TimeZone.current.identifier,
+        sahri: minutes(-440),
+        iftar: minutes(370),
+        sunset: minutes(370),
         prayers: prayers,
         currentPrayer: nil,
         nextPrayer: nil,
@@ -643,6 +882,12 @@ private func sampleSnapshot(now: Date = .now) -> WidgetSnapshot {
 }
 
 #Preview(as: .systemMedium) {
+    SalahWidgets()
+} timeline: {
+    SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))
+}
+
+#Preview(as: .systemLarge) {
     SalahWidgets()
 } timeline: {
     SimpleEntry(date: .now, configuration: ConfigurationAppIntent(), snapshot: sampleSnapshot().snapshot(at: .now))

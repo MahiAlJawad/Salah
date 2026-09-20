@@ -28,6 +28,7 @@ enum WidgetDataPublisher {
                     hijriSummary: day.hijriSummary,
                     sahri: day.sahri,
                     iftar: day.iftar,
+                    sunset: day.sunset,
                     prayers: makeScheduleItems(day: day, completed: [], naflCompletedMask: 0)
                 )
             }
@@ -64,6 +65,7 @@ enum WidgetDataPublisher {
             timeZoneIdentifier: prayerDay.timeZoneIdentifier,
             sahri: prayerDay.sahri,
             iftar: prayerDay.iftar,
+            sunset: prayerDay.sunset,
             prayers: flaggedItems,
             currentPrayer: moment.current,
             nextPrayer: moment.next,
