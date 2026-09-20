@@ -6,16 +6,19 @@ import SwiftUI
 final class TodayViewModel {
     private let repository: any PrayerTimesRepository
     private let trackingRepository: any PrayerTrackingRepository
+    private let trackerHistoryRepository: any TrackerHistoryRepository
     private let settings: AppSettings
 
     var state: FeatureLoadState<PrayerDay> = .idle
     var previousDay: PrayerDay?
     var completed: Set<PrayerType> = []
+    var naflCompletedMask = 0
     private var requestID = UUID()
 
     init(container: AppContainer) {
         repository = container.prayerTimesRepository
         trackingRepository = container.trackingRepository
+        trackerHistoryRepository = container.trackerHistoryRepository
         settings = container.settings
     }
 
@@ -55,9 +58,11 @@ final class TodayViewModel {
             guard requestID == token else { return }
             previousDay = priorLoaded?.value
             completed = (try? trackingRepository.completedPrayerTypes(on: day)) ?? []
+            naflCompletedMask = (try? trackerHistoryRepository.naflRecord(on: day)?.completedMask) ?? 0
             WidgetDataPublisher.save(
                 prayerDay: loaded.value,
                 completed: completed,
+                naflCompletedMask: naflCompletedMask,
                 nextDay: tomorrowLoaded?.value,
                 futureDays: futureDays
             )

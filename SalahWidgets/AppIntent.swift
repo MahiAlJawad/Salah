@@ -46,7 +46,7 @@ struct SetPrayerCompletionIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        guard let kind = WidgetPrayerKind(rawValue: prayerKind), kind.isObligatory else {
+        guard let kind = WidgetPrayerKind(rawValue: prayerKind), kind.supportsCompletion else {
             return .result()
         }
 

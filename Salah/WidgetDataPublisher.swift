@@ -5,6 +5,7 @@ enum WidgetDataPublisher {
     static func save(
         prayerDay: PrayerDay,
         completed: Set<PrayerType>,
+        naflCompletedMask: Int = 0,
         nextDay: PrayerDay? = nil,
         futureDays: [PrayerDay] = []
     ) {
@@ -13,7 +14,11 @@ enum WidgetDataPublisher {
 
         let now = Date()
 
-        let scheduleItems = makeScheduleItems(day: prayerDay, completed: completed)
+        let scheduleItems = makeScheduleItems(
+            day: prayerDay,
+            completed: completed,
+            naflCompletedMask: naflCompletedMask
+        )
         let upcomingSchedules = ([nextDay].compactMap { $0 } + futureDays)
             .filter { $0.localDay > prayerDay.localDay }
             .reduce(into: [String: WidgetDaySchedule]()) { schedules, day in
@@ -23,7 +28,7 @@ enum WidgetDataPublisher {
                     hijriSummary: day.hijriSummary,
                     sahri: day.sahri,
                     iftar: day.iftar,
-                    prayers: makeScheduleItems(day: day, completed: [])
+                    prayers: makeScheduleItems(day: day, completed: [], naflCompletedMask: 0)
                 )
             }
             .values
@@ -80,7 +85,11 @@ enum WidgetDataPublisher {
         WidgetDataStore.updateCompletion(kind: kind, localDayKey: day.key, completed: completed)
     }
 
-    private static func makeScheduleItems(day: PrayerDay, completed: Set<PrayerType>) -> [WidgetPrayer] {
+    private static func makeScheduleItems(
+        day: PrayerDay,
+        completed: Set<PrayerType>,
+        naflCompletedMask: Int
+    ) -> [WidgetPrayer] {
         let prayerItems = day.windows.map { window in
             WidgetPrayer(
                 name: window.prayer.title,
@@ -103,7 +112,30 @@ enum WidgetDataPublisher {
             isCurrent: false,
             kind: .sunrise
         )
-        return prayerItems.reduce(into: [WidgetPrayer]()) { result, item in
+        let naflItems = [
+            WidgetPrayer(
+                name: L10n.string("Tahajjud"),
+                time: day.localDay.date(in: day.timeZone, hour: 0) ?? day.windows[0].start,
+                end: day.windows.first(where: { $0.prayer == .fajr })?.start ?? day.windows[0].start,
+                symbolName: NaflPractice.tahajjud.symbol,
+                completed: naflCompletedMask & (1 << NaflPractice.tahajjud.rawValue) != 0,
+                isNext: false,
+                isCurrent: false,
+                kind: .tahajjud
+            ),
+            WidgetPrayer(
+                name: L10n.string("Ishrak"),
+                time: day.sunrise.addingTimeInterval(PrayerTimeline.ishrakSunriseBuffer),
+                end: (day.windows.first(where: { $0.prayer == .dhuhr })?.start ?? day.sunrise)
+                    .addingTimeInterval(-PrayerTimeline.ishrakDhuhrBuffer),
+                symbolName: NaflPractice.ishrak.symbol,
+                completed: naflCompletedMask & (1 << NaflPractice.ishrak.rawValue) != 0,
+                isNext: false,
+                isCurrent: false,
+                kind: .ishrak
+            )
+        ]
+        return prayerItems.reduce(into: naflItems) { result, item in
             result.append(item)
             if item.kind == .fajr { result.append(sunriseItem) }
         }

@@ -188,11 +188,16 @@ final class SalahDomainTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: PrayerRecord.self, configurations: configuration)
+        let container = try ModelContainer(
+            for: PrayerRecord.self,
+            NaflHistoryRecord.self,
+            configurations: configuration
+        )
         let repository = SwiftDataPrayerTrackingRepository(
             container: container,
             widgetCompletionDefaults: defaults
         )
+        let naflRepository = SwiftDataTrackerHistoryRepository(container: container)
 
         WidgetPrayerCompletionStore.record(
             prayerKind: .fajr,
@@ -215,6 +220,26 @@ final class SalahDomainTests: XCTestCase {
         )
         XCTAssertTrue(try repository.completedPrayerTypes(on: day).isEmpty)
         XCTAssertEqual(try repository.records(on: day).first?.completed, false)
+
+        WidgetPrayerCompletionStore.record(
+            prayerKind: .ishrak,
+            localDayKey: day.key,
+            timeZoneIdentifier: zone.identifier,
+            completed: true,
+            defaults: defaults
+        )
+        _ = try repository.records(on: day)
+        XCTAssertTrue(try XCTUnwrap(naflRepository.naflRecord(on: day)).contains(.ishrak))
+
+        WidgetPrayerCompletionStore.record(
+            prayerKind: .ishrak,
+            localDayKey: day.key,
+            timeZoneIdentifier: zone.identifier,
+            completed: false,
+            defaults: defaults
+        )
+        _ = try repository.records(on: day)
+        XCTAssertFalse(try XCTUnwrap(naflRepository.naflRecord(on: day)).contains(.ishrak))
     }
 
     @MainActor
@@ -731,7 +756,17 @@ final class SalahDomainTests: XCTestCase {
     }
 
     func testWidgetShowsIshrakAsUpcomingAndCurrentLikeTodayCard() throws {
-        let prayers = widgetPrayers(from: try fixture(day: day))
+        var prayers = widgetPrayers(from: try fixture(day: day))
+        prayers.append(WidgetPrayer(
+            name: String(localized: "Ishrak"),
+            time: try XCTUnwrap(day.date(in: zone, hour: 6, minute: 35)),
+            end: try XCTUnwrap(day.date(in: zone, hour: 12)),
+            symbolName: "sunrise.fill",
+            completed: true,
+            isNext: false,
+            isCurrent: false,
+            kind: .ishrak
+        ))
         let beforeIshrak = try XCTUnwrap(day.date(in: zone, hour: 6, minute: 25))
         let duringIshrak = try XCTUnwrap(day.date(in: zone, hour: 6, minute: 40))
 
@@ -752,6 +787,7 @@ final class SalahDomainTests: XCTestCase {
             timeZoneIdentifier: zone.identifier
         )
         XCTAssertEqual(current.current?.kind, .ishrak)
+        XCTAssertTrue(current.current?.completed == true)
         XCTAssertEqual(current.current?.end, try XCTUnwrap(day.date(in: zone, hour: 12)))
         XCTAssertEqual(current.next?.kind, .dhuhr)
     }

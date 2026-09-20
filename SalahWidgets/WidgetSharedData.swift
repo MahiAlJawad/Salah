@@ -40,6 +40,8 @@ enum WidgetPrayerKind: String, Codable, Sendable {
         }
     }
 
+    var supportsCompletion: Bool { isObligatory || isNafl }
+
     var iconTone: SalahIconTone {
         switch self {
         case .tahajjud: .midnightViolet
@@ -254,7 +256,7 @@ extension WidgetSnapshot {
                     time: midnight,
                     end: fajr.time,
                     symbolName: "moon.stars.fill",
-                    completed: false,
+                    completed: prayers.first(where: { $0.kind == .tahajjud })?.completed ?? false,
                     isNext: false,
                     isCurrent: true,
                     kind: .tahajjud
@@ -273,7 +275,7 @@ extension WidgetSnapshot {
                     time: start,
                     end: end,
                     symbolName: "sunrise.fill",
-                    completed: false,
+                    completed: prayers.first(where: { $0.kind == .ishrak })?.completed ?? false,
                     isNext: date >= sunrise.time && date < start,
                     isCurrent: date >= start && date < end,
                     kind: .ishrak

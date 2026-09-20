@@ -207,20 +207,44 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
 
         var consumedKeys = Set<String>()
         for change in changes {
-            guard let prayer = PrayerType(rawValue: change.prayerKind.rawValue),
-                  let day = LocalDay(stableKey: change.localDayKey) else { continue }
-            try upsert(
-                completed: change.completed,
-                prayer: prayer,
-                day: day,
-                timeZoneIdentifier: change.timeZoneIdentifier,
-                source: "widget",
-                changedAt: change.changedAt
-            )
+            guard let day = LocalDay(stableKey: change.localDayKey) else { continue }
+            if let prayer = PrayerType(rawValue: change.prayerKind.rawValue) {
+                try upsert(
+                    completed: change.completed,
+                    prayer: prayer,
+                    day: day,
+                    timeZoneIdentifier: change.timeZoneIdentifier,
+                    source: "widget",
+                    changedAt: change.changedAt
+                )
+            } else if let practice = naflPractice(for: change.prayerKind) {
+                let existingMask = try naflMask(on: day)
+                let bit = 1 << practice.rawValue
+                let mask = change.completed ? existingMask | bit : existingMask & ~bit
+                try upsertNafl(NaflDailyRecord(day: day, completedMask: mask, updatedAt: change.changedAt))
+            } else {
+                continue
+            }
             consumedKeys.insert(change.key)
         }
         try context.save()
         WidgetPrayerCompletionStore.remove(keys: consumedKeys, defaults: widgetCompletionDefaults)
+    }
+
+    private func naflPractice(for kind: WidgetPrayerKind) -> NaflPractice? {
+        switch kind {
+        case .tahajjud: .tahajjud
+        case .ishrak: .ishrak
+        default: nil
+        }
+    }
+
+    private func naflMask(on day: LocalDay) throws -> Int {
+        let key = day.key
+        let descriptor = FetchDescriptor<NaflHistoryRecord>(
+            predicate: #Predicate { $0.localDateKey == key }
+        )
+        return try context.fetch(descriptor).first?.completedMask ?? 0
     }
 
     private func upsert(
@@ -249,6 +273,23 @@ final class SwiftDataPrayerTrackingRepository: PrayerTrackingRepository {
             )
             record.updatedAt = changedAt
             context.insert(record)
+        }
+    }
+
+    private func upsertNafl(_ record: NaflDailyRecord) throws {
+        let key = record.day.key
+        let descriptor = FetchDescriptor<NaflHistoryRecord>(
+            predicate: #Predicate { $0.localDateKey == key }
+        )
+        if let existing = try context.fetch(descriptor).first {
+            existing.completedMask = max(0, record.completedMask)
+            existing.updatedAt = record.updatedAt
+        } else {
+            context.insert(NaflHistoryRecord(
+                day: record.day,
+                completedMask: record.completedMask,
+                updatedAt: record.updatedAt
+            ))
         }
     }
 }

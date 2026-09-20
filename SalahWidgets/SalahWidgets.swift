@@ -397,7 +397,7 @@ private struct SmallWidgetView: View {
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
 
-                            if isCurrent, featured.kind.isObligatory {
+                            if isCurrent, featured.kind.supportsCompletion {
                                 PrayerCompletionToggle(
                                     prayer: featured,
                                     localDayKey: snapshot.localDayKey,
@@ -493,7 +493,7 @@ private struct MediumWidgetView: View {
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.75)
 
-                                if isCurrent, featured.kind.isObligatory {
+                                if isCurrent, featured.kind.supportsCompletion {
                                     PrayerCompletionToggle(
                                         prayer: featured,
                                         localDayKey: snapshot.localDayKey,
@@ -543,7 +543,8 @@ private struct MediumWidgetView: View {
                     .frame(height: 12)
                     .padding(.bottom, 1)
 
-                    ForEach(snapshot.prayers) { prayer in
+                    let displayedPrayers = snapshot.prayers.filter { !$0.kind.isNafl }
+                    ForEach(displayedPrayers) { prayer in
                         HStack(spacing: 5) {
                             Image(systemName: prayer.symbolName)
                                 .semanticWidgetTint(prayer.kind.iconTone)
@@ -565,7 +566,7 @@ private struct MediumWidgetView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 19)
 
-                        if prayer.id != snapshot.prayers.last?.id {
+                        if prayer.id != displayedPrayers.last?.id {
                             Rectangle()
                                 .fill(WidgetTheme.divider)
                                 .frame(height: 1)
