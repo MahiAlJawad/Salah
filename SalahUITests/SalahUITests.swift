@@ -18,7 +18,7 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Today"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
         XCTAssertTrue(app.tabBars.buttons["Tracker"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Discover"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Find"].exists)
         XCTAssertTrue(app.tabBars.buttons["More"].exists)
         let locationMenu = app.buttons["today.location.menu"]
         XCTAssertTrue(locationMenu.exists)
@@ -34,13 +34,13 @@ final class SalahUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["আজ"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.tabBars.buttons["ক্যালেন্ডার"].exists)
         XCTAssertTrue(app.tabBars.buttons["ট্র্যাকার"].exists)
-        XCTAssertTrue(app.tabBars.buttons["আবিষ্কার"].exists)
+        XCTAssertTrue(app.tabBars.buttons["খুঁজুন"].exists)
         XCTAssertTrue(app.tabBars.buttons["আরও"].exists)
         XCTAssertTrue(app.staticTexts["সূর্যোদয়"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.staticTexts["সূর্যাস্ত"].exists)
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'ফজর'" )).firstMatch.exists)
 
-        app.tabBars.buttons["আবিষ্কার"].tap()
+        app.tabBars.buttons["খুঁজুন"].tap()
         XCTAssertTrue(app.segmentedControls.buttons["মসজিদ"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["নিকটতম মসজিদ"].exists)
     }
@@ -71,7 +71,7 @@ final class SalahUITests: XCTestCase {
         app.launchArguments = ["-ui-testing", "-reset-state", "-onboarding-complete"]
         app.launch()
 
-        app.tabBars.buttons["Discover"].tap()
+        app.tabBars.buttons["Find"].tap()
         XCTAssertTrue(app.segmentedControls.buttons["Mosques"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["Nearest Mosques"].exists)
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Baitul Aman Mosque'" )).firstMatch.waitForExistence(timeout: 3))
@@ -104,7 +104,7 @@ final class SalahUITests: XCTestCase {
         app.launchArguments = ["-ui-testing", "-reset-state", "-onboarding-complete", "-location-denied"]
         app.launch()
 
-        app.tabBars.buttons["Discover"].tap()
+        app.tabBars.buttons["Find"].tap()
         XCTAssertTrue(app.buttons["Choose Area"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["Open Settings"].exists)
     }

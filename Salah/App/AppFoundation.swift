@@ -107,7 +107,7 @@ enum AppTab: Hashable, CaseIterable, Identifiable {
         case .today: L10n.string("Today")
         case .calendar: L10n.string("Calendar")
         case .tracker: L10n.string("Tracker")
-        case .discover: L10n.string("Discover")
+        case .discover: L10n.string("Find")
         case .more: L10n.string("More")
         }
     }
@@ -117,7 +117,7 @@ enum AppTab: Hashable, CaseIterable, Identifiable {
         case .today: "house.fill"
         case .calendar: "calendar"
         case .tracker: "checklist"
-        case .discover: "moon.stars.fill"
+        case .discover: "location.magnifyingglass"
         case .more: "ellipsis.circle"
         }
     }
