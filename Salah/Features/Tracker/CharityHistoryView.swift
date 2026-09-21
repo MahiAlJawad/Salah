@@ -54,8 +54,6 @@ struct CharityHistoryView: View {
                 }
             } header: {
                 Text("Giving History")
-            } footer: {
-                Text("Entries stay on this device. Swipe an entry to delete it.")
             }
         }
         .navigationTitle("Sadaqah")
@@ -211,11 +209,6 @@ struct AddCharityEntryView: View {
                         .lineLimit(2...4)
                 }
 
-                Section {
-                    Text("This records a private reflection only. Salah does not send money or contact the recipient.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
             }
             .navigationTitle("Add Giving")
             .navigationBarTitleDisplayMode(.inline)
