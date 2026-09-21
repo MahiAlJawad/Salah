@@ -9,11 +9,12 @@ final class SalahUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-reset-state"]
         app.launch()
-        XCTAssertFalse(app.buttons["Skip"].exists)
+        XCTAssertTrue(app.buttons["Skip"].exists)
         app.buttons["Continue"].tap()
-        app.buttons["Continue"].tap()
-        app.buttons["Choose Prayer Location"].tap()
         app.buttons["Use Current Location"].tap()
+        let notNow = app.buttons["Not Now"]
+        XCTAssertTrue(notNow.waitForExistence(timeout: 3))
+        notNow.tap()
         XCTAssertTrue(app.tabBars.buttons["Today"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
         XCTAssertTrue(app.tabBars.buttons["Tracker"].exists)
@@ -49,11 +50,9 @@ final class SalahUITests: XCTestCase {
         app.launchArguments = ["-ui-testing", "-reset-state", "-location-denied"]
         app.launch()
         app.buttons["Continue"].tap()
-        app.buttons["Continue"].tap()
-        app.buttons["Choose Prayer Location"].tap()
         app.buttons["Use Current Location"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Location access is denied'")).firstMatch.waitForExistence(timeout: 3))
-        app.buttons["Search for a City or Place"].tap()
+        app.buttons["Choose a City"].tap()
         let searchField = app.searchFields["City, town, or address"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3))
         searchField.tap()
@@ -61,6 +60,9 @@ final class SalahUITests: XCTestCase {
         let dhaka = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Dhaka'" )).firstMatch
         XCTAssertTrue(dhaka.waitForExistence(timeout: 3))
         dhaka.tap()
+        let notNow = app.buttons["Not Now"]
+        XCTAssertTrue(notNow.waitForExistence(timeout: 3))
+        notNow.tap()
         XCTAssertTrue(app.tabBars.buttons["Today"].waitForExistence(timeout: 3))
     }
 
