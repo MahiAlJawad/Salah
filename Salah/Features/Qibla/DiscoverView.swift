@@ -266,12 +266,12 @@ struct DiscoverView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("Discover")
+            Text("Find")
                 .font(.largeTitle.bold())
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
 
-            Picker("Discover section", selection: $selection) {
+            Picker("Find section", selection: $selection) {
                 ForEach(DiscoverSection.allCases) { section in
                     Text(section.title).tag(section)
                 }
@@ -292,7 +292,7 @@ struct DiscoverView: View {
         }
         .padding(.top, 8)
         .background(palette.screenBackground.ignoresSafeArea())
-        .navigationTitle("Discover")
+        .navigationTitle("Find")
         .toolbar(.hidden, for: .navigationBar)
         .onChange(of: selection) { _, newValue in
             if newValue == .qibla { mosqueFinder.cancel() }
