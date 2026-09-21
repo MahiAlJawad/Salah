@@ -282,10 +282,6 @@ struct TrackerView: View {
                 }
             }
         }
-
-        Text("These reflections stay on this device and reset only when you choose to change them.")
-            .font(.footnote)
-            .foregroundStyle(.secondary)
     }
 
     @ViewBuilder
@@ -387,9 +383,6 @@ struct TrackerView: View {
                 }
             }
 
-            Text("Salah records your reflection only. It never collects or processes donations.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
         }
         .sheet(isPresented: $showingAddCharity) {
             AddCharityEntryView(currencyCode: $charityCurrencyCode, timeZone: container.settings.location.timeZone) { entry in

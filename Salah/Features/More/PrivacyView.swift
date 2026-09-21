@@ -1,11 +1,6 @@
 import SwiftUI
 
 struct PrivacyView: View {
-    @Bindable var container: AppContainer
-    @Environment(\.salahPalette) private var palette
-    @State private var showingClearConfirmation = false
-    @State private var cleared = false
-
     var body: some View {
         List {
             Section {
@@ -28,37 +23,10 @@ struct PrivacyView: View {
                     Link("Privacy Policy", destination: privacyPolicyURL)
                 }
             }
-            Section {
-                Button("Clear Local Tracker Data", role: .destructive) { showingClearConfirmation = true }
-                if cleared { Label("Tracker data cleared", systemImage: "checkmark.circle.fill").foregroundStyle(palette.accent) }
-            } header: {
-                Text("Your Data")
-            } footer: {
-                Text("Prayer-time cache and lightweight preferences can be replaced automatically; tracker deletion cannot be undone.")
-            }
         }
         .navigationTitle("Privacy & Data")
         .navigationBarTitleDisplayMode(.inline)
         .phoneOnlyHideTabBar()
-        .confirmationDialog("Clear all tracker data?", isPresented: $showingClearConfirmation, titleVisibility: .visible) {
-            Button("Clear Tracker Data", role: .destructive) {
-                try? container.trackingRepository.clearAll()
-                try? container.trackerHistoryRepository.clearAll()
-                UserDefaults.standard.set(0, forKey: "salah.deeds.istighfar-count")
-                UserDefaults.standard.set(0, forKey: "salah.deeds.tasbih-goal")
-                UserDefaults.standard.removeObject(forKey: "salah.deeds.tasbih-day")
-                UserDefaults.standard.removeObject(forKey: TasbihHistoryLedger.storageKey)
-                UserDefaults.standard.set(0, forKey: "salah.deeds.good-deeds-mask")
-                UserDefaults.standard.removeObject(forKey: "salah.deeds.good-deeds-day")
-                UserDefaults.standard.removeObject(forKey: NaflHistoryLedger.storageKey)
-                UserDefaults.standard.set(0, forKey: "salah.deeds.charity-total")
-                UserDefaults.standard.removeObject(forKey: CharityLedger.storageKey)
-                cleared = true
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This permanently removes prayer, Tasbih, good deeds, and charity history stored on this device.")
-        }
     }
 
     private func privacyRow(_ title: String, detail: String, symbol: String, tint: Color, background: Color) -> some View {

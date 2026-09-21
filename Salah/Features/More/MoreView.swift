@@ -80,23 +80,9 @@ struct MoreView: View {
                     .buttonStyle(.plain)
                 }
 
-                MoreSectionHeader("Giving & Charity")
-                MoreSectionCard {
-                    NavigationLink { CharityHistoryView(container: container) } label: {
-                        MoreSettingsRow(
-                            title: "Sadaqah",
-                            subtitle: "A private giving intention",
-                            symbol: "gift",
-                            iconTint: .pink.opacity(0.76),
-                            iconBackground: .pink.opacity(0.09)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-
                 MoreSectionHeader("Privacy & Support")
                 MoreSectionCard {
-                    NavigationLink { PrivacyView(container: container) } label: {
+                    NavigationLink { PrivacyView() } label: {
                         MoreSettingsRow(
                             title: "Privacy & Data",
                             subtitle: "Local-first and transparent",
