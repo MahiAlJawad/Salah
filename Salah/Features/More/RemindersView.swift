@@ -294,7 +294,7 @@ struct RemindersView: View {
                     showingCharityEducation = true
                 } label: {
                     HStack {
-                        Label("Charity reminder", systemImage: "heart.fill")
+                        Label("Charity reminder", systemImage: "gift")
                         Spacer()
                         Image(systemName: "circle").foregroundStyle(.secondary)
                     }
@@ -306,7 +306,7 @@ struct RemindersView: View {
                 .accessibilityHint("Opens reminder settings and permission options")
             } else {
                 Toggle(isOn: $charityReminderEnabled) {
-                    Label("Charity reminder", systemImage: "heart.fill")
+                    Label("Charity reminder", systemImage: "gift")
                 }
                 .frame(minHeight: 44)
                 .accessibilityIdentifier("charity.reminder.toggle")
