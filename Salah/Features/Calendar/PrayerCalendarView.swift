@@ -50,7 +50,6 @@ final class CalendarViewModel {
         let day = selectedDay
         let location = container.settings.location
         let calculation = container.settings.calculation
-        prayerDay = nil
         offlineDate = nil
         prayerError = false
         loadingPrayerTimes = true
@@ -67,6 +66,7 @@ final class CalendarViewModel {
             offlineDate = result.isStale ? result.value.fetchedAt : nil
         } catch {
             guard !Task.isCancelled, prayerRequestID == requestID, selectedDay == day else { return }
+            prayerDay = nil
             prayerError = true
         }
     }
@@ -100,7 +100,6 @@ final class CalendarViewModel {
         selectedDay = day
         selectedPrayer = nil
         pendingPrayer = nil
-        prayerDay = nil
         completed = []
         tasbih = nil
         naflMask = 0
@@ -128,7 +127,7 @@ final class CalendarViewModel {
     func navigate(to target: CalendarPrayerTarget) {
         guard target.day <= today else { return }
         select(target.day, followsToday: false)
-        if prayerDay != nil { selectedPrayer = target.prayer } else { pendingPrayer = target.prayer }
+        if prayerDay?.localDay == selectedDay { selectedPrayer = target.prayer } else { pendingPrayer = target.prayer }
     }
 
     func togglePrayer(_ prayer: PrayerType, on targetDay: LocalDay? = nil) {
@@ -386,7 +385,7 @@ struct PrayerCalendarView: View {
 
     private var salahRecords: some View {
         VStack(spacing: 12) {
-            if viewModel.loadingPrayerTimes { ProgressView("Loading prayer times…") }
+            if viewModel.loadingPrayerTimes, viewModel.prayerDay == nil { ProgressView("Loading prayer times…") }
             if viewModel.prayerError {
                 Text("Prayer times could not be loaded. Your records are still available.")
                     .font(.footnote).foregroundStyle(.secondary)
@@ -399,7 +398,7 @@ struct PrayerCalendarView: View {
                         Button {
                             if PrayerTimeline.isMidnightToFajrWindow(now: .now, today: day) {
                                 showingFutureSalahAlert = true
-                            } else { viewModel.selectedPrayer = prayer }
+                            } else if day.localDay == viewModel.selectedDay { viewModel.selectedPrayer = prayer }
                         } label: {
                             PrayerScheduleRow(window: window, day: day, preference: container.settings.calculation.timeFormat,
                                               isActive: false, isCompleted: viewModel.completed.contains(prayer))
