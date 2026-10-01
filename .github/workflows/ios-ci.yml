@@ -25,6 +25,11 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Run SwiftLint
+        uses: swift-actions/swiftlint@v2
+        with:
+          args: lint --strict
+
       - name: Build Salah for iOS Simulator
         run: |
           set -o pipefail
