@@ -25,10 +25,11 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
       - name: Run SwiftLint
-        uses: swift-actions/swiftlint@v2
-        with:
-          args: lint --strict
+        run: swiftlint lint --no-cache
 
       - name: Build Salah for iOS Simulator
         run: |
